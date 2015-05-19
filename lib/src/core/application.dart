@@ -106,7 +106,7 @@ class Application implements Container {
   /// the config files are located.
   Future setUp(String configRoot) async {
 
-    _setUpConfig(configRoot, as);
+    _setUpConfig(configRoot);
 
     _registerServiceProviders();
 
@@ -116,7 +116,7 @@ class Application implements Container {
       this.resolveMethod(_controller, 'load');
   }
 
-  _setUpConfig(String configRoot, Type as) async {
+  _setUpConfig(String configRoot) async {
     Directory configRootDirectory = new Directory(configRoot);
 
     if (!await configRootDirectory.exists()) {

@@ -20,33 +20,8 @@ abstract class Config {
   /// into a new config instance. Since this reads from the disk, it is
   /// asynchronous and returns a [Future].
   static Future<Config> load(Directory directory) async {
-
-    Config config = new _Config();
-
-    await for (FileSystemEntity entity in directory.list(recursive: true)) {
-
-      FileStat stat = await entity.stat();
-
-      if (!entity.path.endsWith('.yaml')) continue;
-
-      String path = entity.path
-      .replaceAll(new RegExp('^${directory.path}/'), '')
-      .replaceAll(new RegExp(r'.yaml$'), '')
-      .replaceAll('/','.');
-
-      if (stat.type == FileSystemEntityType.DIRECTORY) {
-
-        config[path] = {};
-        continue;
-      }
-
-      if (stat.type != FileSystemEntityType.FILE) continue;
-
-      File file = entity;
-
-      config[path] = yaml.loadYaml(await file.readAsString());
-    }
-
+    var config = new _Config();
+    await config._load(directory);
     return config;
   }
 }
@@ -56,39 +31,78 @@ class _Config implements Config {
   Map _map = {};
 
   operator [](String key) {
+    return _itemFromDotPath(key);
+  }
 
-    var keySegments = key.split('.');
-
-    var pointer = _map;
-
-    while (keySegments.isNotEmpty) {
-
-      var segment = keySegments.removeAt(0);
-
-      pointer = pointer[segment];
-    }
-    return pointer;
+  _itemFromDotPath(String key) {
+    return _itemFromDotPathSegments(key.split('.'));
   }
 
   void operator []=(String key, value) {
-
     var keySegments = key.split('.');
+    var lastKey = keySegments.removeLast();
 
-    var pointer = _map;
+    _itemFromDotPathSegments(keySegments)
+      ..[lastKey] = value;
+  }
 
-    while (keySegments.length > 1) {
+  _itemFromDotPathSegments(List<String> segments) {
+    var item = _map;
 
-      var segment = keySegments.removeAt(0);
+    while (segments.isNotEmpty)
+      item = _childOfItemByKey(item, segments.removeAt(0));
 
-      if (!pointer.containsKey(segment)) pointer[segment] = {};
+    return item;
+  }
 
-      pointer = pointer[segment];
-    }
-    pointer[keySegments.removeLast()] = value;
+  _childOfItemByKey(item, key) {
+    return (item is Iterable)
+    ? item[int.parse(key)]
+    : item[key];
   }
 
   String toString() {
-
     return 'Config(${_map})';
+  }
+
+  Future _load(Directory directory) async {
+    await _throwIfDirectoryDoesNotExist(directory);
+
+    await for (var entity in directory.list(recursive: true))
+      if (_isYamlFile(entity))
+        await _loadFile(entity, directory);
+  }
+
+  Future _throwIfDirectoryDoesNotExist(Directory directory) async {
+    if (await _directoryDoesNotExist(directory))
+      throw new ConfigException('${directory.path} is not a directory!');
+  }
+
+  Future<bool> _directoryDoesNotExist(Directory directory) async {
+    return !(await directory.exists());
+  }
+
+  _isYamlFile(FileSystemEntity entity) {
+    return entity.path.endsWith('.yaml');
+  }
+
+  Future _loadFile(File file, Directory root) async {
+    this[_makePathOfFile(file, root)] = await _loadYaml(file);
+  }
+
+  String _makePathOfFile(File file, Directory root) {
+    return file.path
+    .replaceAll(new RegExp('^${root.path}/'), '')
+    .replaceAll(new RegExp(r'.yaml$'), '')
+    .replaceAll('/', '.');
+  }
+
+  Future<dynamic> _loadYaml(File file) async {
+    var loaded = yaml.loadYaml(await file.readAsString());
+
+    if (loaded is Iterable)
+      return []..addAll(loaded);
+
+    return {}..addAll(loaded);
   }
 }
