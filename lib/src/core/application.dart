@@ -105,15 +105,15 @@ class Application implements Container {
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.
   Future setUp(String configRoot) async {
-
     _setUpConfig(configRoot, as);
 
-    _registerServiceProviders();
+    await _setUpServiceProviders();
 
-    await _loadServiceProviders();
+    _loadController();
+  }
 
-    if (this.canResolveMethod(_controller, 'load'))
-      this.resolveMethod(_controller, 'load');
+  Future tearDown() async {
+    await _runServiceProviderMethod('tearDown');
   }
 
   _setUpConfig(String configRoot, Type as) async {
@@ -126,6 +126,12 @@ class Application implements Container {
     _config = await Config.load(configRootDirectory);
 
     this.singleton(_config, as: Config);
+  }
+
+  _setUpServiceProviders() async {
+    _registerServiceProviders();
+
+    await _loadServiceProviders();
   }
 
   Future _loadServiceProviders() async {
@@ -190,7 +196,8 @@ class Application implements Container {
     await Future.wait(futures);
   }
 
-  Future tearDown() async {
-    await _runServiceProviderMethod('tearDown');
+  _loadController() {
+    if (this.canResolveMethod(_controller, 'load'))
+      this.resolveMethod(_controller, 'load');
   }
 }
