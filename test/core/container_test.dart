@@ -16,7 +16,7 @@ class ContainerTest implements TestCase {
 
   @test
   it_instantiates_a_class() {
-    expect(container.make(DeCoupledClass) is DeCoupledClass, isTrue);
+    expect(container.make(LonelyClass) is LonelyClass, isTrue);
   }
 
   @test
@@ -38,19 +38,19 @@ class ContainerTest implements TestCase {
 
   @test
   it_resolves_a_functions_arguments() {
-    var closure = (DeCoupledClass d) => d;
+    var closure = (LonelyClass d) => d;
 
-    expect(container.resolve(closure) is DeCoupledClass, isTrue);
+    expect(container.resolve(closure) is LonelyClass, isTrue);
   }
 }
 
-class DeCoupledClass {
+class LonelyClass {
 }
 
 class ClassDependingOnClass {
-  DeCoupledClass dependency;
+  LonelyClass dependency;
 
-  ClassDependingOnClass(DeCoupledClass this.dependency);
+  ClassDependingOnClass(LonelyClass this.dependency);
 }
 
 abstract class Interface {
