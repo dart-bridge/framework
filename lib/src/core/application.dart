@@ -105,7 +105,8 @@ class Application implements Container {
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.
   Future setUp(String configRoot) async {
-    _setUpConfig(configRoot, as);
+
+    _setUpConfig(configRoot);
 
     await _setUpServiceProviders();
 
@@ -116,7 +117,7 @@ class Application implements Container {
     await _runServiceProviderMethod('tearDown');
   }
 
-  _setUpConfig(String configRoot, Type as) async {
+  _setUpConfig(String configRoot) async {
     Directory configRootDirectory = new Directory(configRoot);
 
     if (!await configRootDirectory.exists()) {

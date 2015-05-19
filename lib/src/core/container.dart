@@ -111,7 +111,7 @@ class _Container implements Container {
 
     var positional = _getPositionalParameters(closure.function);
 
-    return closure.apply(positional, _convertStringKeysToSymbols(namedParameters));
+    return closure.apply(positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }
 
   _make(Type type, Map<String, dynamic> namedParameters) {
