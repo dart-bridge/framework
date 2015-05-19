@@ -2,6 +2,7 @@ name: bridge
 description: Extensible end-to-end framework
 author: Emil Persson <emil.n.persson@gmail.com>
 version: 0.1.0
+homepage: http://github.com/emilniklas/dart-bridge
 dependencies:
   vue: ">=0.1.0 <1.0.0"
   cupid: ">=0.3.0 <0.4.0"
