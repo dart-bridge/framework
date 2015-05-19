@@ -42,6 +42,22 @@ class ContainerTest implements TestCase {
 
     expect(container.resolve(closure) is LonelyClass, isTrue);
   }
+
+  @test
+  it_binds_an_instance_as_a_singleton() {
+    var instance = new LonelyClass();
+    container.singleton(instance);
+
+    expect(container.make(LonelyClass) == instance, isTrue);
+  }
+
+  @test
+  it_binds_a_singleton_to_an_interface() {
+    var instance = new ClassImplementingInterface();
+    container.singleton(instance, as: Interface);
+
+    expect(container.make(Interface) == instance, isTrue);
+  }
 }
 
 class LonelyClass {
