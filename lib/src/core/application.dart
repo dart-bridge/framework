@@ -146,7 +146,7 @@ class Application implements Container {
 
   _registerServiceProviders() {
 
-    List<String> providerPaths = config['app.service_providers'];
+    List<String> providerPaths = config('app.service_providers');
 
     if (providerPaths == null) return;
 

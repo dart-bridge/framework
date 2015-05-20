@@ -11,13 +11,11 @@ part of bridge.io;
 ///     }
 class IoServiceProvider implements ServiceProvider {
 
-  Container container;
-  IoServiceProvider(Container this.container);
+  setUp(Container container, Config config) async {
+    var server = new _IoServer()
+      .._port = config('app.server.port', 1337)
+      .._hostname = config('app.server.hostname', 'localhost');
 
-  setUp(Config config) async {
-    var server = new _IoServer();
-    server._port = config('app.server.port', 1337);
-    server._hostname = config('app.server.hostname', 'localhost');
     container.singleton(server, as: IoServer);
   }
 
