@@ -56,4 +56,10 @@ class ConfigTest implements TestCase {
     ];
     expect(config['config.list.0.0'], equals('nested'));
   }
+
+  @test
+  it_can_look_for_a_value_and_provide_a_default_if_key_does_not_exist() {
+    expect(config('config.key', 'default'), equals('value'));
+    expect(config('config.doesNotExist', 'default'), equals('default'));
+  }
 }

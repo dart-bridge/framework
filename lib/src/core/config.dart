@@ -24,6 +24,10 @@ abstract class Config {
     await config._load(directory);
     return config;
   }
+
+  /// Tries to return the value of a key, but if it doesn't exist, return
+  /// the default value provided instead
+  call(String key, [defaultValue]);
 }
 
 class _Config implements Config {
@@ -104,5 +108,10 @@ class _Config implements Config {
       return []..addAll(loaded);
 
     return {}..addAll(loaded);
+  }
+
+  call(String key, [defaultValue]) {
+    var value = this[key];
+    return (value == null) ? defaultValue : value;
   }
 }
