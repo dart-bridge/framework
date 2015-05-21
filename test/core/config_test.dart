@@ -62,4 +62,14 @@ class ConfigTest implements TestCase {
     expect(config('config.key', 'default'), equals('value'));
     expect(config('config.doesNotExist', 'default'), equals('default'));
   }
+
+  @test
+  it_fetches_environment_variables() {
+    expect(config.env('TEST_KEY'), equals('value'));
+  }
+
+  @test
+  it_provides_a_fallback_if_env_key_does_not_exist() {
+    expect(config.env('NOT_A_REAL_KEY', 'default'), equals('default'));
+  }
 }

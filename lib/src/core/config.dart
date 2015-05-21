@@ -20,10 +20,24 @@ abstract class Config {
   /// into a new config instance. Since this reads from the disk, it is
   /// asynchronous and returns a [Future].
   static Future<Config> load(Directory directory) async {
+    if (_envHasNotBeenLoaded()) _loadEnv();
     var config = new _Config();
     await config._load(directory);
     return config;
   }
+
+  static _envHasNotBeenLoaded() => !_envHasBeenLoaded;
+
+  static _loadEnv() {
+    dotenv.load();
+    _envHasBeenLoaded = true;
+  }
+
+  static bool _envHasBeenLoaded = false;
+
+  /// Get an environment variable from a `.env` file in the root of
+  /// you application. Optionally provide a fallback default value.
+  String env(String key, [String defaultValue]);
 
   /// Tries to return the value of a key, but if it doesn't exist, return
   /// the default value provided instead
@@ -113,5 +127,14 @@ class _Config implements Config {
   call(String key, [defaultValue]) {
     var value = this[key];
     return (value == null) ? defaultValue : value;
+  }
+
+  String env(String key, [String defaultValue]) {
+    if (_envVariableExists(key)) return dotenv.env[key];
+    return defaultValue;
+  }
+
+  bool _envVariableExists(String key) {
+    return dotenv.env.containsKey(key);
   }
 }

@@ -7,7 +7,6 @@ part of bridge.core;
 /// and is responsible for running all the service providers
 /// when the program is started.
 class Application implements Container {
-
   Container _container = new Container();
 
   Config _config;
@@ -33,7 +32,7 @@ class Application implements Container {
   /// non-abstract class will be injected when the
   /// abstraction is requested.
   void bind(Type abstraction, Type implementation) =>
-  _container.bind(abstraction, implementation);
+      _container.bind(abstraction, implementation);
 
   /// Creates a new instance of a class, while injecting its
   /// dependencies recursively. Assign to a typed variable:
@@ -51,7 +50,7 @@ class Application implements Container {
   ///
   ///     application.make(MyClass, namedParameters: {'myString': 'value'});
   make(Type type, {Map<String, dynamic> namedParameters}) =>
-  _container.make(type, namedParameters: namedParameters);
+      _container.make(type, namedParameters: namedParameters);
 
   /// Resolves a method or a top-level function be injecting its
   /// arguments and their dependencies recursively
@@ -64,7 +63,7 @@ class Application implements Container {
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
   resolve(Function function, {Map<String, dynamic> namedParameters}) =>
-  _container.resolve(function, namedParameters: namedParameters);
+      _container.resolve(function, namedParameters: namedParameters);
 
   /// Binds an instance as a singleton in the container, so that every
   /// time a class of that type is requested, that instance will
@@ -74,15 +73,16 @@ class Application implements Container {
   /// to have a singleton instance of an abstract class.
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
-  void singleton(Object singleton, {Type as, Map<String, dynamic> namedParameters}) =>
-  _container.singleton(singleton, as: as, namedParameters: namedParameters);
+  void singleton(Object singleton,
+          {Type as, Map<String, dynamic> namedParameters}) =>
+      _container.singleton(singleton, as: as, namedParameters: namedParameters);
 
   /// Checks if an object has a method.
   ///
   /// **NOTE:** This does not guarantee that the method will successfully
   /// be resolved, only that the method exists. This behaviour may change.
   bool canResolveMethod(Object object, String method) =>
-  _container.canResolveMethod(object, method);
+      _container.canResolveMethod(object, method);
 
   /// Resolves a named method on an instance. Use only when the type is
   /// not known or when expects a subtype or an implementation.
@@ -90,13 +90,13 @@ class Application implements Container {
   /// Otherwise, use [resolve].
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
-  resolveMethod(Object object, String methodName, {Map<String, dynamic> namedParameters}) =>
-  _container.resolveMethod(object, methodName, namedParameters: namedParameters);
+  resolveMethod(Object object, String methodName,
+      {Map<String, dynamic> namedParameters}) => _container.resolveMethod(
+          object, methodName, namedParameters: namedParameters);
 
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.
   Future setUp(String configRoot) async {
-
     await _setUpConfig(configRoot);
 
     await _setUpServiceProviders();
@@ -108,13 +108,10 @@ class Application implements Container {
 
   _setUpConfig(String configRoot) async {
     Directory configRootDirectory = new Directory(configRoot);
-
     if (!await configRootDirectory.exists()) {
       throw new InvalidArgumentException('$configRoot is not a directory');
     }
-
     _config = await Config.load(configRootDirectory);
-
     this.singleton(_config, as: Config);
   }
 
@@ -125,7 +122,6 @@ class Application implements Container {
   }
 
   Future _loadServiceProviders() async {
-
     await _runServiceProviderMethod('setUp');
 
     await _runServiceProviderMethod('load');
@@ -134,15 +130,14 @@ class Application implements Container {
   }
 
   _registerServiceProviders() {
-
     List<String> providerPaths = config('app.service_providers');
 
     if (providerPaths == null) return;
 
-    if (providerPaths is! List) throw new ConfigException('[app.service_providers] must be a list');
+    if (providerPaths is! List) throw new ConfigException(
+        '[app.service_providers] must be a list');
 
     providerPaths.forEach((String serviceProviderPath) {
-
       List<String> serviceProviderPathSegments = serviceProviderPath.split('.');
 
       String serviceProviderName = serviceProviderPathSegments.removeLast();
@@ -150,20 +145,16 @@ class Application implements Container {
       String libraryName = serviceProviderPathSegments.join('.');
 
       _registerServiceProvider(
-          new Symbol(libraryName),
-          new Symbol(serviceProviderName)
-      );
+          new Symbol(libraryName), new Symbol(serviceProviderName));
     });
   }
 
   _registerServiceProvider(Symbol libraryName, Symbol serviceClassName) {
-
     LibraryMirror library = currentMirrorSystem().findLibrary(libraryName);
 
     ClassMirror serviceClass = library.declarations[serviceClassName];
 
     if (!serviceClass.superinterfaces.contains(reflectClass(ServiceProvider))) {
-
       String name = MirrorSystem.getName(serviceClassName);
 
       throw new ConfigException('$name is not a ServiceProvider');
@@ -172,14 +163,12 @@ class Application implements Container {
   }
 
   Future _runServiceProviderMethod(String name) async {
-
     List<Future> futures = [];
 
     for (ServiceProvider serviceProvider in _serviceProviders) {
-
       if (this.canResolveMethod(serviceProvider, name)) {
-
-        futures.add(new Future.value(this.resolveMethod(serviceProvider, name)));
+        futures
+            .add(new Future.value(this.resolveMethod(serviceProvider, name)));
       }
     }
 

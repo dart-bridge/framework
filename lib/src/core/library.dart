@@ -16,6 +16,7 @@ import 'package:bridge/exceptions.dart';
 
 // External libraries
 import 'package:yaml/yaml.dart' as yaml;
+import 'package:dotenv/dotenv.dart' as dotenv;
 
 part 'application.dart';
 part 'container.dart';
