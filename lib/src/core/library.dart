@@ -12,7 +12,7 @@ import 'dart:async';
 
 // Using
 import 'package:bridge/exceptions.dart';
-import 'package:bridge/bridge.dart';
+//import 'package:bridge/bridge.dart';
 
 // External libraries
 import 'package:yaml/yaml.dart' as yaml;
