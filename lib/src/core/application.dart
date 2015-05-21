@@ -10,22 +10,13 @@ class Application implements Container {
 
   Container _container = new Container();
 
-  Controller _controller;
-
   Config _config;
 
   List<ServiceProvider> _serviceProviders = [];
 
-  /// Takes a type of a class that implements [Controller].
-  Application(Type controllerClass) {
-
+  Application() {
     _container.singleton(this);
-
     _container.singleton(this, as: Container);
-
-    _controller = this.make(controllerClass);
-
-    this.singleton(_controller, as: Controller);
   }
 
   /// An easy accessor to the global [Config] object, which can also
@@ -106,11 +97,9 @@ class Application implements Container {
   /// the config files are located.
   Future setUp(String configRoot) async {
 
-    _setUpConfig(configRoot);
+    await _setUpConfig(configRoot);
 
     await _setUpServiceProviders();
-
-    _loadController();
   }
 
   Future tearDown() async {
@@ -195,10 +184,5 @@ class Application implements Container {
     }
 
     await Future.wait(futures);
-  }
-
-  _loadController() {
-    if (this.canResolveMethod(_controller, 'load'))
-      this.resolveMethod(_controller, 'load');
   }
 }
