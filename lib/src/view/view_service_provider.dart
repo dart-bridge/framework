@@ -1,4 +1,4 @@
-part of bridge.view.server;
+part of bridge.view;
 
 class ViewServiceProvider implements ServiceProvider {
 
