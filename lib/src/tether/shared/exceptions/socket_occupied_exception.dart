@@ -1,4 +1,4 @@
-part of bridge.tether;
+part of bridge.tether.shared;
 
 class SocketOccupiedException extends InvalidArgumentException {
 

@@ -1,20 +1,18 @@
 library bridge.tether;
 
 // Core libraries
-import 'dart:math' show Random;
-import 'dart:convert' show JSON;
+import 'dart:io';
 import 'dart:async';
 
-// Shared
-//import 'package:bridge/bridge.dart';
+// Server side of library
+import 'library_shared.dart';
+export 'library_shared.dart';
 
 // Using
-import 'package:bridge/exceptions.dart';
+import 'package:bridge/core.dart';
+import 'package:bridge/io.dart';
 
-part 'shared/exceptions/socket_occupied_exception.dart';
-part 'shared/exceptions/tether_exception.dart';
-part 'shared/message.dart';
-part 'shared/socket_interface.dart';
-part 'shared/tether_container.dart';
-part 'shared/handles_tether.dart';
-part 'shared/tether.dart';
+part 'server/server_socket_adapter.dart';
+part 'server/server_tether_maker.dart';
+part 'server/tether_service_provider.dart';
+part 'server/tether_manager.dart';

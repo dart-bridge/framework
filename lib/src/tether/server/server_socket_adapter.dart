@@ -1,7 +1,8 @@
-part of bridge.tether.server;
+part of bridge.tether;
 
+/// Adapter for the server side [dart.io.WebSocket],
+/// implementing the [SocketInterface].
 class ServerSocketAdapter implements SocketInterface {
-
   WebSocket _socket;
 
   ServerSocketAdapter(WebSocket this._socket);
@@ -9,17 +10,6 @@ class ServerSocketAdapter implements SocketInterface {
   Stream get receiver => _socket;
 
   void send(data) => _socket.add(data);
-
-  static Tether makeTether(WebSocket socket, String token) {
-
-    socket.add(new Message('_handshake', token, null).serialized);
-
-    TetherContainer container = new TetherContainer(
-        new ServerSocketAdapter(socket)
-    );
-
-    return new Tether(token, container);
-  }
 
   bool get isOpen => _socket.readyState == WebSocket.OPEN;
 
