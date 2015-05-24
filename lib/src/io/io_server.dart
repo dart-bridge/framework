@@ -8,16 +8,16 @@ abstract class IoServer {
 
   /// Add shelf middleware to the handler. This must be done
   /// in the `load` method of a service provider.
-  addMiddleware(Middleware middleware);
+  void addMiddleware(Middleware middleware);
 
   /// Set the actual handler of the request. This is done internally
   /// and should probably not be overridden.
-  setHandler(Handler handler);
+  void setHandler(Handler handler);
 
   /// Set the handler that handles a newly established WebSocket
   /// connection. This is done internally and should probably
   /// not be overridden.
-  setSocketHandler(handler(WebSocket socket));
+  void setSocketHandler(handler(WebSocket socket));
 
   /// Start the server
   Future run();
