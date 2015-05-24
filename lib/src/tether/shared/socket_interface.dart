@@ -12,4 +12,6 @@ abstract class SocketInterface {
   bool get isOpen;
 
   Future get onClose;
+
+  Future get onOpen;
 }

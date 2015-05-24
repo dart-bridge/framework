@@ -54,6 +54,8 @@ class MockMessenger implements Messenger {
     return new StreamController().stream;
   }
 
+  Future get onConnectionOpen => null;
+
   Future get onConnectionEnd => null;
 
   Message sentMessage;

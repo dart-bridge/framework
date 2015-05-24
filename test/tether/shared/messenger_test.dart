@@ -40,6 +40,8 @@ class MockSocket implements SocketInterface {
 
   bool get isOpen => true;
 
+  Future get onOpen => null;
+
   Future get onClose => null;
 
   StreamController socketInput = new StreamController();

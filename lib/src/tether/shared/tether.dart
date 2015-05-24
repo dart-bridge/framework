@@ -38,6 +38,10 @@ abstract class Tether {
   /// on the server.
   Future get onConnectionLost;
 
+  /// Provides a hook for when connection to the other side
+  /// has been established.
+  Future get onConnectionEstablished;
+
   /// Sends a request to the other side of the tether. Optionally
   /// takes a value to be sent to the listener.
   ///
@@ -64,6 +68,8 @@ class _Tether implements Tether {
   String get token => _token;
 
   Future get onConnectionLost => _messenger.onConnectionEnd;
+
+  Future get onConnectionEstablished => _messenger.onConnectionOpen;
 
   _Tether(String this._token, Messenger this._messenger) {
     _listenForPingPong();

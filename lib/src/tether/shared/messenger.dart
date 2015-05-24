@@ -7,6 +7,7 @@ part of bridge.tether.shared;
 abstract class Messenger {
   final bool socketIsOpen;
   final Future onConnectionEnd;
+  final Future onConnectionOpen;
 
   factory Messenger(SocketInterface socket) => new _Messenger(socket);
 
@@ -22,6 +23,8 @@ class _Messenger implements Messenger {
   bool get socketIsOpen => _socket.isOpen;
 
   Future get onConnectionEnd => _socket.onClose;
+
+  Future get onConnectionOpen => _socket.onOpen;
 
   _Messenger(SocketInterface this._socket) {
     _listenOnSocket();

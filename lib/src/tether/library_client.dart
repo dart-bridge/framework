@@ -11,3 +11,9 @@ export 'library_shared.dart';
 
 part 'client/client_socket_adapter.dart';
 part 'client/client_tether_maker.dart';
+
+Tether tether;
+
+Future globalTether() async {
+  tether = await ClientTetherMaker.makeTether();
+}

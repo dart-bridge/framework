@@ -23,4 +23,6 @@ class ClientSocketAdapter implements SocketInterface {
   bool get isOpen => _socket.readyState == WebSocket.OPEN;
 
   Future get onClose => _socket.onClose.first;
+
+  Future get onOpen => _socket.onOpen.first;
 }

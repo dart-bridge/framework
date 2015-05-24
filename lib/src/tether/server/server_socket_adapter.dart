@@ -14,4 +14,6 @@ class ServerSocketAdapter implements SocketInterface {
   bool get isOpen => _socket.readyState == WebSocket.OPEN;
 
   Future get onClose => _socket.done;
+
+  Future get onOpen async => await null;
 }

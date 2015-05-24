@@ -8,12 +8,12 @@ class ClientTetherMaker {
   }
 
   static Future<WebSocket> _openSocket() async {
-    WebSocket socket = await _makeSocket();
+    WebSocket socket = _makeSocket();
     await socket.onOpen.first;
     return socket;
   }
 
-  static Future<WebSocket> _makeSocket() {
+  static WebSocket _makeSocket() {
     return new WebSocket(
         'ws://${window.location.hostname}:${window.location.port}/');
   }

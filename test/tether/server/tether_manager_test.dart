@@ -50,6 +50,8 @@ class MockTether implements Tether {
 
   Future get onConnectionLost => null;
 
+  Future get onConnectionEstablished => null;
+
   Future send(String key, [data]) => null;
 
   void listen(String key, Future listener(data)) => null;
