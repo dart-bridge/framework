@@ -1,101 +1,60 @@
 part of bridge.view;
 
 class ViewServiceProvider implements ServiceProvider {
+  Router router;
+  DocumentBuilder builder;
+  Application app;
 
-  Config config;
-
-  ViewServiceProvider(Config this.config);
-
-  setUp(Controller controller, Application app) async {
-
-    if (controller is! HandlesRoutes) {
-
-      throw new ViewException('The controller must handle routes! Implement HandlesRoutes!');
-    }
-
-    app.singleton(controller, as: HandlesRoutes);
+  setUp(Application application) {
+    app = application;
+    router = new Router();
+    app.singleton(router, as: Router);
+    app.bind(TemplateRepository, FileTemplateRepository);
   }
 
-  load(IoServer server, HandlesRoutes handler) async {
-
-    server.addMiddleware(createMiddleware(
-        requestHandler: (Request request) async {
-
-          var file = new File('web/${request.url.path}');
-
-          if (!await file.exists()) {
-
-            return _handleViewRequest(request, handler);
-          }
-        }
-    ));
+  load(IoServer server, TemplateRepository repository) {
+    builder = new DocumentBuilder(repository);
+    server.addMiddleware(_middleware());
   }
 
-  Future<Response> _handleViewRequest(Request request, HandlesRoutes handler) async {
+  Middleware _middleware() {
+    return createMiddleware(requestHandler: _requestHandler);
+  }
 
-    String rootFolderPath = config['view.root'];
+  Future _requestHandler(Request request) async {
+    if (!await _staticFileExists(request.url.path))
+      return _handleViewRequest(request);
+  }
 
-    if (rootFolderPath == null) rootFolderPath = 'views';
+  Future<bool> _staticFileExists(String path) {
+    return new File('web/$path').exists();
+  }
 
-    var headTemplateFile = new File('$rootFolderPath/head.hbs');
-
-    List<String> headSegments = [];
-
-    if (await headTemplateFile.exists()) {
-
-      var headTemplate = new Template(await headTemplateFile.readAsString());
-
-      headSegments.add(headTemplate.headMarkup);
+  Future<Response> _handleViewRequest(Request request) async {
+    try {
+      return _serve(router.match(request.method, request.url.path));
+    } on RoutesDoNotMatchException {
+      return _serve404(router.notFoundHandler);
     }
+  }
 
-    Router router = new Router(request.url.path);
+  Future<Response> _serve(Route route) async {
+    return _handle(route.handler, 200);
+  }
 
-    handler.routes(router);
+  Future<Response> _serve404(Function handler) async {
+    return _handle(handler, 404);
+  }
 
-    Template pageTemplate;
+  Future<Response> _handle(Function handler, int statusCode) async {
+    var returnValue = await app.resolve(handler);
+    if (returnValue is Response) return returnValue;
+    if (returnValue is ViewResponse) return _handleViewResponse(returnValue);
+    return new Response(statusCode, body: returnValue);
+  }
 
-    var body = '';
-
-    if (router.pointer != null) {
-
-      var page = router.pointer.replaceAll('.', '/');
-
-      var pageTemplateFile = new File('$rootFolderPath/$page.hbs');
-
-      if (await pageTemplateFile.exists()) {
-
-        pageTemplate = new Template(await pageTemplateFile.readAsString());
-
-        headSegments.add(pageTemplate.headMarkup);
-
-        body = pageTemplate.bodyMarkup;
-      }
-    }
-
-    var script = (request.headers['user-agent'].contains('(Dart)'))
-                 ? "<script type='application/dart' src='/main.dart'></script>"
-                 : "<script src='/main.js'></script>";
-
-    var template = '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-    ${headSegments.join('')}
-    <script src='/vue.js'></script>
-    </head>
-    <body unresolved>
-    $body
-    $script
-    </body>
-    </html>
-    ''';
-
-    var headers = {
-      'Content-Type': 'text/html; charset=utf8'
-    };
-
-    if (!router.is404)
-      return new Response.ok(template, headers: headers);
-    return new Response.notFound(template, headers: headers);
+  Future<Response> _handleViewResponse(ViewResponse response) async {
+    String template = await builder.fromTemplateName(response.templateName);
+    return new Response.ok(template);
   }
 }

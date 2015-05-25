@@ -4,9 +4,9 @@ class Route {
 
   final String method;
   final String route;
-  final value;
+  final Function handler;
 
-  const Route(String this.method, String this.route, this.value);
+  const Route(String this.method, String this.route, Function this.handler);
 
   bool matches(String method, String uri) {
     if (_matchesMethod(method)) return false;

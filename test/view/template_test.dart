@@ -33,7 +33,7 @@ class TemplateTest implements TestCase {
 
   @test
   it_takes_a_callback_function_that_requests_another_template() async {
-    template.markup = '<head>merged-{{>tmpl}}</head>';
+    template.markup = '<head>merged-{{> tmpl}}</head>';
     var callbackRequest, callbackCount = 0;
     template.templateProvider((String request) {
       callbackRequest = request;

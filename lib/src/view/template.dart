@@ -22,7 +22,7 @@ class Template {
 
   Future<String> get templateMarkup => _contentsOfTag('template');
 
-  Future<String> _contentsOfTag(String tagName) {
+  Future<String> _contentsOfTag(String tagName) async {
     Match match = new RegExp('<$tagName.*?>([^]*)</$tagName>').firstMatch(markup);
     if (match == null) return '';
     return _injectDependencyTemplates(tagName, match[1]);
@@ -33,7 +33,7 @@ class Template {
     while (dependencyMatcher.hasMatch(template)) {
       var nextMatch = dependencyMatcher.firstMatch(template);
       if (_dependencies.containsKey(nextMatch[1]))
-        template.replaceFirst(dependencyMatcher, await _dependencies[nextMatch[1]]._contentsOfTag(tagName));
+        template = template.replaceFirst(dependencyMatcher, await _dependencies[nextMatch[1]]._contentsOfTag(tagName));
       else await _dependOnTemplate(nextMatch[1]);
     }
     return template;
