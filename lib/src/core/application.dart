@@ -130,7 +130,7 @@ class Application implements Container {
   }
 
   _registerServiceProviders() {
-    List<String> providerPaths = config('app.service_providers');
+    List<String> providerPaths = config('app.service_providers', []);
 
     if (providerPaths == null) return;
 
@@ -172,6 +172,11 @@ class Application implements Container {
       }
     }
 
-    await Future.wait(futures);
+    try {
+      await Future.wait(futures);
+    } catch(e) {
+      print('A service provider failed when running $name.');
+      rethrow;
+    }
   }
 }

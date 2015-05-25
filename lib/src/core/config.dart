@@ -29,7 +29,10 @@ abstract class Config {
   static _envHasNotBeenLoaded() => !_envHasBeenLoaded;
 
   static _loadEnv() {
-    dotenv.load();
+    try {
+      dotenv.load();
+    } on FileSystemException {
+    }
     _envHasBeenLoaded = true;
   }
 
@@ -67,8 +70,12 @@ class _Config implements Config {
   _itemFromDotPathSegments(List<String> segments) {
     var item = _map;
 
-    while (segments.isNotEmpty)
-      item = _childOfItemByKey(item, segments.removeAt(0));
+    try {
+      while (segments.isNotEmpty)
+        item = _childOfItemByKey(item, segments.removeAt(0));
+    } on NoSuchMethodError {
+      return null;
+    }
 
     return item;
   }
@@ -118,10 +125,14 @@ class _Config implements Config {
   Future<dynamic> _loadYaml(File file) async {
     var loaded = yaml.loadYaml(await file.readAsString());
 
-    if (loaded is Iterable)
-      return []..addAll(loaded);
+    if (loaded == null) return null;
 
-    return {}..addAll(loaded);
+    if (loaded is Iterable)
+      return []
+        ..addAll(loaded);
+
+    return {}
+      ..addAll(loaded);
   }
 
   call(String key, [defaultValue]) {
