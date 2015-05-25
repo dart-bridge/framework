@@ -3,6 +3,8 @@ description: Extensible end-to-end framework
 author: Emil Persson <emil.n.persson@gmail.com>
 version: 0.3.0
 homepage: http://github.com/emilniklas/dart-bridge
+environment:
+  sdk: ">=1.8.0 <2.0.0"
 dependencies:
   shelf: ">=0.6.1+2 <0.7.0"
   shelf_static: ">=0.2.2 <0.3.0"
