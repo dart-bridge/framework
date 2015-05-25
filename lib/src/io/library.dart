@@ -6,6 +6,7 @@ import 'dart:async';
 
 // Server side
 import 'package:bridge/core.dart';
+import 'package:bridge/cli.dart';
 
 // External libraries
 import 'package:shelf/shelf.dart';
