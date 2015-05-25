@@ -14,6 +14,6 @@ class FileTemplateRepository implements TemplateRepository {
   }
 
   String _pathFromTemplateName(String templateName) {
-    return _templateDirectory.path + templateName.replaceAll('.', '/') + '.hbs';
+    return _templateDirectory.path + '/' + templateName.replaceAll('.', '/') + '.hbs';
   }
 }

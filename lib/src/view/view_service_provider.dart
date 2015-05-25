@@ -12,8 +12,8 @@ class ViewServiceProvider implements ServiceProvider {
     app.bind(TemplateRepository, FileTemplateRepository);
   }
 
-  load(IoServer server, TemplateRepository repository) {
-    builder = new DocumentBuilder(repository);
+  load(IoServer server) {
+    builder = new DocumentBuilder(new FileTemplateRepository(new Directory('lib/templates')));
     server.addMiddleware(_middleware());
   }
 
@@ -33,7 +33,7 @@ class ViewServiceProvider implements ServiceProvider {
   Future<Response> _handleViewRequest(Request request) async {
     try {
       return _serve(router.match(request.method, request.url.path));
-    } on RoutesDoNotMatchException {
+    } on InvalidArgumentException {
       return _serve404(router.notFoundHandler);
     }
   }
@@ -43,18 +43,21 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   Future<Response> _serve404(Function handler) async {
+    if (handler == null) return new Response.notFound('Not found');
     return _handle(handler, 404);
   }
 
   Future<Response> _handle(Function handler, int statusCode) async {
     var returnValue = await app.resolve(handler);
     if (returnValue is Response) return returnValue;
-    if (returnValue is ViewResponse) return _handleViewResponse(returnValue);
+    if (returnValue is ViewResponse) return _handleViewResponse(returnValue, statusCode);
     return new Response(statusCode, body: returnValue);
   }
 
-  Future<Response> _handleViewResponse(ViewResponse response) async {
+  Future<Response> _handleViewResponse(ViewResponse response, int statusCode) async {
     String template = await builder.fromTemplateName(response.templateName);
-    return new Response.ok(template);
+    return new Response(statusCode, body: template, headers: {
+      'Content-Type': ContentType.HTML.toString()
+    });
   }
 }

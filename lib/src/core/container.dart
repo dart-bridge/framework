@@ -109,7 +109,7 @@ class _Container implements Container {
 
     ClosureMirror closure = reflect(function);
 
-    var positional = _getPositionalParameters(closure.function);
+    List positional = _getPositionalParameters(closure.function);
 
     return closure.apply(positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }
