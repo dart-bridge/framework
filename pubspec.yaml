@@ -1,7 +1,7 @@
 name: bridge
 description: Extensible end-to-end framework
 author: Emil Persson <emil.n.persson@gmail.com>
-version: 0.3.3
+version: 0.3.4
 homepage: http://github.com/emilniklas/dart-bridge
 environment:
   sdk: ">=1.8.0 <2.0.0"
@@ -9,7 +9,7 @@ dependencies:
   shelf: ">=0.6.1+2 <0.7.0"
   shelf_static: ">=0.2.2 <0.3.0"
   yaml: ">=2.1.2 <3.0.0"
-  cupid: ">=0.5.4 <1.0.0"
+  cupid: ">=0.5.5 <1.0.0"
   dotenv: "^0.1.3+1"
 dev_dependencies:
   test: any
