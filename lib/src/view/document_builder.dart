@@ -18,8 +18,9 @@ class DocumentBuilder {
     return _tag('head', template);
   }
 
-  Future<String> _bodyTag(Template template) {
-    return _tag('body', template);
+  Future<String> _bodyTag(Template template) async {
+    String tagContents = await template.bodyMarkup;
+    return '<body>$tagContents</body>';
   }
 
   Future<String> _tag(String tagName, Template template) async {
@@ -27,8 +28,10 @@ class DocumentBuilder {
     return '<$tagName>$tagContents</$tagName>';
   }
 
-  Future<String> fromTemplateName(String templateName) async {
+  Future<String> fromTemplateName(String templateName, [List<String> scripts]) async {
     Template template = await _repository.find(templateName);
+    if (scripts is List<String>)
+      template.scripts.addAll(scripts);
     return fromTemplate(template);
   }
 }

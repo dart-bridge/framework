@@ -3,14 +3,12 @@ part of bridge.view;
 typedef Future<Template> TemplateProvider(String templateName);
 
 class Template {
-
   String markup = '';
-
-  Template([String this.markup]);
-
+  final List<String> scripts = [];
+  Map<String, Template> _dependencies = {};
   TemplateProvider _templateProvider = (t) async => await new Template();
 
-  Map<String, Template> _dependencies = {};
+  Template([String this.markup]);
 
   void templateProvider(TemplateProvider provider) {
     _templateProvider = provider;
@@ -18,7 +16,16 @@ class Template {
 
   Future<String> get headMarkup => _contentsOfTag('head');
 
-  Future<String> get bodyMarkup => _contentsOfTag('body');
+  Future<String> get bodyMarkup async {
+    String bodyContents = await _contentsOfTag('body');
+    return bodyContents + _scriptsMarkup();
+  }
+
+  String _scriptsMarkup() {
+    return scripts.map((script){
+      return '<script src="/$script.dart" type="application/dart"></script>';
+    }).join('');
+  }
 
   Future<String> get templateMarkup => _contentsOfTag('template');
 

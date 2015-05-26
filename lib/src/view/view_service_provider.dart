@@ -69,7 +69,7 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   Future<Response> _handleViewResponse(ViewResponse response, int statusCode) async {
-    String template = await builder.fromTemplateName(response.templateName);
+    String template = await builder.fromTemplateName(response.templateName, response.scripts);
     return new Response(statusCode, body: template, headers: {
       'Content-Type': ContentType.HTML.toString()
     });
