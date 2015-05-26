@@ -3,6 +3,7 @@ library bridge.view;
 // Core libraries
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 
 // Using
 import 'package:bridge/core.dart';
@@ -15,7 +16,6 @@ import 'package:shelf/shelf.dart';
 part 'exceptions/view_exception.dart';
 part 'exceptions/routes_do_not_match_exception.dart';
 part 'exceptions/template_not_found_exception.dart';
-part 'exception/http_not_found_exception.dart';
 part 'view_service_provider.dart';
 part 'router.dart';
 part 'route.dart';

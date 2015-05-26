@@ -49,8 +49,9 @@ class Application implements Container {
   ///     }
   ///
   ///     application.make(MyClass, namedParameters: {'myString': 'value'});
-  make(Type type, {Map<String, dynamic> namedParameters}) =>
-      _container.make(type, namedParameters: namedParameters);
+  make(Type type, {Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting}) =>
+      _container.make(type, namedParameters: namedParameters, injecting: injecting);
 
   /// Resolves a method or a top-level function be injecting its
   /// arguments and their dependencies recursively
@@ -62,8 +63,9 @@ class Application implements Container {
   ///     application.resolve(getConfigItem); // 'value'
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
-  resolve(Function function, {Map<String, dynamic> namedParameters}) =>
-      _container.resolve(function, namedParameters: namedParameters);
+  resolve(Function function, {Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting}) =>
+      _container.resolve(function, namedParameters: namedParameters, injecting: injecting);
 
   /// Binds an instance as a singleton in the container, so that every
   /// time a class of that type is requested, that instance will
@@ -73,9 +75,8 @@ class Application implements Container {
   /// to have a singleton instance of an abstract class.
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
-  void singleton(Object singleton,
-          {Type as, Map<String, dynamic> namedParameters}) =>
-      _container.singleton(singleton, as: as, namedParameters: namedParameters);
+  void singleton(Object singleton, {Type as}) =>
+      _container.singleton(singleton, as: as);
 
   /// Checks if an object has a method.
   ///
@@ -91,8 +92,9 @@ class Application implements Container {
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
   resolveMethod(Object object, String methodName,
-      {Map<String, dynamic> namedParameters}) => _container.resolveMethod(
-          object, methodName, namedParameters: namedParameters);
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) => _container.resolveMethod(
+          object, methodName, namedParameters: namedParameters, injecting: injecting);
 
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.

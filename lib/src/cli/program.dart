@@ -12,9 +12,8 @@ class BridgeCli extends Program {
   }
 
   setUp() async {
-    print('Welcome to the Bridge CLI!');
     await app.setUp(_configPath);
-    this.shell.prompter = () => '~> ';
+    this.shell.prompter = () => '= ';
   }
 
   tearDown() async {

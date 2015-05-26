@@ -58,6 +58,20 @@ class ContainerTest implements TestCase {
 
     expect(container.make(Interface) == instance, isTrue);
   }
+
+  @test
+  it_can_send_through_a_temporary_singleton() {
+    var wasCalled = false;
+    var instance = new ClassImplementingInterface();
+    var closure = (Interface dependency) {
+      expect(instance, equals(dependency));
+      wasCalled = true;
+    };
+    container.resolve(closure, injecting: {
+      Interface: instance
+    });
+    expect(wasCalled, isTrue);
+  }
 }
 
 class LonelyClass {

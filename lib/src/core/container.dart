@@ -22,8 +22,20 @@ abstract class Container {
   ///     }
   ///
   ///     container.make(MyClass, namedParameters: {'myString': 'value'});
+  ///
+  /// Optionally provide temporary singletons, to be injected if
+  /// the constructor depends on a type.
+  ///
+  ///     class MyClass {
+  ///       MyClass(MyInterface interface) {
+  ///         ...
+  ///       }
+  ///     }
+  ///
+  ///     container.make(MyClass, injecting: {MyInterface: new MyImpl()});
   make(Type type, {
-  Map<String, dynamic> namedParameters
+  Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting
   });
 
   /// Resolves a method or a top-level function be injecting its
@@ -36,8 +48,11 @@ abstract class Container {
   ///     container.resolve(getConfigItem); // 'value'
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
+  /// Optionally provide temporary singletons, to potentially be injected
+  /// into the invocation.
   resolve(Function function, {
-  Map<String, dynamic> namedParameters
+  Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting
   });
 
   /// Resolves a named method on an instance. Use only when the type is
@@ -46,8 +61,11 @@ abstract class Container {
   /// Otherwise, use [resolve].
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
+  /// Optionally provide temporary singletons, to potentially be injected
+  /// into the invocation.
   resolveMethod(Object object, String methodName, {
-  Map<String, dynamic> namedParameters
+  Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting
   });
 
   /// Checks if an object has a method.
@@ -64,10 +82,9 @@ abstract class Container {
   /// to have a singleton instance of an abstract class.
   ///
   /// Optionally provide named parameters to be inserted in the invocation.
-  void singleton(Object singleton, {
-  Type as,
-  Map<String, dynamic> namedParameters
-  });
+  /// Optionally provide temporary singletons, to potentially be injected
+  /// into the invocation.
+  void singleton(Object singleton, {Type as});
 
   /// Binds an abstract class to an implementation, so that the
   /// non-abstract class will be injected when the
@@ -85,36 +102,40 @@ class _Container implements Container {
   }
 
   void singleton(
-      Object singleton,
-      {
-      Type as,
-      Map<String, dynamic> namedParameters
-      }) {
+      Object singleton, {Type as}) {
 
     Type type = (as == null) ? singleton.runtimeType : as;
 
     _singletons[type] = singleton;
   }
 
-  make(Type type, {Map<String, dynamic> namedParameters}) {
+  make(Type type, {
+  Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting
+  }) {
 
     if (_singletons.containsKey(type)) return _singletons[type];
 
     if (_bindings.containsKey(type)) type = _bindings[type];
 
-    return _make(type, namedParameters);
+    return _make(type, namedParameters, injecting);
   }
 
-  resolve(Function function, {Map<String, dynamic> namedParameters}) {
+  resolve(Function function, {
+  Map<String, dynamic> namedParameters,
+  Map<Type, dynamic> injecting
+  }) {
 
     ClosureMirror closure = reflect(function);
 
-    List positional = _getPositionalParameters(closure.function);
+    List positional = _getPositionalParameters(closure.function, injecting);
 
     return closure.apply(positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }
 
-  _make(Type type, Map<String, dynamic> namedParameters) {
+  _make(Type type,
+        Map<String, dynamic> namedParameters,
+        Map<Type, dynamic> injecting) {
 
     try {
 
@@ -130,7 +151,7 @@ class _Container implements Container {
 
         MethodMirror constructor = classMirror.declarations[classMirror.simpleName];
 
-        positionalArguments = _getPositionalParameters(constructor);
+        positionalArguments = _getPositionalParameters(constructor, injecting);
 
         constructorSymbol = constructor.constructorName;
       }
@@ -162,7 +183,8 @@ class _Container implements Container {
     );
   }
 
-  List _getPositionalParameters(MethodMirror method) {
+  List _getPositionalParameters(MethodMirror method,
+                                Map<Type, dynamic> injecting) {
 
     List positionalParameters = [];
 
@@ -177,14 +199,25 @@ class _Container implements Container {
               'Each parameter must be typed in order to resolve the method!'
           );
 
-        positionalParameters.add(make(parameter.type.reflectedType));
+        var type = parameter.type.reflectedType;
+
+        if (injecting != null && injecting.containsKey(type)) {
+          return positionalParameters.add(injecting[type]);
+        }
+
+        positionalParameters.add(make(type));
       }
     });
 
     return positionalParameters;
   }
 
-  resolveMethod(Object object, String methodName, {Map<String, dynamic> namedParameters}) {
+  resolveMethod(
+      Object object,
+      String methodName, {
+      Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting
+      }) {
 
     var symbol = new Symbol(methodName);
 
@@ -194,7 +227,7 @@ class _Container implements Container {
 
     var method = objectClass.declarations[symbol];
 
-    var args = _getPositionalParameters(method);
+    var args = _getPositionalParameters(method, injecting);
 
     return instance.invoke(symbol, args, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }

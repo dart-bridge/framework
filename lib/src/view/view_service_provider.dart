@@ -4,9 +4,11 @@ class ViewServiceProvider implements ServiceProvider {
   Router router;
   DocumentBuilder builder;
   Application app;
+  Config config;
 
-  setUp(Application application) {
+  setUp(Application application, Config config) {
     app = application;
+    this.config = config;
     router = new Router();
     app.singleton(router, as: Router);
     app.bind(TemplateRepository, FileTemplateRepository);
@@ -27,31 +29,43 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   Future<bool> _staticFileExists(String path) {
-    return new File('web/$path').exists();
+    return new File('${config.env('APP_WEB_ROOT', 'build/web')}/$path').exists();
   }
 
   Future<Response> _handleViewRequest(Request request) async {
     try {
-      return _serve(router.match(request.method, request.url.path));
+      return _serve(router.match(request.method, request.url.path), request);
     } on InvalidArgumentException {
-      return _serve404(router.notFoundHandler);
+      return _serve404(router.notFoundHandler, request);
     }
   }
 
-  Future<Response> _serve(Route route) async {
-    return _handle(route.handler, 200);
+  Future<Response> _serve(Route route, Request r) async {
+    return _handle(route.handler, 200, r);
   }
 
-  Future<Response> _serve404(Function handler) async {
+  Future<Response> _serve404(Function handler, Request r) async {
     if (handler == null) return new Response.notFound('Not found');
-    return _handle(handler, 404);
+    return _handle(handler, 404, r);
   }
 
-  Future<Response> _handle(Function handler, int statusCode) async {
-    var returnValue = await app.resolve(handler);
+  Future<Response> _handle(Function handler, int statusCode, Request r) async {
+    var returnValue = await app.resolve(handler, injecting: {
+      Request: r
+    });
     if (returnValue is Response) return returnValue;
     if (returnValue is ViewResponse) return _handleViewResponse(returnValue, statusCode);
-    return new Response(statusCode, body: returnValue);
+
+    var contentType = (returnValue is String && returnValue.contains('<html')) ? ContentType.HTML : ContentType.TEXT;
+
+    if (returnValue is! String) {
+      returnValue = JSON.encode(returnValue);
+      contentType = ContentType.JSON;
+    }
+
+    return new Response(statusCode, body: returnValue, headers: {
+      'Content-Type': contentType.toString()
+    });
   }
 
   Future<Response> _handleViewResponse(ViewResponse response, int statusCode) async {

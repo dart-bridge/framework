@@ -33,8 +33,8 @@ class IoServiceProvider implements ServiceProvider {
     container.singleton(server, as: IoServer);
   }
 
-  run(IoServer server, Program program) async {
-    server.setHandler(createStaticHandler('web', serveFilesOutsidePath: true));
+  run(IoServer server, Program program, Config config) async {
+    server.setHandler(createStaticHandler(config.env('APP_WEB_ROOT', 'build/web'), serveFilesOutsidePath: true));
 
     program.addCommand(open);
     program.addCommand(close);
