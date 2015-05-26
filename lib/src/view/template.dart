@@ -39,18 +39,6 @@ class Template {
     return template;
   }
 
-//  Future<String> _injectDependencyTemplates(String tagName, String template) async {
-//    return template.replaceAllMapped(new RegExp(r'{{>\s*(.*?)\s*}}'), await (Match match) async {
-//      Template injectTemplate = await _templateProvider(match[1]);
-//      return injectTemplate._contentsOfTag(tagName);
-//    });
-//  }
-//
-//  Future<String> _injectTemplate(String tagName, Template template) async {
-//    var templateContents = await template._contentsOfTag(tagName);
-//
-//  }
-
   Future _dependOnTemplate(String templateName) async {
     _dependencies[templateName] = await _templateProvider(templateName);
   }

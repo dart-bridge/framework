@@ -12,8 +12,8 @@ class ViewServiceProvider implements ServiceProvider {
     app.bind(TemplateRepository, FileTemplateRepository);
   }
 
-  load(IoServer server) {
-    builder = new DocumentBuilder(new FileTemplateRepository(new Directory('lib/templates')));
+  load(IoServer server, DocumentBuilder builder) {
+    this.builder = builder;
     server.addMiddleware(_middleware());
   }
 
