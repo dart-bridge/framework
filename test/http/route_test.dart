@@ -1,6 +1,6 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
-import 'package:bridge/view.dart';
+import 'package:bridge/http.dart';
 
 class RouteTest implements TestCase {
 
@@ -20,9 +20,19 @@ class RouteTest implements TestCase {
 
   @test
   it_matches_an_input_uri_to_the_route() {
-    var route = new Route('GET', '/path', handler);
-    expect(route.matches('GET', '/path'), isTrue);
-    expect(route.matches('GET', 'path'), isTrue);
+    var route = new Route('GET', '/', handler);
+    expect(route.matches('GET', '/'), isTrue);
+    expect(route.matches('GET', ''), isTrue);
+    expect(route.matches('GET', '/no'), isFalse);
+    route = new Route('GET', '/:wildcard', handler);
+    expect(route.matches('GET', '/value'), isTrue);
+    expect(route.matches('GET', ''), isFalse);
+    expect(route.matches('GET', '/'), isFalse);
+    route = new Route('GET', ':wildcard', handler);
+    expect(route.matches('GET', '/value'), isTrue);
+    expect(route.matches('GET', 'value'), isTrue);
+    expect(route.matches('GET', ''), isFalse);
+    expect(route.matches('GET', '/'), isFalse);
   }
 
   @test

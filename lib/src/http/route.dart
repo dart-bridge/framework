@@ -1,4 +1,4 @@
-part of bridge.view;
+part of bridge.http;
 
 class Route {
 
@@ -9,11 +9,11 @@ class Route {
   const Route(String this.method, String this.route, Function this.handler);
 
   bool matches(String method, String uri) {
-    if (_matchesMethod(method)) return false;
+    if (_doesntMatchMethod(method)) return false;
     return _matchesUri(uri);
   }
 
-  bool _matchesMethod(String method) {
+  bool _doesntMatchMethod(String method) {
     return method != this.method;
   }
 
@@ -25,7 +25,7 @@ class Route {
   }
 
   Map<String, String> wildcards(String uri) {
-    if (!_matchesUri(uri)) throw new RoutesDoNotMatchException(route, uri);
+    if (!_matchesUri(uri)) return {};
     return _wildcardsFrom(uri);
   }
 
@@ -74,8 +74,10 @@ class Route {
   }
 
   List<String> _getSegments(String uri) {
-    return _trimSlashes(uri).split('/');
+    return _trimSlashes(uri).split('/')..removeWhere(_isEmpty);
   }
+
+  bool _isEmpty(String s) => s.trim() == '';
 
   String _trimSlashes(String input) {
     return input
