@@ -55,9 +55,11 @@ class _Server implements Server {
     return response.change(headers: {'X-Powered-By': 'Dart Bridge'});
   }
 
-  Future<shelf.Response> _routeHandler(shelf.Request request) {
+  Future<shelf.Response> _routeHandler(shelf.Request request) async {
+    var i = new InputParser(request);
+    Input input = await i.parse();
     for (Route route in _router._routes) {
-      if (_routeMatch(route, request)) return _routeResponse(route, request);
+      if (_routeMatch(route, request)) return _routeResponse(route, request, input);
     }
     throw new HttpNotFoundException(request);
   }
@@ -66,9 +68,9 @@ class _Server implements Server {
     return route.matches(request.method, request.url.path);
   }
 
-  Future<shelf.Response> _routeResponse(Route route, shelf.Request request) async {
+  Future<shelf.Response> _routeResponse(Route route, shelf.Request request, Input input) async {
     var returnValue = await _container.resolve(route.handler,
-        injecting: {shelf.Request: request},
+        injecting: {shelf.Request: request, Input: input},
         namedParameters: route.wildcards(request.url.path));
     return _valueToResponse(returnValue);
   }
