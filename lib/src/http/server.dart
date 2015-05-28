@@ -22,10 +22,11 @@ class _Server implements Server {
   Set<shelf.Middleware> _middleware = new Set();
   Set<Function> _returnValueModulators = new Set();
   Container _container;
+  Config _config;
 
-  _Server(Config config, Container this._container) {
-    _host = config('http.server.host', 'localhost');
-    _port = config('http.server.port', 1337);
+  _Server(Config this._config, Container this._container) {
+    _host = _config('http.server.host', 'localhost');
+    _port = _config('http.server.port', 1337);
   }
 
   void _attachRouter(Router router) {
@@ -39,9 +40,21 @@ class _Server implements Server {
   Future<HttpServer> start() async {
     var pipeline = const shelf.Pipeline()
     .addMiddleware(shelf.createMiddleware(errorHandler: _globalErrorHandler))
+    .addMiddleware(shelf.createMiddleware(requestHandler: _staticHandler))
     .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
     _middleware.forEach((m) => pipeline = pipeline.addMiddleware(m));
     return _server = await shelf_io.serve(pipeline.addHandler(_routeHandler), _host, _port);
+  }
+
+  Future<shelf.Response> _staticHandler(shelf.Request request) async {
+    shelf.Handler staticHandler = shelf_static.createStaticHandler(_publicRoot());
+    if (await new File('${_publicRoot()}/${request.url.path}').exists())
+      return staticHandler(request);
+    return null;
+  }
+
+  String _publicRoot() {
+    return _config('app.server.publicRoot', 'web');
   }
 
   shelf.Response _globalErrorHandler(error, StackTrace stack) {
@@ -52,7 +65,7 @@ class _Server implements Server {
   }
 
   shelf.Response _globalResponseHandler(shelf.Response response) {
-    return response.change(headers: {'X-Powered-By': 'Dart Bridge'});
+    return response.change(headers: {'X-Powered-By': 'Bridge for Dart'});
   }
 
   Future<shelf.Response> _routeHandler(shelf.Request request) async {
