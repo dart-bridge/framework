@@ -56,12 +56,17 @@ class _Server implements Server {
   }
 
   Future<shelf.Response> _routeHandler(shelf.Request request) async {
-    var i = new InputParser(request);
-    Input input = await i.parse();
+    Input input = await _getInputFor(request);
     for (Route route in _router._routes) {
       if (_routeMatch(route, request)) return _routeResponse(route, request, input);
     }
     throw new HttpNotFoundException(request);
+  }
+
+  Future<Input> _getInputFor(shelf.Request request) async {
+    if (!new RegExp(r'^(GET|HEAD)$').hasMatch(request.method))
+      return await new InputParser(request).parse();
+    return new Input({});
   }
 
   bool _routeMatch(Route route, shelf.Request request) {
@@ -70,8 +75,8 @@ class _Server implements Server {
 
   Future<shelf.Response> _routeResponse(Route route, shelf.Request request, Input input) async {
     var returnValue = await _container.resolve(route.handler,
-        injecting: {shelf.Request: request, Input: input},
-        namedParameters: route.wildcards(request.url.path));
+    injecting: {shelf.Request: request, Input: input},
+    namedParameters: route.wildcards(request.url.path));
     return _valueToResponse(returnValue);
   }
 
