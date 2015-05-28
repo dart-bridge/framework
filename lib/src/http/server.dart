@@ -47,7 +47,7 @@ class _Server implements Server {
   }
 
   Future<shelf.Response> _staticHandler(shelf.Request request) async {
-    shelf.Handler staticHandler = shelf_static.createStaticHandler(_publicRoot());
+    shelf.Handler staticHandler = shelf_static.createStaticHandler(_publicRoot(), serveFilesOutsidePath: true);
     if (await new File('${_publicRoot()}/${request.url.path}').exists())
       return staticHandler(request);
     return null;
