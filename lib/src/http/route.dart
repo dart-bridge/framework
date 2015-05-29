@@ -14,7 +14,11 @@ class Route {
   }
 
   bool _doesntMatchMethod(String method) {
-    return method != this.method;
+    return method != this.method && _isntAHeadRequestInAGetRoute(method);
+  }
+
+  bool _isntAHeadRequestInAGetRoute(method) {
+    return !(method == 'HEAD' && this.method == 'GET');
   }
 
   bool _matchesUri(String uri) {
