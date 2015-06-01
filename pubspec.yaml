@@ -15,6 +15,7 @@ dependencies:
   http_parser: '^0.0.2+6'
   formler: any
   mustache: '^0.2.3'
+  objectory: any
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"
