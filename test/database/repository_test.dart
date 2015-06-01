@@ -62,6 +62,9 @@ class MockDatabase implements Database {
 
   Future connect(Config config) async {
   }
+
+  Future close() async {
+  }
 }
 
 class MockCollection implements Collection {

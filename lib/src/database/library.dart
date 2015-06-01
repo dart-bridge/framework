@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:bridge/core.dart';
 
 // Drivers
+import 'mongodb/library.dart';
 export 'mongodb/library.dart';
 
 part 'database_service_provider.dart';

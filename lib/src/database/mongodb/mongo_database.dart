@@ -16,4 +16,8 @@ class MongoDatabase implements Database {
     String database = config('database.mongodb.database', 'app');
     return 'mongodb://localhost:$port/$database';
   }
+
+  Future close() async {
+    _database.close();
+  }
 }
