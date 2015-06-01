@@ -14,6 +14,7 @@ dependencies:
   shelf_web_socket: '^0.0.1+2'
   http_parser: '^0.0.2+6'
   formler: any
+  mustache: '^0.2.3'
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"

@@ -9,6 +9,9 @@ import 'package:bridge/core.dart';
 import 'package:bridge/http.dart';
 import 'package:bridge/exceptions.dart';
 
+// External libraries
+import 'package:mustache/mustache.dart' as mustache;
+
 part 'exceptions/view_exception.dart';
 part 'exceptions/template_not_found_exception.dart';
 part 'view_service_provider.dart';

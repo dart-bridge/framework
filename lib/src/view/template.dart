@@ -5,6 +5,7 @@ typedef Future<Template> TemplateProvider(String templateName);
 class Template {
   String markup = '';
   final List<String> scripts = [];
+  final Map<String, dynamic> data = {};
   Map<String, Template> _dependencies = {};
   TemplateProvider _templateProvider = (t) async => await new Template();
 
@@ -32,7 +33,8 @@ class Template {
   Future<String> _contentsOfTag(String tagName) async {
     Match match = new RegExp('<$tagName.*?>([^]*)</$tagName>').firstMatch(markup);
     if (match == null) return '';
-    return _injectDependencyTemplates(tagName, match[1]);
+    var contents = await _injectDependencyTemplates(tagName, match[1]);
+    return _injectData(tagName, contents);
   }
 
   Future<String> _injectDependencyTemplates(String tagName, String template) async {
@@ -44,6 +46,11 @@ class Template {
       else await _dependOnTemplate(nextMatch[1]);
     }
     return template;
+  }
+
+  Future<String> _injectData(String tagName, String template) async {
+    var t = new mustache.Template(template);
+    return t.renderString(data);
   }
 
   Future _dependOnTemplate(String templateName) async {

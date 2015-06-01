@@ -28,10 +28,12 @@ class DocumentBuilder {
     return '<$tagName>$tagContents</$tagName>';
   }
 
-  Future<String> fromTemplateName(String templateName, [List<String> scripts]) async {
+  Future<String> fromTemplateName(String templateName, [List<String> scripts, Map<String, dynamic> data]) async {
     Template template = await _repository.find(templateName);
     if (scripts is List<String>)
       template.scripts.addAll(scripts);
+    if (data is Map<String, dynamic>)
+      template.data.addAll(data);
     return fromTemplate(template);
   }
 }

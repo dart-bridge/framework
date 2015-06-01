@@ -44,4 +44,15 @@ class TemplateTest implements TestCase {
     expect(callbackRequest, equals('tmpl'));
     expect(callbackCount, equals(1));
   }
+
+  @test
+  it_can_inject_data_into_the_template() async {
+    template.markup = '<head>{{key1}}</head><body>{{key2}}</body>';
+    template.data.addAll({
+      'key1': 'value1',
+      'key2': 'value2',
+    });
+    expect(await template.bodyMarkup, equals('value2'));
+    expect(await template.headMarkup, equals('value1'));
+  }
 }
