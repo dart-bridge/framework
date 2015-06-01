@@ -11,5 +11,7 @@ abstract class Collection {
 
   Future first(Selector query);
 
+  Future save(data);
+
   Selector where(String field, Is comparison, value);
 }

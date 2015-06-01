@@ -30,6 +30,27 @@ class Repository<M> implements Collection {
     return instance.reflectee;
   }
 
+  Map<String, dynamic> _fieldsFromModel(M model) {
+    var fieldNames = _getFields();
+    var fields = <String, dynamic>{};
+    var mirror = reflect(model);
+    for (var fieldName in fieldNames) {
+      fields[MirrorSystem.getName(fieldName)] = mirror.getField(fieldName).reflectee;
+    }
+    return fields;
+  }
+
+  Iterable<Symbol> _getFields() {
+    var classMirror = reflectType(M);
+    var symbols = <Symbol>[];
+    var fields = classMirror.declarations;
+    for (var symbol in fields.keys) {
+      if (fields[symbol].metadata.any((m) => m.reflectee == field))
+        symbols.add(symbol);
+    }
+    return symbols;
+  }
+
   List<M> _instantiateModelsFromListOfFields(List<Map> listOfFields) {
     return listOfFields.map(_instantiateModelFromFields).toList();
   }
@@ -52,5 +73,9 @@ class Repository<M> implements Collection {
 
   Selector where(String field, Is comparison, value) {
     return _collection.where(field, comparison, value);
+  }
+
+  Future save(M model) async {
+    _collection.save(_fieldsFromModel(model));
   }
 }

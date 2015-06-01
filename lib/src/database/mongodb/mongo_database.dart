@@ -9,6 +9,8 @@ class MongoDatabase implements Database {
 
   Future connect(Config config) async {
     _database = new mongo.Db(_uri(config));
+
+    await _database.open();
   }
 
   String _uri(Config config) {

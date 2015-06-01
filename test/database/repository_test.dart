@@ -5,7 +5,6 @@ import 'package:bridge/database.dart';
 import 'dart:async';
 
 class RepositoryTest implements TestCase {
-
   Repository<TestModel> repository;
   MockDatabase database;
   MockCollection collection;
@@ -43,6 +42,25 @@ class RepositoryTest implements TestCase {
     expect(model.stringField, equals('string'));
     expect(model.intField, equals(1));
   }
+
+  @test
+  it_saves_data() async {
+    var wasCalled = false;
+    collection.onSave = (data) {
+      wasCalled = true;
+      expect(data, equals({
+        'stringField': 'title',
+        'intField': 1,
+      }));
+    };
+    
+    await repository.save(
+        new TestModel()
+          ..stringField = 'title'
+          ..intField = 1);
+    
+    expect(wasCalled, isTrue);
+  }
 }
 
 class TestModel {
@@ -77,6 +95,10 @@ class MockCollection implements Collection {
   Future<Map> find(id) async {
     return allFields[0];
   }
+  
+  Function onSave;
+  
+  Future save(data) => onSave(data);
 
   noSuchMethod(Invocation invocation) {
 

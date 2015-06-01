@@ -27,4 +27,8 @@ class MongoCollection implements Collection {
   MongoSelector where(String field, Is comparison, value) {
     return select.where(field, comparison, value);
   }
+
+  Future save(data) async {
+    await _collection.save(data);
+  }
 }
