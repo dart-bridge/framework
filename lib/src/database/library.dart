@@ -15,3 +15,4 @@ import 'package:bridge/core.dart';
 part 'database_service_provider.dart';
 
 const field = 'field';
+
