@@ -2,6 +2,7 @@ import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/core.dart';
 import 'dart:async';
+import 'dart:mirrors';
 
 class ContainerTest implements TestCase {
 
@@ -72,6 +73,15 @@ class ContainerTest implements TestCase {
     });
     expect(wasCalled, isTrue);
   }
+
+  @test
+  it_retains_type_arguments_when_resolving_a_dependency() {
+    closure(ClassWithTypeArgument<LonelyClass> dependency) {
+      return reflect(dependency).type.typeArguments[0].reflectedType;
+    }
+    var type = container.resolve(closure);
+    expect(type, equals(LonelyClass));
+  }
 }
 
 class LonelyClass {
@@ -93,4 +103,8 @@ class ClassDependingOnInterface {
   Interface dependency;
 
   ClassDependingOnInterface(Interface this.dependency);
+}
+
+class ClassWithTypeArgument<T> {
+
 }

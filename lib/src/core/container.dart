@@ -4,7 +4,6 @@ part of bridge.core;
 ///
 /// This class is responsible for all dependency injection and the like.
 abstract class Container {
-
   factory Container() => new _Container();
 
   /// Creates a new instance of a class, while injecting its
@@ -33,10 +32,8 @@ abstract class Container {
   ///     }
   ///
   ///     container.make(MyClass, injecting: {MyInterface: new MyImpl()});
-  make(Type type, {
-  Map<String, dynamic> namedParameters,
-  Map<Type, dynamic> injecting
-  });
+  make(Type type,
+       {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Resolves a method or a top-level function be injecting its
   /// arguments and their dependencies recursively
@@ -50,10 +47,8 @@ abstract class Container {
   /// Optionally provide named parameters to be inserted in the invocation.
   /// Optionally provide temporary singletons, to potentially be injected
   /// into the invocation.
-  resolve(Function function, {
-  Map<String, dynamic> namedParameters,
-  Map<Type, dynamic> injecting
-  });
+  resolve(Function function,
+          {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Resolves a named method on an instance. Use only when the type is
   /// not known or when expects a subtype or an implementation.
@@ -63,10 +58,8 @@ abstract class Container {
   /// Optionally provide named parameters to be inserted in the invocation.
   /// Optionally provide temporary singletons, to potentially be injected
   /// into the invocation.
-  resolveMethod(Object object, String methodName, {
-  Map<String, dynamic> namedParameters,
-  Map<Type, dynamic> injecting
-  });
+  resolveMethod(Object object, String methodName,
+                {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Checks if an object has a method.
   ///
@@ -93,7 +86,6 @@ abstract class Container {
 }
 
 class _Container implements Container {
-
   Map<Type, dynamic> _singletons = {};
   Map<Type, Type> _bindings = {};
 
@@ -101,19 +93,15 @@ class _Container implements Container {
     _bindings[abstraction] = implementation;
   }
 
-  void singleton(
-      Object singleton, {Type as}) {
-
+  void singleton(Object singleton, {Type as}) {
     Type type = (as == null) ? singleton.runtimeType : as;
 
     _singletons[type] = singleton;
   }
 
-  make(Type type, {
-  Map<String, dynamic> namedParameters,
-  Map<Type, dynamic> injecting
-  }) {
-
+  make(Type type,
+       {Map<String, dynamic> namedParameters,
+       Map<Type, dynamic> injecting}) {
     if (_singletons.containsKey(type)) return _singletons[type];
 
     if (_bindings.containsKey(type)) type = _bindings[type];
@@ -121,83 +109,69 @@ class _Container implements Container {
     return _make(type, namedParameters, injecting);
   }
 
-  resolve(Function function, {
-  Map<String, dynamic> namedParameters,
-  Map<Type, dynamic> injecting
-  }) {
-
+  resolve(Function function,
+          {Map<String, dynamic> namedParameters,
+          Map<Type, dynamic> injecting}) {
     ClosureMirror closure = reflect(function);
 
     List positional = _getPositionalParameters(closure.function, injecting);
 
-    return closure.apply(positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
+    return closure.apply(
+        positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }
 
   _make(Type type,
         Map<String, dynamic> namedParameters,
         Map<Type, dynamic> injecting) {
-
     try {
-
       var namedArguments = _convertStringKeysToSymbols(namedParameters);
 
-      ClassMirror classMirror = reflectClass(type);
+      ClassMirror classMirror = reflectType(type);
 
       Symbol constructorSymbol;
 
       List positionalArguments;
 
       if (classMirror.declarations.containsKey(classMirror.simpleName)) {
-
-        MethodMirror constructor = classMirror.declarations[classMirror.simpleName];
+        MethodMirror constructor =
+        classMirror.declarations[classMirror.simpleName];
 
         positionalArguments = _getPositionalParameters(constructor, injecting);
 
         constructorSymbol = constructor.constructorName;
-      }
-      else {
+      } else {
         positionalArguments = [];
 
         constructorSymbol = const Symbol('');
       }
 
-      return classMirror.newInstance(
+      return (classMirror.newInstance(
           constructorSymbol,
           positionalArguments,
-          namedArguments
+          namedArguments)
       ).reflectee;
-    }
-    catch (error) {
-
+    } catch (error) {
       throw new ContainerException(type, error);
     }
   }
 
   Map<Symbol, dynamic> _convertStringKeysToSymbols(Map<String, dynamic> map) {
-
     if (map == null) return {};
 
     return new Map<Symbol, dynamic>.fromIterables(
-        map.keys.map((String key) => new Symbol(key)),
-        map.values
-    );
+        map.keys.map((String key) => new Symbol(key)), map.values);
   }
 
-  List _getPositionalParameters(MethodMirror method,
-                                Map<Type, dynamic> injecting) {
-
+  List _getPositionalParameters(
+      MethodMirror method, Map<Type, dynamic> injecting) {
     List positionalParameters = [];
 
     if (method == null) return positionalParameters;
 
     method.parameters.forEach((ParameterMirror parameter) {
-
       if (!parameter.isNamed) {
-
-        if (!parameter.type.hasReflectedType)
-          throw new InvalidArgumentException(
-              'Each parameter must be typed in order to resolve the method!'
-          );
+        if (!parameter.type.hasReflectedType) throw new InvalidArgumentException(
+            'Each parameter must be typed in order to resolve the method!');
 
         var type = parameter.type.reflectedType;
 
@@ -212,13 +186,8 @@ class _Container implements Container {
     return positionalParameters;
   }
 
-  resolveMethod(
-      Object object,
-      String methodName, {
-      Map<String, dynamic> namedParameters,
-      Map<Type, dynamic> injecting
-      }) {
-
+  resolveMethod(Object object, String methodName,
+                {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting}) {
     var symbol = new Symbol(methodName);
 
     var instance = reflect(object);
@@ -229,11 +198,11 @@ class _Container implements Container {
 
     var args = _getPositionalParameters(method, injecting);
 
-    return instance.invoke(symbol, args, _convertStringKeysToSymbols(namedParameters)).reflectee;
+    return instance.invoke(
+        symbol, args, _convertStringKeysToSymbols(namedParameters)).reflectee;
   }
 
   bool canResolveMethod(Object object, String method) {
-
     return reflect(object).type.declarations.containsKey(new Symbol(method));
   }
 }
