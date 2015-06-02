@@ -64,6 +64,7 @@ class RepositoryTest implements TestCase {
 }
 
 class TestModel {
+  @field var id;
   @field String stringField;
   @field int intField;
   String normalProperty;
