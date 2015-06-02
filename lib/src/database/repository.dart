@@ -13,14 +13,13 @@ class Repository<M> implements Collection {
 
   void _setCollection() {
     var collectionName = this.collectionName;
-    if (collectionName == null) {
+    if (collectionName == null)
       collectionName = MirrorSystem.getName(reflectType(M).simpleName).toLowerCase() + 's';
-    }
     _collection = _database.collection(collectionName);
     select = _collection.select;
   }
 
-  M _instantiateModelFromFields(Map fields) {
+  M _instantiateModelFromFields(Map<String, dynamic> fields) {
     var instance = reflect(_container.make(M));
     for (var fieldName in fields.keys) {
       var symbol = new Symbol(fieldName);
@@ -34,9 +33,8 @@ class Repository<M> implements Collection {
     var fieldNames = _getFields();
     var fields = <String, dynamic>{};
     var mirror = reflect(model);
-    for (var fieldName in fieldNames) {
+    for (var fieldName in fieldNames)
       fields[MirrorSystem.getName(fieldName)] = mirror.getField(fieldName).reflectee;
-    }
     return fields;
   }
 
@@ -44,10 +42,9 @@ class Repository<M> implements Collection {
     var classMirror = reflectType(M);
     var symbols = <Symbol>[];
     var fields = classMirror.declarations;
-    for (var symbol in fields.keys) {
+    for (var symbol in fields.keys)
       if (fields[symbol].metadata.any((m) => m.reflectee == field))
         symbols.add(symbol);
-    }
     return symbols;
   }
 
@@ -76,6 +73,9 @@ class Repository<M> implements Collection {
   }
 
   Future save(M model) async {
-    _collection.save(_fieldsFromModel(model));
+    var id = await _collection.save(_fieldsFromModel(model));
+    print(model);
+    print(id);
+    (model as dynamic).id = id;
   }
 }

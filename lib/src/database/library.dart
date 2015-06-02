@@ -20,3 +20,4 @@ part 'is.dart';
 part 'selector.dart';
 
 const field = 'field';
+const key = 'key';
