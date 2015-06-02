@@ -49,6 +49,7 @@ class RepositoryTest implements TestCase {
     collection.onSave = (data) {
       wasCalled = true;
       expect(data, equals({
+        'id': null,
         'stringField': 'title',
         'intField': 1,
       }));
