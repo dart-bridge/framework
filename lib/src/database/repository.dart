@@ -73,9 +73,6 @@ class Repository<M> implements Collection {
   }
 
   Future save(M model) async {
-    var id = await _collection.save(_fieldsFromModel(model));
-    print(model);
-    print(id);
-    (model as dynamic).id = id;
+    (model as dynamic).id = await _collection.save(_fieldsFromModel(model));
   }
 }
