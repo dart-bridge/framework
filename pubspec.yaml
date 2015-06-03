@@ -19,3 +19,4 @@ dependencies:
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"
+  dart_coveralls: '^0.3.0'

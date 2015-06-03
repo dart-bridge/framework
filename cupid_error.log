@@ -1,0 +1,19 @@
+[2015-06-03 10:06:19.531]
+#14     _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:143)
+#13     _runPendingImmediateCallback (dart:isolate-patch/isolate_patch.dart:96)
+#12     _asyncRunCallback (dart:async/schedule_microtask.dart:48)
+#11     _asyncRunCallbackLoop (dart:async/schedule_microtask.dart:41)
+#10     _CustomZone.bindCallback.<anonymous closure> (dart:async/zone.dart:729)
+#9      _CustomZone.runGuarded (dart:async/zone.dart:704)
+#8      _CustomZone.run (dart:async/zone.dart:796)
+#7      _rootRun (dart:async/zone.dart:895)
+#6      _Future._asyncComplete.<anonymous closure> (dart:async/future_impl.dart:422)
+#5      _Future._completeWithValue (dart:async/future_impl.dart:368)
+#4      _Future._propagateToListeners (dart:async/future_impl.dart:577)
+#3      _Future._propagateToListeners.handleValueCallback (dart:async/future_impl.dart:494)
+#2      _CustomZone.runUnary (dart:async/zone.dart:804)
+#1      _rootRunUnary (dart:async/zone.dart:902)
+#0      Application._setUpConfig.<_setUpConfig_async_body> (package:bridge/src/core/application.dart:114:7)
+
+InvalidArgumentException: config is not a directory
+
