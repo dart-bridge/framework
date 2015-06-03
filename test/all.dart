@@ -1,0 +1,11 @@
+import 'core/config_test.dart' as config_test;
+import 'core/container_test.dart' as container_test;
+import 'database/repository_test.dart' as repository_test;
+import 'http/route_test.dart' as route_test;
+import 'tether/server/tether_manager_test.dart' as tether_manager_test;
+import 'tether/shared/message_test.dart' as message_test;
+import 'tether/shared/messenger_test.dart' as messenger_test;
+import 'tether/shared/tether_test.dart' as tether_test;
+import 'view/document_builder_test.dart' as document_builder_test;
+import 'view/template_test.dart' as template_test;
+export 'package:testcase/init.dart';
