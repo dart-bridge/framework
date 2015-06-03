@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Modified version of
+# https://github.com/duse-io/dart-coveralls/blob/master/tool/travis.sh
+# By Kevin Moore <kevmoo>
+
 # Fast fail the script on failures.
 set -e
 
