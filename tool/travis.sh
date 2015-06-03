@@ -3,8 +3,6 @@
 # Fast fail the script on failures.
 set -e
 
-dartanalyzer bin/dart_coveralls.dart lib/dart_coveralls.dart
-
 pub run test test/
 
 # Install dart_coveralls; gather and send coverage data.
