@@ -116,4 +116,9 @@ class BtlParserTest implements TestCase {
   it_can_have_comments() {
     expect(parser.parse('Text// Comment'), equals('Text'));
   }
+
+  @test
+  it_knows_when_two_slashes_are_not_a_comment() {
+    expect(parser.parse('<a href="//notacomment"></a>'), equals('<a href="//notacomment"></a>'));
+  }
 }

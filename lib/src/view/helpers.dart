@@ -1,6 +1,6 @@
 part of bridge.view;
 
-ViewResponse template(String templateName,
+TemplateResponse template(String templateName,
                       {String withScript,
                       List<String> withScripts,
                       Map<String, dynamic> withData}) {
@@ -12,5 +12,5 @@ ViewResponse template(String templateName,
   if (withScript != null) scripts.add(withScript);
   if (withScripts != null) scripts.addAll(withScripts);
 
-  return new ViewResponse(templateName, scripts, data);
+  return new TemplateResponse(templateName, scripts, data);
 }

@@ -1,59 +1,97 @@
 part of bridge.view;
 
-typedef Future<Template> TemplateProvider(String templateName);
-
 class Template {
-  String markup = '';
-  final List<String> scripts = [];
-  final Map<String, dynamic> data = {};
-  Map<String, Template> _dependencies = {};
-  TemplateProvider _templateProvider = (t) async => await new Template();
+  TemplateLoader _loader;
+  TemplateParser _parser;
+  String contents;
+  RegExp _importDeclaration = new RegExp(
+      r'''<import\s+template=(['"])([\w.]+)\1\s*/>''');
+  RegExp _extendsDeclaration = new RegExp(
+      r'''^([^]*)<([a-z]+)(.*)extends=(['"])([\w.]+)\4(.*?)>([^]*)</\2>([^]*)$''');
 
-  Template([String this.markup]);
+  Template(TemplateLoader this._loader, TemplateParser this._parser);
 
-  void templateProvider(TemplateProvider provider) {
-    _templateProvider = provider;
+  Future<String> parse({Map<String, dynamic> withData,
+                       List<String> withScripts,
+                       bool javaScript: false}) async {
+    await _importPartials();
+    await _extendParents();
+    if (withData == null) withData = {};
+    if (withScripts == null) withScripts = [];
+    for (var script in withScripts)
+      injectScript(script, javaScript: javaScript);
+    return _compress(_parser.parse(contents, withData));
   }
 
-  Future<String> get headMarkup => _contentsOfTag('head');
-
-  Future<String> get bodyMarkup async {
-    String bodyContents = await _contentsOfTag('body');
-    return bodyContents + _scriptsMarkup();
+  Future load(String id) async {
+    contents = await _loader.load(id);
   }
 
-  String _scriptsMarkup() {
-    return scripts.map((script){
-      return '<script src="/$script.dart" type="application/dart"></script>';
-    }).join('');
+  Future _importPartials() async {
+    while (_hasImportDeclaration())
+      await _importNextPartial();
   }
 
-  Future<String> get templateMarkup => _contentsOfTag('template');
-
-  Future<String> _contentsOfTag(String tagName) async {
-    Match match = new RegExp('<$tagName.*?>([^]*)</$tagName>').firstMatch(markup);
-    if (match == null) return '';
-    var contents = await _injectDependencyTemplates(tagName, match[1]);
-    return _injectData(tagName, contents);
+  bool _hasImportDeclaration() {
+    return _importDeclaration.hasMatch(contents);
   }
 
-  Future<String> _injectDependencyTemplates(String tagName, String template) async {
-    var dependencyMatcher = new RegExp(r'{{>\s*(.*?)\s*}}');
-    while (dependencyMatcher.hasMatch(template)) {
-      var nextMatch = dependencyMatcher.firstMatch(template);
-      if (_dependencies.containsKey(nextMatch[1]))
-        template = template.replaceFirst(dependencyMatcher, await _dependencies[nextMatch[1]]._contentsOfTag(tagName));
-      else await _dependOnTemplate(nextMatch[1]);
+  Future _importNextPartial() async {
+    Match match = _importDeclaration.firstMatch(contents);
+    var import = await _loader.load(match[2]);
+    contents = contents.replaceFirst(_importDeclaration, import);
+  }
+
+  Future _extendParents() async {
+    while (_hasExtendsDeclaration())
+      await _extendNextParent();
+  }
+
+  bool _hasExtendsDeclaration() {
+    return _extendsDeclaration.hasMatch(contents);
+  }
+
+  Future _extendNextParent() async {
+    Match match = _extendsDeclaration.firstMatch(contents);
+    var tag = match[2];
+    var attributes = match[3].trim() + ' ' + match[6].trim();
+    var tagContents = match[7];
+    var parent = await _loader.load(match[5]);
+    var tagMatcher = _parentExtendTagMatcher(tag);
+    var parentMatch = tagMatcher.firstMatch(parent);
+    if (parentMatch == null) {
+      throw 'Template [${match[5]}] does not contain a <$tag>';
     }
-    return template;
+    var contentMatcher = new RegExp('(<content\s*/>|<content>[^]*?</content>)');
+
+    var beforeTag = match[1];
+    var parentAttributes = parentMatch[1];
+    var afterTag = match[8];
+    var parentTagContents = parentMatch[2];
+    var extendedTagContent = parentTagContents.replaceFirst(contentMatcher, tagContents);
+    var mergedAttributes = '${parentAttributes.trim()} ${attributes.trim()}'.trim();
+    if (mergedAttributes != '') mergedAttributes = ' $mergedAttributes';
+    contents = '$beforeTag<$tag$mergedAttributes>$extendedTagContent</$tag>$afterTag';
   }
 
-  Future<String> _injectData(String tagName, String template) async {
-    var t = new mustache.Template(template);
-    return t.renderString(data);
+  RegExp _parentExtendTagMatcher(String tag) {
+    return new RegExp('''<$tag(.*?)>([^]*)</$tag>''');
   }
 
-  Future _dependOnTemplate(String templateName) async {
-    _dependencies[templateName] = await _templateProvider(templateName);
+  void injectScript(String name, {bool javaScript: false}) {
+    var script = "<script";
+    if (!javaScript)
+      script += " type='application/dart'";
+    script += " src='$name.dart";
+    if (javaScript)
+      script += ".js";
+    script += "'></script>";
+    contents = contents.replaceFirst('</body>', '$script</body>');
+  }
+
+  String _compress(String template) {
+    return template
+    .replaceAll(new RegExp(r'>\s+'), '> ')
+    .replaceAll(new RegExp(r'\s+<'), ' <');
   }
 }

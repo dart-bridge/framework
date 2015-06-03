@@ -1,6 +1,6 @@
-part of bridge.view.template;
+part of bridge.view;
 
-class BtlParser {
+class BtlParser implements TemplateParser {
   Map<String, dynamic> _data;
   static final String _variableMatchString = r'\$(?:\{([\w.]+)}|(\w+))';
   static final RegExp _variableMatcher = new RegExp(_variableMatchString);
@@ -18,7 +18,12 @@ class BtlParser {
   }
 
   String _removeComments(String btl) {
-    return btl.replaceAll(new RegExp(r'\/\/.*$', multiLine: true), '');
+    btl = btl.replaceAllMapped(new RegExp(r'''(['"])(.*)\/\/(.*)\1'''), (Match match) {
+      return '${match[1]}${match[2]}/_ESCAPEDCOMMENT_/${match[3]}${match[1]}';
+    });
+    return btl
+    .replaceAll(new RegExp(r'\/\/.*$', multiLine: true), '')
+    .replaceAll('/_ESCAPEDCOMMENT_/', '//');
   }
 
   String _preEncodeEscaped(String btl) {
