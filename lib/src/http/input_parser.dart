@@ -32,7 +32,12 @@ class InputParser {
   Object _getBody() {
     if (_request.headers['Content-Type'].contains('application/x-www-form-urlencoded'))
       return Formler.parseUrlEncoded(new String.fromCharCodes(_bytes));
-    return _formler.parse();
-    //.addAll(Formler.parseUrlEncoded(_request))
+    if (_request.headers['Content-Type'].contains('boundary'))
+      return _formler.parse();
+    try {
+      return JSON.decode(new String.fromCharCodes(_bytes));
+    } catch(e) {
+      return new String.fromCharCodes(_bytes);
+    }
   }
 }
