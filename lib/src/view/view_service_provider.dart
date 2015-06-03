@@ -9,7 +9,7 @@ class ViewServiceProvider implements ServiceProvider {
     javaScriptTags = (env == 'production');
     container.bind(TemplateParser, BtlParser);
     container.bind(TemplateLoader, FileTemplateLoader);
-    publicDirectory = config('app.server.publicRoot', 'web');
+    publicDirectory = config('http.server.publicRoot', 'web');
     program.addCommand(build);
   }
 
