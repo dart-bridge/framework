@@ -54,7 +54,7 @@ class _Server implements Server {
   }
 
   String _publicRoot() {
-    return _config('app.server.publicRoot', 'web');
+    return _config('http.server.publicRoot', 'web');
   }
 
   shelf.Response _globalErrorHandler(error, StackTrace stack) {
