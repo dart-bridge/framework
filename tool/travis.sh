@@ -11,6 +11,10 @@ pub run test test/
 
 # Install dart_coveralls; gather and send coverage data.
 if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
+
+  # Build test/all.dart
+  dart tool/create_all_tests_file.dart
+
   echo "Running coverage..."
   pub run dart_coveralls report \
     --retry 2 \
@@ -18,6 +22,9 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
     --debug \
     test/all.dart
   echo "Coverage complete."
+
+  # Destroy test/all.dart
+  rm test/all.dart
 else
   if [ -z ${COVERALLS_TOKEN+x} ]; then echo "COVERALLS_TOKEN is unset"; fi
   if [ -z ${TRAVIS_DART_VERSION+x} ]; then

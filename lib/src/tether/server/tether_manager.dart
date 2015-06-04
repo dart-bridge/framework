@@ -23,7 +23,8 @@ class _TetherManager implements TetherManager {
   void manage(Tether tether) {
     _passTetherThroughHandlers(tether);
     _tethers.add(tether);
-    tether.onConnectionLost.then((_) => _tethers.remove(tether));
+    if (tether.onConnectionLost != null)
+      tether.onConnectionLost.then((_) => _tethers.remove(tether));
   }
 
   void _passTetherThroughHandlers(Tether tether) {
