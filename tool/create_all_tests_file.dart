@@ -4,7 +4,7 @@ main() async {
   var testDir = new Directory('test');
   var listOfFiles = <String>[];
 
-  await for (FileSystemEntity entity in testDir.list(recursive: true)) {
+  await for (FileSystemEntity entity in testDir.list(recursive: true, followLinks: false)) {
     FileStat stat = await entity.stat();
 
     if (!(stat.type == FileSystemEntityType.FILE && entity.path.endsWith('_test.dart')))
