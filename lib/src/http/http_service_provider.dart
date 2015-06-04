@@ -26,10 +26,12 @@ class HttpServiceProvider implements ServiceProvider {
   @Command('Start the server')
   start() async {
     await server.start();
+    print('Server started on http://${server.hostname}:${server.hostname}');
   }
 
   @Command('Stop the server')
   stop() async {
     await server.stop();
+    print('Server stopped');
   }
 }

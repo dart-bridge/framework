@@ -1,6 +1,9 @@
 part of bridge.http;
 
 abstract class Server {
+  String get hostname;
+  int get port;
+
   Future start();
 
   Future stop();
@@ -23,6 +26,10 @@ class _Server implements Server {
   Set<Function> _returnValueModulators = new Set();
   Container _container;
   Config _config;
+
+  String get hostname => _host;
+
+  int get port => _port;
 
   _Server(Config this._config, Container this._container) {
     _host = _config('http.server.host', 'localhost');
