@@ -1,12 +1,15 @@
 part of bridge.http;
 
 class Route {
-
   final String method;
   final String route;
   final Function handler;
+  final String name;
 
-  const Route(String this.method, String this.route, Function this.handler);
+  const Route(String this.method,
+              String this.route,
+              Function this.handler,
+              {String this.name});
 
   bool matches(String method, String uri) {
     if (_doesntMatchMethod(method)) return false;

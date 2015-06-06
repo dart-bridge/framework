@@ -19,3 +19,4 @@ part 'route.dart';
 part 'exceptions/http_not_found_exception.dart';
 part 'input.dart';
 part 'input_parser.dart';
+part 'url_generator.dart';

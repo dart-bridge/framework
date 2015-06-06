@@ -49,4 +49,10 @@ class RouteTest implements TestCase {
       'wildcard2': 'value2',
     }));
   }
+
+  @test
+  it_can_optionally_have_a_name() {
+    var route = new Route('GET', '/', handler, name: 'home');
+    expect(route.name, equals('home'));
+  }
 }

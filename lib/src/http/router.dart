@@ -5,35 +5,47 @@ abstract class Router {
 
   factory Router() => new _Router();
 
-  void get(String route, Function handler);
+  void get(String route, Function handler, {String name});
 
-  void post(String route, Function handler);
+  void post(String route, Function handler, {String name});
 
-  void put(String route, Function handler);
+  void put(String route, Function handler, {String name});
 
-  void update(String route, Function handler);
+  void update(String route, Function handler, {String name});
 
-  void patch(String route, Function handler);
+  void patch(String route, Function handler, {String name});
 
-  void delete(String route, Function handler);
+  void delete(String route, Function handler, {String name});
 }
 
 class _Router implements Router {
   Set<Route> _routes = new Set();
 
-  void _route(String method, String route, Function handler) {
-    _routes.add(new Route(method, route, handler));
+  void _route(String method, String route, Function handler, String name) {
+    _routes.add(new Route(method, route, handler, name: name));
   }
 
-  void delete(String route, Function handler) => _route('DELETE', route, handler);
+  void delete(String route,
+              Function handler,
+              {String name}) => _route('DELETE', route, handler, name);
 
-  void get(String route, Function handler) => _route('GET', route, handler);
+  void get(String route,
+           Function handler,
+           {String name}) => _route('GET', route, handler, name);
 
-  void patch(String route, Function handler) => _route('PATCH', route, handler);
+  void patch(String route,
+             Function handler,
+             {String name}) => _route('PATCH', route, handler, name);
 
-  void post(String route, Function handler) => _route('POST', route, handler);
+  void post(String route,
+            Function handler,
+            {String name}) => _route('POST', route, handler, name);
 
-  void put(String route, Function handler) => _route('PUT', route, handler);
+  void put(String route,
+           Function handler,
+           {String name}) => _route('PUT', route, handler, name);
 
-  void update(String route, Function handler) => _route('UPDATE', route, handler);
+  void update(String route,
+              Function handler,
+              {String name}) => _route('UPDATE', route, handler, name);
 }
