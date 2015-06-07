@@ -10,11 +10,11 @@ main() async {
     if (!(stat.type == FileSystemEntityType.FILE && entity.path.endsWith('_test.dart')))
       continue;
 
-    listOfFiles.add(entity.absolute.path.replaceFirst(testDir.absolute.path, ''));
+    listOfFiles.add(entity.absolute.path.replaceFirst('${testDir.absolute.path}/', ''));
   }
 
   var script = "export 'package:testcase/testcase.dart';\n" +
-    listOfFiles.map((f) => "export '$f';\n").join('\n');
+    listOfFiles.map((f) => "export '$f';").join('\n');
 
   await new File('${testDir.path}/all.dart').writeAsString(script);
 }
