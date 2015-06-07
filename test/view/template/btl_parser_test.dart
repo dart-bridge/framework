@@ -121,4 +121,11 @@ class BtlParserTest implements TestCase {
   it_knows_when_two_slashes_are_not_a_comment() {
     expect(parser.parse('<a href="//notacomment"></a>'), equals('<a href="//notacomment"></a>'));
   }
+
+  @test
+  it_can_simulate_form_methods() {
+    var before = "<form method='put'></form>";
+    var after = "<form method='POST'><input type='hidden' name='_method' value='PUT'></form>";
+    expect(parser.parse(before), equals(after));
+  }
 }

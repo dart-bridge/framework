@@ -13,8 +13,25 @@ class BtlParser implements TemplateParser {
     btl = _injectVariables(btl);
     btl = _parseIfStatements(btl);
     btl = _postDecodeEscaped(btl);
+    btl = _extendFormMethods(btl);
 
     return btl;
+  }
+
+  String _extendFormMethods(String btl) {
+    var matcher = new RegExp(
+        r'''<form([^>]*?)method=(['"])(.*?)\2([^>]*?)>''',
+        caseSensitive: false);
+    return btl.replaceAllMapped(matcher, (Match match) {
+      var method = match[3];
+      var hiddenInput = '';
+      if (!new RegExp('(GET|POST)').hasMatch(method)) {
+        hiddenInput = "<input type='hidden' name='_method' value='${method.toUpperCase()}'>";
+        method = 'POST';
+      }
+      var reconstruction = "<form${match[1]}method='$method'${match[4]}>$hiddenInput";
+      return reconstruction;
+    });
   }
 
   String _removeComments(String btl) {

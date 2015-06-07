@@ -3,6 +3,7 @@ part of bridge.core;
 /// Loads a deep folder structure with YAML-files and its values
 /// as a single map with dot-notation accessing.
 abstract class Config {
+  factory Config() => new _Config();
 
   /// Gets a value from this config map. Supports dot notation:
   ///

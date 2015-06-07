@@ -8,7 +8,7 @@ class HttpServiceProvider implements ServiceProvider {
     this.server = server;
     this.router = router;
 
-    server._attachRouter(router);
+    server.attachRouter(router);
 
     container.singleton(server, as: Server);
     container.singleton(router, as: Router);
@@ -17,6 +17,7 @@ class HttpServiceProvider implements ServiceProvider {
   load(Program program, Server server) {
     program.addCommand(start);
     program.addCommand(stop);
+    program.addCommand(routes);
   }
 
   tearDown() async {
@@ -33,5 +34,20 @@ class HttpServiceProvider implements ServiceProvider {
   stop() async {
     await server.stop();
     print('Server stopped');
+  }
+
+  @Command('List all the end-points defined in the router')
+  routes() async {
+    var table = new dlog.Table(3);
+
+    for (var row in router._routes) {
+      table.data.addAll([
+        row.method,
+        row.route,
+        row.name == null ? '<nameless>' : row.name,
+      ]);
+    }
+
+    print(table);
   }
 }

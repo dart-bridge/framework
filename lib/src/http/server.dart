@@ -1,7 +1,10 @@
 part of bridge.http;
 
 abstract class Server {
+  factory Server(Config config, Container container) => new _Server(config, container);
+
   String get hostname;
+
   int get port;
 
   Future start();
@@ -14,7 +17,9 @@ abstract class Server {
 
   void modulateRouteReturnValue(modulation(value));
 
-  void _attachRouter(Router router);
+  void attachRouter(Router router);
+
+  Future<shelf.Response> handle(shelf.Request request);
 }
 
 class _Server implements Server {
@@ -36,7 +41,7 @@ class _Server implements Server {
     _port = _config('http.server.port', 1337);
   }
 
-  void _attachRouter(Router router) {
+  void attachRouter(Router router) {
     _router = router;
   }
 
@@ -50,7 +55,7 @@ class _Server implements Server {
     .addMiddleware(shelf.createMiddleware(requestHandler: _staticHandler))
     .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
     _middleware.forEach((m) => pipeline = pipeline.addMiddleware(m));
-    return _server = await shelf_io.serve(pipeline.addHandler(_routeHandler), _host, _port);
+    return _server = await shelf_io.serve(pipeline.addHandler(handle), _host, _port);
   }
 
   Future<shelf.Response> _staticHandler(shelf.Request request) async {
@@ -75,10 +80,10 @@ class _Server implements Server {
     return response.change(headers: {'X-Powered-By': 'Bridge for Dart'});
   }
 
-  Future<shelf.Response> _routeHandler(shelf.Request request) async {
+  Future<shelf.Response> handle(shelf.Request request) async {
     Input input = await _getInputFor(request);
     for (Route route in _router._routes) {
-      if (_routeMatch(route, request)) return _routeResponse(route, request, input);
+      if (_routeMatch(route, request, input)) return _routeResponse(route, request, input);
     }
     throw new HttpNotFoundException(request);
   }
@@ -89,8 +94,11 @@ class _Server implements Server {
     return new Input({});
   }
 
-  bool _routeMatch(Route route, shelf.Request request) {
-    return route.matches(request.method, request.url.path);
+  bool _routeMatch(Route route, shelf.Request request, Input input) {
+    var method = input.containsKey('_method')
+    ? input['_method']
+    : request.method;
+    return route.matches(method, request.url.path);
   }
 
   Future<shelf.Response> _routeResponse(Route route, shelf.Request request, Input input) async {

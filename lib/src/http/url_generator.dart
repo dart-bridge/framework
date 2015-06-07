@@ -22,6 +22,6 @@ class UrlGenerator {
   }
 
   String _replaceWildcards(Route route, Map<String, dynamic> wildcards) {
-    return route.route.replaceAllMapped(_wildcardMatcher, (m) => wildcards[m[1]]);
+    return route.route.replaceAllMapped(_wildcardMatcher, (m) => wildcards.remove(m[1]));
   }
 }

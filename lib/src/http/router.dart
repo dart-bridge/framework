@@ -16,6 +16,8 @@ abstract class Router {
   void patch(String route, Function handler, {String name});
 
   void delete(String route, Function handler, {String name});
+
+  void resource(String route, Object controller, {String name});
 }
 
 class _Router implements Router {
@@ -48,4 +50,20 @@ class _Router implements Router {
   void update(String route,
               Function handler,
               {String name}) => _route('UPDATE', route, handler, name);
+
+  void resource(String route, Object controller, {String name}) {
+    var controllerMirror = reflect(controller);
+    var baseName = name == null ? route.split('/').removeLast() : name;
+    _restfulResource(route, controllerMirror, baseName);
+  }
+
+  void _restfulResource(String route, InstanceMirror controller, String name) {
+    _route('GET', '$route', controller.getField(#index).reflectee, '$name.index');
+    _route('GET', '$route/create', controller.getField(#create).reflectee, '$name.create');
+    _route('POST', '$route', controller.getField(#store).reflectee, '$name.store');
+    _route('GET', '$route/:id', controller.getField(#show).reflectee, '$name.show');
+    _route('GET', '$route/:id/edit', controller.getField(#edit).reflectee, '$name.edit');
+    _route('PUT', '$route/:id', controller.getField(#update).reflectee, '$name.update');
+    _route('DELETE', '$route/:id', controller.getField(#destroy).reflectee, '$name.destroy');
+  }
 }
