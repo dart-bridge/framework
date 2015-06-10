@@ -21,13 +21,17 @@ abstract class Config {
   /// into a new config instance. Since this reads from the disk, it is
   /// asynchronous and returns a [Future].
   static Future<Config> load(Directory directory) async {
-    if (_envHasNotBeenLoaded()) _loadEnv();
+    if (_envHasNotBeenLoaded() && await _envFileIsPresent()) _loadEnv();
     var config = new _Config();
     await config._load(directory);
     return config;
   }
 
   static _envHasNotBeenLoaded() => !_envHasBeenLoaded;
+
+  static Future<bool> _envFileIsPresent() {
+    return new File('.env').exists();
+  }
 
   static _loadEnv() {
     try {

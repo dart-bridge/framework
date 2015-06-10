@@ -5,11 +5,22 @@ part of bridge.cli;
 /// is the relative path to the root config directory. This will be passed
 /// into the [Application] and bootstrap the entire system.
 bootstrap(List<String> arguments, {String configPath}) async {
-  await _makeProgram(configPath).run();
+  await _makeProgram(arguments, configPath).run();
 }
 
-Program _makeProgram(configPath) {
-  return new BridgeCli(_chooseConfigPath(configPath));
+bool _printToLog = false;
+
+Program _makeProgram(List<String> arguments, configPath) {
+  return new BridgeCli(_createInitialInput(arguments.toList()), _chooseConfigPath(configPath), printToLog: _printToLog);
+}
+
+Input _createInitialInput(List<String> arguments) {
+  if (arguments.contains('--production')) {
+    _printToLog = true;
+    arguments.remove('--production');
+  }
+  if (arguments.isEmpty) return null;
+  return new Input(arguments);
 }
 
 String _chooseConfigPath(String configPath) {
