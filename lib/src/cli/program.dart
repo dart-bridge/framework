@@ -6,7 +6,7 @@ class BridgeCli extends Program {
   Input _initialInput;
 
   BridgeCli(Input this._initialInput, String this._configPath, {bool printToLog: false})
-  : super(io: printToLog ? new LogIoDevice() : new ConsoleIoDevice()) {
+  : super(io: printToLog ? new LogIoDevice() : null) {
     app = new Application()
       ..singleton(this)
       ..singleton(this, as: Program);
