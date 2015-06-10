@@ -3,6 +3,7 @@ part of bridge.http;
 class HttpServiceProvider implements ServiceProvider {
   Server server;
   Router router;
+  Program program;
 
   setUp(Container container, _Server server, Router router) {
     this.server = server;
@@ -15,6 +16,7 @@ class HttpServiceProvider implements ServiceProvider {
   }
 
   load(Program program, Server server) {
+    this.program = program;
     program.addCommand(start);
     program.addCommand(stop);
     program.addCommand(routes);
@@ -27,13 +29,13 @@ class HttpServiceProvider implements ServiceProvider {
   @Command('Start the server')
   start() async {
     await server.start();
-    print('Server started on http://${server.hostname}:${server.port}');
+    program.printInfo('Server started on http://${server.hostname}:${server.port}');
   }
 
   @Command('Stop the server')
   stop() async {
     await server.stop();
-    print('Server stopped');
+    program.printInfo('Server stopped');
   }
 
   @Command('List all the end-points defined in the router')

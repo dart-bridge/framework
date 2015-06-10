@@ -3,6 +3,7 @@ library bridge.view;
 // Core libraries
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 
 // Using
 import 'package:bridge/core.dart';

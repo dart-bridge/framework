@@ -3,8 +3,10 @@ part of bridge.view;
 class ViewServiceProvider implements ServiceProvider {
   bool javaScriptTags;
   String publicDirectory;
+  Program program;
 
   setUp(Container container, Config config, Program program) async {
+    this.program = program;
     var env = config.env('APP_ENV', 'production');
     javaScriptTags = (env == 'production');
     container.bind(TemplateParser, BtlParser);
@@ -30,20 +32,25 @@ class ViewServiceProvider implements ServiceProvider {
   @Command('Compile front end .dart files to .js')
   build() async {
     var files = await new Directory(publicDirectory).list(recursive: true, followLinks: false).toList();
-    for (File file in files) {
+    await Future.wait(files.map((File file) async {
       FileStat stat = await file.stat();
-      if (stat.type != FileSystemEntityType.FILE) continue;
+      if (stat.type != FileSystemEntityType.FILE) return null;
 
-      if (!file.path.endsWith('.dart')) continue;
+      if (!file.path.endsWith('.dart')) return null;
 
       var outFile = '${file.path}.js';
 
-      print('Compiling ${file.path}');
+      program.printInfo('Compiling ${file.path}');
 
-      ProcessResult result = await Process.run('dart2js', ['-o', outFile, file.path]);
+      Process process = await Process.start('dart2js', ['-o', outFile, file.path]);
 
-      print(result.stdout);
-    }
+      var sub = process.stdout.map(UTF8.decode).listen(stdout.writeln);
+
+      int exitCode = await process.exitCode;
+      await sub.cancel();
+      if (exitCode == 0) return program.printAccomplishment('$outFile generated successfully.');
+      program.printDanger('$outFile could not be generated!');
+    }));
   }
 
 
