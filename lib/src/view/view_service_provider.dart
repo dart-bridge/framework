@@ -49,7 +49,7 @@ class ViewServiceProvider implements ServiceProvider {
       int exitCode = await process.exitCode;
       await sub.cancel();
       if (exitCode == 0) return program.printAccomplishment('$outFile generated successfully.');
-      program.printDanger('$outFile could not be generated!');
+      program.printDanger('$outFile could not be generated! [Exit code $exitCode]');
     }));
   }
 
