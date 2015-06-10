@@ -4,8 +4,8 @@ part of bridge.cli;
 /// arguments should be passed directly from the main function. The `configPath`
 /// is the relative path to the root config directory. This will be passed
 /// into the [Application] and bootstrap the entire system.
-bootstrap(List<String> arguments, message, {String configPath}) {
-  _makeProgram(configPath).run(arguments, message);
+bootstrap(List<String> arguments, {String configPath}) async {
+  await _makeProgram(configPath).run();
 }
 
 Program _makeProgram(configPath) {

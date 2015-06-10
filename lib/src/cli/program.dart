@@ -13,7 +13,7 @@ class BridgeCli extends Program {
 
   setUp() async {
     await app.setUp(_configPath);
-    this.shell.prompter = () => '= ';
+    this.setPrompter('<cyan>=</cyan> ');
   }
 
   tearDown() async {
