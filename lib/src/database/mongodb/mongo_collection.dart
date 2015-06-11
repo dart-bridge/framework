@@ -15,7 +15,8 @@ class MongoCollection implements Collection {
   }
 
   Map _setIdWithUnderscore(Map input) {
-    input = {}..addAll(input);
+    input = {}
+      ..addAll(input);
     input['_id'] = input['id'];
     input.remove('id');
     return input;
@@ -41,8 +42,21 @@ class MongoCollection implements Collection {
     return _collection.findOne(query._builder).then(_setIdWithoutUnderscore);
   }
 
-  MongoSelector where(String field, Is comparison, value) {
-    return select.where(field, comparison, value);
+  MongoSelector where(String field,
+                      {isEqualTo,
+                      isNotEqualTo,
+                      isLessThan,
+                      isGreaterThan,
+                      isLessThanOrEqualTo,
+                      isGreaterThanOrEqualTo}) {
+    return select.where(
+        field,
+        isEqualTo: isEqualTo,
+        isNotEqualTo: isNotEqualTo,
+        isLessThan: isLessThan,
+        isGreaterThan: isGreaterThan,
+        isLessThanOrEqualTo: isLessThanOrEqualTo,
+        isGreaterThanOrEqualTo: isGreaterThanOrEqualTo);
   }
 
   Future save(data) async {

@@ -1,7 +1,13 @@
 part of bridge.database;
 
 abstract class Selector {
-  Selector where(String field, Is comparison, value);
+  Selector where(String field,
+                 {isEqualTo,
+                 isNotEqualTo,
+                 isLessThan,
+                 isGreaterThan,
+                 isLessThanOrEqualTo,
+                 isGreaterThanOrEqualTo});
 
   Future<List> get();
 

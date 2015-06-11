@@ -68,8 +68,21 @@ class Repository<M> implements Collection {
     return _instantiateModelFromFields(await _collection.first(query));
   }
 
-  Selector where(String field, Is comparison, value) {
-    return _collection.where(field, comparison, value);
+  Selector where(String field,
+                 {isEqualTo,
+                 isNotEqualTo,
+                 isLessThan,
+                 isGreaterThan,
+                 isLessThanOrEqualTo,
+                 isGreaterThanOrEqualTo}) {
+    return _collection.where(
+        field,
+        isEqualTo: isEqualTo,
+        isNotEqualTo: isNotEqualTo,
+        isLessThan: isLessThan,
+        isGreaterThan: isGreaterThan,
+        isLessThanOrEqualTo: isLessThanOrEqualTo,
+        isGreaterThanOrEqualTo: isGreaterThanOrEqualTo);
   }
 
   Future save(M model) async {

@@ -22,27 +22,26 @@ class MongoSelector implements Selector {
     return _collection._collection.find(_builder).toList();
   }
 
-  Selector where(String field, Is comparison, value) {
-    switch (comparison) {
-      case Is.equalTo:
-        _builder = _builder.eq(field, value);
-        break;
-      case Is.notEqualTo:
-        _builder = _builder.ne(field, value);
-        break;
-      case Is.lessThan:
-        _builder = _builder.lt(field, value);
-        break;
-      case Is.lessThanOrEqualTo:
-        _builder = _builder.lte(field, value);
-        break;
-      case Is.greaterThan:
-        _builder = _builder.gt(field, value);
-        break;
-      case Is.greaterThanOrEqualTo:
-        _builder = _builder.gte(field, value);
-        break;
-    }
+  Selector where(String field,
+                 {isEqualTo,
+                 isNotEqualTo,
+                 isLessThan,
+                 isGreaterThan,
+                 isLessThanOrEqualTo,
+                 isGreaterThanOrEqualTo}) {
+    var has = (v) => v != null;
+    if (has(isEqualTo))
+      _builder = _builder.eq(field, isEqualTo);
+    if (has(isNotEqualTo))
+      _builder = _builder.ne(field, isNotEqualTo);
+    if (has(isLessThan))
+      _builder = _builder.lt(field, isLessThan);
+    if (has(isLessThanOrEqualTo))
+      _builder = _builder.lte(field, isLessThanOrEqualTo);
+    if (has(isGreaterThan))
+      _builder = _builder.gt(field, isGreaterThan);
+    if (has(isGreaterThanOrEqualTo))
+      _builder = _builder.gte(field, isGreaterThanOrEqualTo);
     return this;
   }
 }

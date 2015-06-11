@@ -11,13 +11,14 @@ import 'package:bridge/core.dart';
 // Drivers
 import 'mongodb/library.dart';
 export 'mongodb/library.dart';
+export 'in_memory/library.dart';
 
 part 'database_service_provider.dart';
 part 'repository.dart';
 part 'database.dart';
 part 'collection.dart';
-part 'is.dart';
 part 'selector.dart';
+part 'model.dart';
 
 const field = 'field';
 const key = 'key';

@@ -13,5 +13,11 @@ abstract class Collection {
 
   Future save(data);
 
-  Selector where(String field, Is comparison, value);
+  Selector where(String field,
+                 {isEqualTo,
+                 isNotEqualTo,
+                 isLessThan,
+                 isGreaterThan,
+                 isLessThanOrEqualTo,
+                 isGreaterThanOrEqualTo});
 }
