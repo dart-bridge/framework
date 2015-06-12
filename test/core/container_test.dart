@@ -82,6 +82,20 @@ class ContainerTest implements TestCase {
     var type = container.resolve(closure);
     expect(type, equals(LonelyClass));
   }
+
+  @test
+  it_can_create_an_auto_resolving_function() {
+    var lonely = new LonelyClass();
+    var wasCalled = false;
+    var function = (ClassWithTypeArgument<String> dep, LonelyClass lonelyClass) {
+      expect(dep, new isInstanceOf<ClassWithTypeArgument<String>>());
+      expect(lonelyClass, equals(lonely));
+      wasCalled = true;
+    };
+    var autoResolvingFunction = container.presolve(function);
+    autoResolvingFunction(lonely);
+    expect(wasCalled, isTrue);
+  }
 }
 
 class LonelyClass {

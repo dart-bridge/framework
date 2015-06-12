@@ -96,6 +96,18 @@ class Application implements Container {
                 Map<Type, dynamic> injecting}) => _container.resolveMethod(
       object, methodName, namedParameters: namedParameters, injecting: injecting);
 
+  /// Creates a function that can take any arguments. The arguments will
+  /// then, by their type, be injected into the inner function when called,
+  /// evaluating the inner function and returning the response.
+  ///
+  ///     functionWillBeInjected(SomeClass input) {}
+  ///     Function presolved = container.presolve(functionWillBeInjected);
+  ///     presolved(...);
+  presolve(Function function,
+                {Map<String, dynamic> namedParameters,
+                Map<Type, dynamic> injecting}) => _container.presolve(
+      function, namedParameters: namedParameters, injecting: injecting);
+
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.
   Future setUp(String configRoot) async {

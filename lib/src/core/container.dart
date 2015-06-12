@@ -83,6 +83,17 @@ abstract class Container {
   /// non-abstract class will be injected when the
   /// abstraction is requested.
   void bind(Type abstraction, Type implementation);
+
+  /// Creates a function that can take any arguments. The arguments will
+  /// then, by their type, be injected into the inner function when called,
+  /// evaluating the inner function and returning the response.
+  ///
+  ///     functionWillBeInjected(SomeClass input) {}
+  ///     Function presolved = container.presolve(functionWillBeInjected);
+  ///     presolved(...);
+  Function presolve(Function function,
+                    {Map<String, dynamic> namedParameters,
+                    Map<Type, dynamic> injecting});
 }
 
 class _Container implements Container {
@@ -204,5 +215,19 @@ class _Container implements Container {
 
   bool canResolveMethod(Object object, String method) {
     return reflect(object).type.declarations.containsKey(new Symbol(method));
+  }
+
+  Function presolve(Function function,
+                    {Map<String, dynamic> namedParameters,
+                    Map<Type, dynamic> injecting}) {
+    return ([arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]) {
+      var arguments = [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]
+      .where((a) => a != null);
+      var argumentsWithTypes = ((injecting != null ? injecting : {}) as Map)
+        ..addAll(new Map.fromIterables(
+          arguments.map((a) => a.runtimeType),
+          arguments));
+      return resolve(function, injecting: argumentsWithTypes, namedParameters: namedParameters);
+    };
   }
 }
