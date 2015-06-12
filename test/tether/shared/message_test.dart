@@ -18,7 +18,7 @@ class MessageTest implements TestCase {
   @test
   it_can_serialize_and_deserialize_json() {
     var message = new Message('k', 't', 1, 'rT');
-    var json = '{"key":"k","token":"t","data":1,"returnToken":"rT"}';
+    var json = '{"key":"k","token":"t","data":1,"returnToken":"rT","exception":-1}';
     expect(message.serialized, equals(
         json
     ));

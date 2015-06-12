@@ -8,6 +8,7 @@ part of bridge.tether.shared;
 class Message {
   final String key;
   final String token;
+  int exception = -1;
   final dynamic data;
   String _returnToken;
 
@@ -18,11 +19,25 @@ class Message {
   }
 
   factory Message._fromMap(Map data) {
-    return new Message(data['key'], data['token'], data['data'], data['returnToken']);
+    return new Message(data['key'], data['token'], data['data'], data['returnToken'])
+      ..exception = data['exception'];
   }
 
   String get serialized => JSON.encode(
-      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken});
+      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken, 'exception': exception},
+      toEncodable: (o) {
+        try {
+          try {
+            return JSON.encode(o.serialize());
+          } on NoSuchMethodError {
+            if (o is Serializable)
+              (() async => throw new TetherException('$o failed serialization!'))();
+            return JSON.encode(o.toJson());
+          }
+        } on NoSuchMethodError {
+          return JSON.encode(o.toString());
+        }
+      });
 
   String get returnToken {
     if (_returnToken != null) return _returnToken;

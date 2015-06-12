@@ -25,7 +25,6 @@ part of bridge.tether.shared;
 ///     // On the client
 ///     Map mostCommonTopic = await tether.send('topics.mostCommon');
 abstract class Tether {
-
   factory Tether(String token, Messenger messenger) => new _Tether(token, messenger);
 
   /// The token representing this specific session with the
@@ -58,12 +57,34 @@ abstract class Tether {
   /// Sends pings back and fourth so that the [WebSocket] will
   /// not time out.
   void initiatePersistentConnection();
+
+  /// Set the deserialization factories for the [Exception]s to be
+  /// transferable through the [Tether]. If an exception is thrown
+  /// on the other side, the [Future] returned from the [send]
+  /// method will fail, throwing the corresponding exception from
+  /// this map. If the exception thrown is not registered in this
+  /// list the exception will be cast to a standard [Exception]
+  set exceptionFactories(Map<Type, ExceptionFactory> value);
+
+  /// Throw an exception on the other side of the tether. The type of
+  /// [exception] should be registered using [exceptionFactories] setter.
+  /// If [exception] is not registered it will be cast to a standard
+  /// [Exception] on arrival.
+  void sendException(String key, Exception exception);
 }
 
-class _Tether implements Tether {
+typedef Exception ExceptionFactory(String message);
 
+class _Tether implements Tether {
   Messenger _messenger;
   String _token;
+  final Map<Type, ExceptionFactory> _standardExceptionFactories = {
+    Exception: (m) => new Exception(m),
+    BaseException: (m) => new BaseException(m),
+    InvalidArgumentException: (m) => new InvalidArgumentException(m),
+    TetherException: (m) => new TetherException(m),
+  };
+  Map<Type, ExceptionFactory> _exceptionFactories;
 
   String get token => _token;
 
@@ -72,6 +93,7 @@ class _Tether implements Tether {
   Future get onConnectionEstablished => _messenger.onConnectionOpen;
 
   _Tether(String this._token, Messenger this._messenger) {
+    _exceptionFactories = _standardExceptionFactories;
     _listenForPingPong();
   }
 
@@ -89,8 +111,23 @@ class _Tether implements Tether {
 
   Future send(String key, [data]) async {
     var message = new Message(key, _token, data);
-    Message returnValue = await _messenger.send(message);
+    Message returnValue = await _send(message);
+    if (returnValue.exception != -1)
+      throw _reconstructException(returnValue);
     return returnValue.data;
+  }
+
+  void sendException(String key, Exception exception) {
+    var exceptionIndex = 0;
+    if (_exceptionFactories.containsKey(exception.runtimeType))
+      exceptionIndex = _exceptionFactories.keys.toList().indexOf(exception.runtimeType);
+    var message = new Message(key, token, exception);
+    message.exception = exceptionIndex;
+    _send(message);
+  }
+
+  Future _send(Message message) {
+    return _messenger.send(message);
   }
 
   void listen(String key, Future listener(data)) {
@@ -98,8 +135,24 @@ class _Tether implements Tether {
   }
 
   Future _respondToMessage(Message message, Future listener(data)) async {
-    var returnValue = await listener(message.data);
-    send(message.returnToken, returnValue);
+    var returnValue;
+    try {
+      returnValue = await listener(message.data);
+      send(message.returnToken, returnValue);
+    } catch (e) {
+      sendException(message.returnToken, e);
+    }
+  }
+
+  Exception _reconstructException(Message message) {
+    var index = message.exception;
+    if (_exceptionFactories.length <= index)
+      index = 0;
+    try {
+      return _exceptionFactories.values.elementAt(index)(message.data);
+    } catch(e) {
+      throw new TetherException('Failed to reconstruct ${_exceptionFactories.keys.elementAt(index)}: $e');
+    }
   }
 
   void initiatePersistentConnection() {
@@ -108,5 +161,10 @@ class _Tether implements Tether {
 
   void _sendPingPong() {
     this.send('_pingpong', null);
+  }
+
+  set exceptionFactories(Map<Type, ExceptionFactory> value) {
+    _exceptionFactories = new Map.from(_standardExceptionFactories)
+      ..addAll(value);
   }
 }

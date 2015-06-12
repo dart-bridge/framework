@@ -7,7 +7,7 @@ class MessengerTest implements TestCase {
 
   MockSocket socket;
   Messenger messenger;
-  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT"}';
+  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT","exception":-1}';
   final Message exampleMessage = new Message('k', 't', 1, 'rT');
 
   setUp() {

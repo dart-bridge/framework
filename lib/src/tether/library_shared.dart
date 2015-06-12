@@ -17,3 +17,4 @@ part 'shared/message.dart';
 part 'shared/socket_interface.dart';
 part 'shared/messenger.dart';
 part 'shared/tether.dart';
+part 'shared/serializable.dart';

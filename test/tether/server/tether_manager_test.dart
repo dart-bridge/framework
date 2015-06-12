@@ -57,4 +57,10 @@ class MockTether implements Tether {
   void listen(String key, Future listener(data)) => null;
 
   void initiatePersistentConnection() => null;
+
+  set exceptionFactories(Map<Type, ExceptionFactory> value) {
+  }
+
+  void sendException(String key, Exception exception) {
+  }
 }
