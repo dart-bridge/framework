@@ -223,10 +223,12 @@ class _Container implements Container {
     return ([arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]) {
       var arguments = [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]
       .where((a) => a != null);
+
       var argumentsWithTypes = ((injecting != null ? injecting : {}) as Map)
         ..addAll(new Map.fromIterables(
           arguments.map((a) => a.runtimeType),
           arguments));
+
       return resolve(function, injecting: argumentsWithTypes, namedParameters: namedParameters);
     };
   }

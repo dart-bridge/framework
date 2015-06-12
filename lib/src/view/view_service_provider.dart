@@ -42,7 +42,7 @@ class ViewServiceProvider implements ServiceProvider {
 
       program.printInfo('Compiling ${file.path}');
 
-      Process process = await Process.start('dart2js', ['-o', outFile, file.path]);
+      Process process = await Process.start('dart2js', ['-m', '-o', outFile, file.path]);
 
       var sub = process.stdout.map(UTF8.decode).listen(stdout.writeln);
 
