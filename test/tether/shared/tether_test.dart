@@ -41,6 +41,18 @@ class TetherTest implements TestCase {
     var response = await tether.send('key');
     expect(response, equals(1));
   }
+
+  @test
+  it_can_register_modulators_of_listener_return_values_before_serialization() async {
+    tether.modulateBeforeSerialization((value) {
+      if (value == 'value')
+        return 'modulatedValue';
+      return value;
+    });
+    await tether.send('key', 'value');
+    expect(messenger.sentMessage.key, equals('key'));
+    expect(messenger.sentMessage.data, equals('modulatedValue'));
+  }
 }
 
 class MockMessenger implements Messenger {

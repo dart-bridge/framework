@@ -12,6 +12,6 @@ class BaseException implements Exception, Serializable {
   }
 
   Object serialize() {
-    return toString();
+    return message;
   }
 }

@@ -4,8 +4,10 @@ class ViewServiceProvider implements ServiceProvider {
   bool javaScriptTags;
   String publicDirectory;
   Program program;
+  Container container;
 
   setUp(Container container, Config config, Program program) async {
+    this.container = container;
     this.program = program;
     var env = config.env('APP_ENV', 'production');
     javaScriptTags = (env == 'production');
@@ -21,21 +23,35 @@ class ViewServiceProvider implements ServiceProvider {
     program.addCommand(build);
   }
 
-  load(Server server, Template template, Container container) {
+  Future<String> _parseTemplateResponse(Template template, TemplateResponse templateResponse) async {
+    var parser = (templateResponse.parser != null)
+    ? container.make(templateResponse.parser)
+    : container.make(TemplateParser);
+    await template.load(templateResponse.templateName);
+    String contents = await template.parse(
+        withData: templateResponse.data,
+        withScripts: templateResponse.scripts,
+        javaScript: javaScriptTags,
+        withParser: parser);
+    return contents;
+  }
+
+  load(Server server, Template template, TetherManager tethers) {
+    tethers.registerHandler((Tether tether) {
+      tether.modulateBeforeSerialization((TemplateResponse value) async {
+        if (value is! TemplateResponse) return value;
+        value.parser = BtlToHandlebarsParser;
+        var contents = await _parseTemplateResponse(template, value);
+        return {
+          'template': contents,
+          'data': value.data,
+        };
+      });
+    });
     server.modulateRouteReturnValue((TemplateResponse value) async {
-      if (value is TemplateResponse) {
-        var parser = (value.parser != null)
-        ? container.make(value.parser)
-        : container.make(TemplateParser);
-        await template.load(value.templateName);
-        String contents = await template.parse(
-            withData: value.data,
-            withScripts: value.scripts,
-            javaScript: javaScriptTags,
-            withParser: parser);
-        return '<!DOCTYPE html><html>$contents</html>';
-      }
-      return value;
+      if (value is! TemplateResponse) return value;
+      var contents = await _parseTemplateResponse(template, value);
+      return '<!DOCTYPE html><html>$contents</html>';
     });
   }
 

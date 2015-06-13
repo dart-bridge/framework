@@ -63,4 +63,7 @@ class MockTether implements Tether {
 
   void registerStructure(String id, Type serializable, Serializable factory(data)) {
   }
+
+  void modulateBeforeSerialization(modulation(value)) {
+  }
 }

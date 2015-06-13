@@ -10,6 +10,7 @@ import 'package:bridge/core.dart';
 import 'package:bridge/http.dart';
 import 'package:bridge/exceptions.dart';
 import 'package:bridge/cli.dart';
+import 'package:bridge/tether.dart';
 
 part 'exceptions/template_exception.dart';
 part 'view_service_provider.dart';

@@ -65,11 +65,14 @@ abstract class Tether {
   void sendException(String key, Exception exception);
 
   void registerStructure(String id, Type serializable, Serializable factory(data));
+
+  void modulateBeforeSerialization(modulation(value));
 }
 
 class _Tether implements Tether {
   Messenger _messenger;
   String _token;
+  Set<Function> _returnValueModulators = new Set();
 
   String get token => _token;
 
@@ -94,6 +97,7 @@ class _Tether implements Tether {
   bool get _socketIsOpen => _messenger.socketIsOpen;
 
   Future send(String key, [data]) async {
+    data = await _applyModulators(data);
     var message = new Message(key, _token, data);
     Message returnValue = await _send(message);
     if (returnValue.data is Exception)
@@ -123,6 +127,13 @@ class _Tether implements Tether {
     }
   }
 
+  Future _applyModulators(returnValue) async {
+    for (var modulator in _returnValueModulators) {
+      returnValue = await modulator(returnValue);
+    }
+    return returnValue;
+  }
+
   void initiatePersistentConnection() {
     _sendPingPong();
   }
@@ -133,5 +144,9 @@ class _Tether implements Tether {
 
   void registerStructure(String id, Type serializable, Serializable factory(data)) {
     _messenger.registerStructure(id, serializable, factory);
+  }
+
+  void modulateBeforeSerialization(modulation(value)) {
+    _returnValueModulators.add(modulation);
   }
 }
