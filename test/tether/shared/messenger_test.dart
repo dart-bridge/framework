@@ -4,10 +4,9 @@ import 'package:bridge/tether.dart';
 import 'dart:async';
 
 class MessengerTest implements TestCase {
-
   MockSocket socket;
   Messenger messenger;
-  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT","exception":-1}';
+  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT","structure":null}';
   final Message exampleMessage = new Message('k', 't', 1, 'rT');
 
   setUp() {
@@ -34,10 +33,42 @@ class MessengerTest implements TestCase {
     await null;
     expect(socket.sentData, equals(exampleJson));
   }
+
+  @test
+  it_can_register_serializable_items_that_can_then_be_transfered() async {
+    messenger.registerStructure(
+        'TestSerializable',
+        TestSerializable,
+            (d) => new TestSerializable(d['someString']));
+    socket.socketInput.add('{"key":"k","token":"t","data":{"someString":"value"},"returnToken":"rT","structure":"TestSerializable"}');
+    Message message = await messenger.listen('k').first;
+    expect(message.data, new isInstanceOf<TestSerializable>());
+    expect(message.data.someString, equals('value'));
+  }
+
+  @test
+  it_can_send_serializable_items() async {
+    messenger.registerStructure(
+        'TestSerializable',
+        TestSerializable,
+            (d) => new TestSerializable(d['someString']));
+    messenger.send(new Message('k', 't', new TestSerializable('value'), 'rT'));
+    await null;
+    expect(socket.sentData, equals('{"key":"k","token":"t","data":{"someString":"value"},"returnToken":"rT","structure":"TestSerializable"}'));
+  }
+}
+
+class TestSerializable implements Serializable {
+  final String someString;
+
+  TestSerializable(String this.someString);
+
+  Object serialize() => {
+    'someString': someString
+  };
 }
 
 class MockSocket implements SocketInterface {
-
   bool get isOpen => true;
 
   Future get onOpen => null;

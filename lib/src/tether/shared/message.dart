@@ -8,8 +8,8 @@ part of bridge.tether.shared;
 class Message {
   final String key;
   final String token;
-  int exception = -1;
-  final dynamic data;
+  var data;
+  String structure;
   String _returnToken;
 
   Message(String this.key, String this.token, this.data, [String this._returnToken]);
@@ -20,22 +20,24 @@ class Message {
 
   factory Message._fromMap(Map data) {
     return new Message(data['key'], data['token'], data['data'], data['returnToken'])
-      ..exception = data['exception'];
+    ..structure = data['structure'];
   }
 
   String get serialized => JSON.encode(
-      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken, 'exception': exception},
+      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken, 'structure': structure},
       toEncodable: (o) {
         try {
           try {
-            return JSON.encode(o.serialize());
+            JSON.encode(o.serialize());
+            return o.serialize();
           } on NoSuchMethodError {
             if (o is Serializable)
               (() async => throw new TetherException('$o failed serialization!'))();
-            return JSON.encode(o.toJson());
+            JSON.encode(o.toJson());
+            return o.toJson();
           }
         } on NoSuchMethodError {
-          return JSON.encode(o.toString());
+          return o.toString();
         }
       });
 

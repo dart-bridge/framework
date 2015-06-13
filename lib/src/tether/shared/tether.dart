@@ -58,33 +58,18 @@ abstract class Tether {
   /// not time out.
   void initiatePersistentConnection();
 
-  /// Set the deserialization factories for the [Exception]s to be
-  /// transferable through the [Tether]. If an exception is thrown
-  /// on the other side, the [Future] returned from the [send]
-  /// method will fail, throwing the corresponding exception from
-  /// this map. If the exception thrown is not registered in this
-  /// list the exception will be cast to a standard [Exception]
-  set exceptionFactories(Map<Type, ExceptionFactory> value);
-
   /// Throw an exception on the other side of the tether. The type of
   /// [exception] should be registered using [exceptionFactories] setter.
   /// If [exception] is not registered it will be cast to a standard
   /// [Exception] on arrival.
   void sendException(String key, Exception exception);
-}
 
-typedef Exception ExceptionFactory(String message);
+  void registerStructure(String id, Type serializable, Serializable factory(data));
+}
 
 class _Tether implements Tether {
   Messenger _messenger;
   String _token;
-  final Map<Type, ExceptionFactory> _standardExceptionFactories = {
-    Exception: (m) => new Exception(m),
-    BaseException: (m) => new BaseException(m),
-    InvalidArgumentException: (m) => new InvalidArgumentException(m),
-    TetherException: (m) => new TetherException(m),
-  };
-  Map<Type, ExceptionFactory> _exceptionFactories;
 
   String get token => _token;
 
@@ -93,7 +78,6 @@ class _Tether implements Tether {
   Future get onConnectionEstablished => _messenger.onConnectionOpen;
 
   _Tether(String this._token, Messenger this._messenger) {
-    _exceptionFactories = _standardExceptionFactories;
     _listenForPingPong();
   }
 
@@ -112,18 +96,13 @@ class _Tether implements Tether {
   Future send(String key, [data]) async {
     var message = new Message(key, _token, data);
     Message returnValue = await _send(message);
-    if (returnValue.exception != -1)
-      throw _reconstructException(returnValue);
+    if (returnValue.data is Exception)
+      throw returnValue.data;
     return returnValue.data;
   }
 
   void sendException(String key, Exception exception) {
-    var exceptionIndex = 0;
-    if (_exceptionFactories.containsKey(exception.runtimeType))
-      exceptionIndex = _exceptionFactories.keys.toList().indexOf(exception.runtimeType);
-    var message = new Message(key, token, exception);
-    message.exception = exceptionIndex;
-    _send(message);
+    _send(new Message(key, token, exception));
   }
 
   Future _send(Message message) {
@@ -144,17 +123,6 @@ class _Tether implements Tether {
     }
   }
 
-  Exception _reconstructException(Message message) {
-    var index = message.exception;
-    if (_exceptionFactories.length <= index)
-      index = 0;
-    try {
-      return _exceptionFactories.values.elementAt(index)(message.data);
-    } catch(e) {
-      throw new TetherException('Failed to reconstruct ${_exceptionFactories.keys.elementAt(index)}: $e');
-    }
-  }
-
   void initiatePersistentConnection() {
     _sendPingPong();
   }
@@ -163,8 +131,7 @@ class _Tether implements Tether {
     this.send('_pingpong', null);
   }
 
-  set exceptionFactories(Map<Type, ExceptionFactory> value) {
-    _exceptionFactories = new Map.from(_standardExceptionFactories)
-      ..addAll(value);
+  void registerStructure(String id, Type serializable, Serializable factory(data)) {
+    _messenger.registerStructure(id, serializable, factory);
   }
 }

@@ -14,11 +14,14 @@ abstract class Messenger {
   Future<Message> send(Message message);
 
   Stream<Message> listen(String key);
+
+  void registerStructure(String id, Type serializable, Serializable factory(data));
 }
 
 class _Messenger implements Messenger {
   SocketInterface _socket;
   Map<String, StreamController<Message>> _listeners = {};
+  Map<String, dynamic> _structures = {};
 
   bool get socketIsOpen => _socket.isOpen;
 
@@ -50,7 +53,7 @@ class _Messenger implements Messenger {
 
   Stream<Message> listen(String key) {
     _ensureUniqueListener(key);
-    return _registerListener(key).stream;
+    return _registerListener(key).stream.asyncMap(_makeStructure);
   }
 
   StreamController<Message> _registerListener(String key) {
@@ -65,6 +68,9 @@ class _Messenger implements Messenger {
   }
 
   Future<Message> send(Message message) async {
+    if (_structures.keys.any((k) => _structures[k][0] == message.data.runtimeType))
+      message.structure = _structures.keys.firstWhere((k)
+      => _structures[k][0] == message.data.runtimeType);
     _socket.send(message.serialized);
     return _returnMessage(message);
   }
@@ -77,5 +83,15 @@ class _Messenger implements Messenger {
     if (!_listenerExistsForKey(key)) return;
     _listeners[key].close();
     _listeners.remove(key);
+  }
+
+  void registerStructure(String id, Type serializable, Serializable factory(data)) {
+    _structures[id] = [serializable, factory];
+  }
+
+  Message _makeStructure(Message message) {
+    if (message.structure != null)
+      message.data = _structures[message.structure][1](message.data);
+    return message;
   }
 }

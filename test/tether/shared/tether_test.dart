@@ -4,7 +4,6 @@ import 'package:bridge/tether.dart';
 import 'dart:async';
 
 class TetherTest implements TestCase {
-
   Tether tether;
   MockMessenger messenger;
 
@@ -18,9 +17,7 @@ class TetherTest implements TestCase {
 
   @test
   it_sends_data() async {
-    tether.send('key', 1);
-    await null;
-    await null;
+    await tether.send('key', 1);
     expect(messenger.sentMessage.key, equals('key'));
     expect(messenger.sentMessage.data, equals(1));
   }
@@ -66,4 +63,7 @@ class MockMessenger implements Messenger {
   }
 
   bool get socketIsOpen => true;
+
+  void registerStructure(String id, Type serializable, Serializable factory(data)) {
+  }
 }
