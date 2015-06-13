@@ -4,6 +4,9 @@ class BtlParser implements TemplateParser {
   Map<String, dynamic> _data;
   static final String _variableMatchString = r'\$(?:\{([\w.]+)}|(\w+))';
   static final RegExp _variableMatcher = new RegExp(_variableMatchString);
+  UrlGenerator _urlGenerator;
+
+  BtlParser(UrlGenerator this._urlGenerator);
 
   String parse(String btl, [Map<String, dynamic> data]) {
     _data = _ensureMap(data);
@@ -14,6 +17,7 @@ class BtlParser implements TemplateParser {
     btl = _parseIfStatements(btl);
     btl = _postDecodeEscaped(btl);
     btl = _extendFormMethods(btl);
+    btl = _formRouteActions(btl);
 
     return btl;
   }
@@ -128,5 +132,11 @@ class BtlParser implements TemplateParser {
   _getKeyFromVariableMatchWithAlias(Match match, String alias) {
     alias = (alias == '') ? '' : '$alias.';
     return _getKeyFromVariableMatch(match).replaceFirst(new RegExp('^$alias'), '');
+  }
+
+  String _formRouteActions(String btl) {
+    return btl.replaceAllMapped(new RegExp(r'''<form([^]*?)route=(['"])(.*?)\2'''), (m) {
+      return "<form${m[1]}action='${_urlGenerator.route(m[3])}'";
+    });
   }
 }

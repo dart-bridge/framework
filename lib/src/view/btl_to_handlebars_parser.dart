@@ -3,6 +3,9 @@ part of bridge.view;
 class BtlToHandlebarsParser implements TemplateParser {
   static final String _variableMatchString = r'\$(?:\{([\w.]+)}|(\w+))';
   static final RegExp _variableMatcher = new RegExp(_variableMatchString);
+  UrlGenerator _urlGenerator;
+
+  BtlToHandlebarsParser(UrlGenerator this._urlGenerator);
 
   String parse(String template, [Map<String, dynamic> data]) {
     template = _removeComments(template);
@@ -10,6 +13,7 @@ class BtlToHandlebarsParser implements TemplateParser {
     template = _translateIfStatements(template);
     template = _translateVariables(template);
     template = _extendFormMethods(template);
+    template = _formRouteActions(template);
     return template;
   }
 
@@ -85,6 +89,12 @@ class BtlToHandlebarsParser implements TemplateParser {
       }
       var reconstruction = "<form${match[1]}method='$method'${match[4]}>$hiddenInput";
       return reconstruction;
+    });
+  }
+  
+  String _formRouteActions(String btl) {
+    return btl.replaceAllMapped(new RegExp(r'''<form([^]*?)route=(['"])(.*?)\2'''), (m) {
+      return "<form${m[1]}action='${_urlGenerator.route(m[3])}'";
     });
   }
 }

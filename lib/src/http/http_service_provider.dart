@@ -1,5 +1,7 @@
 part of bridge.http;
 
+UrlGenerator _urlGenerator;
+
 class HttpServiceProvider implements ServiceProvider {
   Server server;
   Router router;
@@ -21,7 +23,10 @@ class HttpServiceProvider implements ServiceProvider {
   }
 
   load(Program program,
-       SessionsMiddleware sessionsMiddleware) {
+       SessionsMiddleware sessionsMiddleware,
+       UrlGenerator urlGenerator) {
+    _urlGenerator = urlGenerator;
+
     server.addMiddleware(sessionsMiddleware);
 
     this.program = program;

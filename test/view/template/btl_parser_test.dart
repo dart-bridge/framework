@@ -1,12 +1,15 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/view.dart';
+import 'package:bridge/http.dart';
 
 class BtlParserTest implements TestCase {
   BtlParser parser;
+  Router router;
 
   setUp() {
-    parser = new BtlParser();
+    router = new Router();
+    parser = new BtlParser(new UrlGenerator(router));
   }
 
   tearDown() {
@@ -126,6 +129,14 @@ class BtlParserTest implements TestCase {
   it_can_simulate_form_methods() {
     var before = "<form method='put'></form>";
     var after = "<form method='POST'><input type='hidden' name='_method' value='PUT'></form>";
+    expect(parser.parse(before), equals(after));
+  }
+
+  @test
+  it_can_use_route_names_for_form_actions() {
+    router.get('/', () => '', name: 'home');
+    var before = "<form route='home'>";
+    var after = "<form action='/'>";
     expect(parser.parse(before), equals(after));
   }
 }
