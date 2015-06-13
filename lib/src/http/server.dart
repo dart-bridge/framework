@@ -154,10 +154,10 @@ class _Server implements Server {
     await _server.close();
   }
 
-  void handleException(Type exceptionType, Function handler) {
+  void handleException(Type exceptionType, Function handler, {int statusCode: 500}) {
     this.addMiddleware(shelf.createMiddleware(errorHandler: (Object exception, StackTrace stack) async {
       if (exception.runtimeType == exceptionType)
-        return _valueToResponse(await _container.resolve(handler, injecting: {Exception: exception}), 404);
+        return _valueToResponse(await _container.resolve(handler, injecting: {Exception: exception}), statusCode);
       throw exception;
     }));
   }
