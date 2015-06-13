@@ -1,2 +1,0 @@
-library bridge.sessions.client;
-

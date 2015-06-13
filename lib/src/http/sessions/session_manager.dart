@@ -1,0 +1,90 @@
+part of bridge.http.sessions;
+
+class SessionManager {
+  final Map<String, Session> _sessions = {};
+
+  void open(String id) {
+    _sessions[id] = new Session(id);
+  }
+
+  Session session(String id) {
+    return _sessions[id];
+  }
+
+  void close(String id) {
+    _sessions.remove(id);
+  }
+
+  Session sessionOf(shelf.Message message) {
+    if (!hasSession(message)) return null;
+
+    return _sessionOf(message);
+  }
+
+  shelf.Message attachSession(shelf.Message message) {
+    if (hasSession(message)) return message;
+
+    Session session;
+    if (_hasSessionCookie(message))
+      session = _loadSessionCookie(message);
+    else
+      session = _generateSession();
+
+    return message.change(context: {
+      'X-BRIDGE-SESSION-ID': session.id
+    });
+  }
+
+  Session _loadSessionCookie(shelf.Message message) {
+    var cookie = Cookie.parse(message.headers['Cookie'])
+    .firstWhere(_isSessionCookie);
+    return _sessions[cookie.value]..isNew = false;
+  }
+
+  bool _hasSessionCookie(shelf.Message message) {
+    if (!message.headers.containsKey('Cookie')) return false;
+    var cookies = Cookie.parse(message.headers['Cookie']);
+    if (!cookies.any(_isSessionCookie)) return false;
+    return _sessions.containsKey(cookies.firstWhere(_isSessionCookie).value);
+  }
+
+  bool hasSession(shelf.Message message) {
+    var sessionId = _idOf(message);
+    if (sessionId == null) return false;
+    return _sessions.containsKey(sessionId);
+  }
+
+  Session _sessionOf(shelf.Message message) {
+    return _sessions[_idOf(message)];
+  }
+
+  String _idOf(shelf.Message message) {
+    return message.context[Cookie.sessionIdKey];
+  }
+
+  Session _generateSession() {
+    var id = _generateId();
+    open(id);
+    return session(id)
+      ..isNew = true;
+  }
+
+  String _generateId() {
+    var out = '';
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var random = new Random();
+    for (var i = 0; i < 128; ++i)
+      out += chars[random.nextInt(chars.length - 1)];
+    return out;
+  }
+
+  shelf.Message passSession({shelf.Message from, shelf.Message to}) {
+    return to.change(context: {
+      Cookie.sessionIdKey: _idOf(from)
+    });
+  }
+
+  bool _isSessionCookie(Cookie element) {
+    return element.key == Cookie.sessionIdKey;
+  }
+}

@@ -1,7 +1,8 @@
 part of bridge.http;
 
 abstract class Server {
-  factory Server(Config config, Container container) => new _Server(config, container);
+  factory Server(Config config, Container container)
+  => new _Server(config, container);
 
   String get hostname;
 
@@ -19,6 +20,8 @@ abstract class Server {
 
   void attachRouter(Router router);
 
+  void attachSessionManager(SessionManager sessionManager);
+
   Future<shelf.Response> handle(shelf.Request request);
 }
 
@@ -31,6 +34,7 @@ class _Server implements Server {
   Set<Function> _returnValueModulators = new Set();
   Container _container;
   Config _config;
+  SessionManager _sessions;
 
   String get hostname => _host;
 
@@ -43,6 +47,10 @@ class _Server implements Server {
 
   void attachRouter(Router router) {
     _router = router;
+  }
+
+  void attachSessionManager(SessionManager sessions) {
+    _sessions = sessions;
   }
 
   void addMiddleware(shelf.Middleware middleware) {
@@ -82,8 +90,10 @@ class _Server implements Server {
 
   Future<shelf.Response> handle(shelf.Request request) async {
     Input input = await _getInputFor(request);
+    Session session = _sessions.sessionOf(request);
     for (Route route in _router._routes) {
-      if (_routeMatch(route, request, input)) return _routeResponse(route, request, input);
+      if (_routeMatch(route, request, input))
+        return _routeResponse(route, request, input, session);
     }
     throw new HttpNotFoundException(request);
   }
@@ -101,9 +111,16 @@ class _Server implements Server {
     return route.matches(method, request.url.path);
   }
 
-  Future<shelf.Response> _routeResponse(Route route, shelf.Request request, Input input) async {
+  Future<shelf.Response> _routeResponse(Route route,
+                                        shelf.Request request,
+                                        Input input,
+                                        Session session) async {
     var returnValue = await _container.resolve(route.handler,
-    injecting: {shelf.Request: request, Input: input},
+    injecting: {
+      shelf.Request: request,
+      Input: input,
+      Session: session,
+    },
     namedParameters: route.wildcards(request.url.path));
     return _valueToResponse(returnValue);
   }

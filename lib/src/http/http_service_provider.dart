@@ -5,17 +5,25 @@ class HttpServiceProvider implements ServiceProvider {
   Router router;
   Program program;
 
-  setUp(Container container, _Server server, Router router) {
+  setUp(Container container,
+        Server server,
+        Router router,
+        SessionManager manager) {
     this.server = server;
     this.router = router;
 
     server.attachRouter(router);
+    server.attachSessionManager(manager);
 
     container.singleton(server, as: Server);
     container.singleton(router, as: Router);
+    container.singleton(manager);
   }
 
-  load(Program program, Server server) {
+  load(Program program,
+       SessionsMiddleware sessionsMiddleware) {
+    server.addMiddleware(sessionsMiddleware);
+
     this.program = program;
     program.addCommand(start);
     program.addCommand(stop);
@@ -42,11 +50,17 @@ class HttpServiceProvider implements ServiceProvider {
   routes() async {
     var table = new dlog.Table(3);
 
+    table.columns.addAll([
+      'Method',
+      'End-point',
+      'Name',
+    ]);
+
     for (var row in router._routes) {
       table.data.addAll([
         row.method,
         row.route,
-        row.name == null ? '<nameless>' : row.name,
+        row.name == null ? '' : row.name,
       ]);
     }
 
