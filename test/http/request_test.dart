@@ -10,13 +10,16 @@ class RequestTest implements TestCase {
   Server server;
   Config config;
   Container container;
+  SessionManager sessions;
 
   setUp() {
     config = new Config();
     container = new Container();
     router = new Router();
+    sessions = new SessionManager();
     server = new Server(config, container);
     server.attachRouter(router);
+    server.attachSessionManager(sessions);
   }
 
   tearDown() {
