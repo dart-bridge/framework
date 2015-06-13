@@ -15,8 +15,14 @@ part 'exceptions/template_exception.dart';
 part 'view_service_provider.dart';
 part 'template_response.dart';
 part 'helpers.dart';
-part 'btl_parser.dart';
 part 'template_loader.dart';
 part 'file_template_loader.dart';
 part 'template.dart';
 part 'template_parser.dart';
+part 'btl_parser.dart';
+part 'btl_to_handlebars_parser.dart';
+
+var _templateParsers = <String, Type>{
+  'html': BtlParser,
+  'handlebars': BtlToHandlebarsParser,
+};

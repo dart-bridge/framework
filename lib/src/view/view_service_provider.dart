@@ -9,20 +9,30 @@ class ViewServiceProvider implements ServiceProvider {
     this.program = program;
     var env = config.env('APP_ENV', 'production');
     javaScriptTags = (env == 'production');
-    container.bind(TemplateParser, BtlParser);
+    var parserId = config('view.parse_to', 'html');
+    Type parser = parserId == null
+    ? null
+    : _templateParsers.containsKey(parserId)
+    ? _templateParsers[parserId]
+    : throw new TemplateException('Parser [$parserId] does not exist');
+    container.bind(TemplateParser, parser);
     container.bind(TemplateLoader, FileTemplateLoader);
     publicDirectory = config('http.server.publicRoot', 'web');
     program.addCommand(build);
   }
 
-  load(Server server, Template template) {
+  load(Server server, Template template, Container container) {
     server.modulateRouteReturnValue((TemplateResponse value) async {
       if (value is TemplateResponse) {
+        var parser = (value.parser != null)
+        ? container.make(value.parser)
+        : container.make(TemplateParser);
         await template.load(value.templateName);
         String contents = await template.parse(
             withData: value.data,
             withScripts: value.scripts,
-            javaScript: javaScriptTags);
+            javaScript: javaScriptTags,
+            withParser: parser);
         return '<!DOCTYPE html><html>$contents</html>';
       }
       return value;
