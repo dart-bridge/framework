@@ -1,6 +1,8 @@
 part of bridge.http;
 
 abstract class Server {
+  Function onError;
+
   factory Server(Config config, Container container)
   => new _Server(config, container);
 
@@ -20,8 +22,6 @@ abstract class Server {
 
   void attachRouter(Router router);
 
-  void attachSessionManager(SessionManager sessionManager);
-
   Future<shelf.Response> handle(shelf.Request request);
 }
 
@@ -34,7 +34,10 @@ class _Server implements Server {
   Set<Function> _returnValueModulators = new Set();
   Container _container;
   Config _config;
-  SessionManager _sessions;
+  Function onError = (e, s) {
+    print(e);
+    print(s);
+  };
 
   String get hostname => _host;
 
@@ -49,36 +52,16 @@ class _Server implements Server {
     _router = router;
   }
 
-  void attachSessionManager(SessionManager sessions) {
-    _sessions = sessions;
-  }
-
   void addMiddleware(shelf.Middleware middleware) {
     _middleware.add(middleware);
   }
 
   Future<HttpServer> start() async {
-    var pipeline = const shelf.Pipeline()
-    .addMiddleware(shelf.createMiddleware(errorHandler: _globalErrorHandler))
-    .addMiddleware(shelf.createMiddleware(requestHandler: _staticHandler))
-    .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
-    _middleware.forEach((m) => pipeline = pipeline.addMiddleware(m));
-    return _server = await shelf_io.serve(pipeline.addHandler(handle), _host, _port);
-  }
-
-  Future<shelf.Response> _staticHandler(shelf.Request request) async {
-    shelf.Handler staticHandler = shelf_static.createStaticHandler(_publicRoot(), serveFilesOutsidePath: true);
-    if (await new File('${_publicRoot()}/${request.url.path}').exists())
-      return staticHandler(request);
-    return null;
-  }
-
-  String _publicRoot() {
-    return _config('http.server.publicRoot', 'web');
+    return _server = await shelf_io.serve(_buildPipeline(), _host, _port);
   }
 
   shelf.Response _globalErrorHandler(error, StackTrace stack) {
-    new Future.microtask(() => throw error);
+    onError(error, stack);
     if (error is HttpNotFoundException)
       return new shelf.Response.notFound('404 Not Found');
     return new shelf.Response.internalServerError(body: 'Internal Server Error');
@@ -88,23 +71,28 @@ class _Server implements Server {
     return response.change(headers: {'X-Powered-By': 'Bridge for Dart'});
   }
 
+  shelf.Handler _buildPipeline() {
+    var pipeline = const shelf.Pipeline()
+    .addMiddleware(shelf.createMiddleware(errorHandler: _globalErrorHandler))
+    .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
+    _middleware.forEach((m) => pipeline = pipeline.addMiddleware(m));
+    return pipeline.addHandler(_handle);
+  }
+
   Future<shelf.Response> handle(shelf.Request request) async {
-    Input input = await _getInputFor(request);
-    Session session = _sessions.sessionOf(request);
+    return _buildPipeline()(request);
+  }
+
+  Future<shelf.Response> _handle(shelf.Request request) async {
     for (Route route in _router._routes) {
-      if (_routeMatch(route, request, input))
-        return _routeResponse(route, request, input, session);
+      if (_routeMatch(route, request))
+        return _routeResponse(route, request);
     }
     throw new HttpNotFoundException(request);
   }
 
-  Future<Input> _getInputFor(shelf.Request request) async {
-    if (!new RegExp(r'^(GET|HEAD)$').hasMatch(request.method))
-      return await new InputParser(request).parse();
-    return new Input({});
-  }
-
-  bool _routeMatch(Route route, shelf.Request request, Input input) {
+  bool _routeMatch(Route route, shelf.Request request) {
+    Input input = request.context['input'];
     var method = input.containsKey('_method')
     ? input['_method']
     : request.method;
@@ -112,14 +100,12 @@ class _Server implements Server {
   }
 
   Future<shelf.Response> _routeResponse(Route route,
-                                        shelf.Request request,
-                                        Input input,
-                                        Session session) async {
+                                        shelf.Request request) async {
     var returnValue = await _container.resolve(route.handler,
     injecting: {
       shelf.Request: request,
-      Input: input,
-      Session: session,
+      Input: request.context['input'],
+      Session: request.context['session'],
     },
     namedParameters: route.wildcards(request.url.path));
     return _valueToResponse(returnValue);

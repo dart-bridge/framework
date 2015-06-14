@@ -26,9 +26,9 @@ class SessionManagerTest implements TestCase {
     var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
     expect(manager.hasSession(request), isFalse);
     request = manager.attachSession(request);
-    var session = manager.sessionOf(request);
+    var session = request.context['session'];
     expect(session, new isInstanceOf<Session>());
-    expect(manager.sessionOf(request), equals(session));
+    expect(request.context['session'], equals(session));
   }
 
   @test
@@ -36,7 +36,6 @@ class SessionManagerTest implements TestCase {
     var request = manager.attachSession(
         new shelf.Request('GET', new Uri.http('example.com', '/')));
     var response = manager.passSession(from: request, to: new shelf.Response.ok('body'));
-
-    expect(manager.sessionOf(request), equals(manager.sessionOf(response)));
+    expect(response.context['session'], equals(request.context['session']));
   }
 }

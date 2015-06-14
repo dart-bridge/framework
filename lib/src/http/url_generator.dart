@@ -18,7 +18,7 @@ class UrlGenerator {
   }
 
   Route _getNamedRoute(String name) {
-    return _router._routes.firstWhere((r) => r.name == name);
+    return _router._routes.firstWhere((r) => r.name == name, orElse: () => null);
   }
 
   String _replaceWildcards(Route route, Map<String, dynamic> wildcards) {

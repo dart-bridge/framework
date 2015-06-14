@@ -31,7 +31,7 @@ class SessionManager {
       session = _generateSession();
 
     return message.change(context: {
-      'X-BRIDGE-SESSION-ID': session.id
+      'session': session
     });
   }
 
@@ -49,17 +49,11 @@ class SessionManager {
   }
 
   bool hasSession(shelf.Message message) {
-    var sessionId = _idOf(message);
-    if (sessionId == null) return false;
-    return _sessions.containsKey(sessionId);
+    return message.context['session'] is Session;
   }
 
   Session _sessionOf(shelf.Message message) {
-    return _sessions[_idOf(message)];
-  }
-
-  String _idOf(shelf.Message message) {
-    return message.context[Cookie.sessionIdKey];
+    return message.context['session'];
   }
 
   Session _generateSession() {
@@ -80,7 +74,7 @@ class SessionManager {
 
   shelf.Message passSession({shelf.Message from, shelf.Message to}) {
     return to.change(context: {
-      Cookie.sessionIdKey: _idOf(from)
+      'session': from.context['session']
     });
   }
 

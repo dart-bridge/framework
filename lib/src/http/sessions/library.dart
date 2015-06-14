@@ -10,4 +10,4 @@ import 'dart:math' show Random;
 part 'session_manager.dart';
 part 'session.dart';
 part 'cookie.dart';
-part 'sessions_middleware.dart';
+part '../middleware/sessions_middleware.dart';

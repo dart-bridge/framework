@@ -15,7 +15,6 @@ class HttpServiceProvider implements ServiceProvider {
     this.router = router;
 
     server.attachRouter(router);
-    server.attachSessionManager(manager);
 
     container.singleton(server, as: Server);
     container.singleton(router, as: Router);
@@ -24,10 +23,25 @@ class HttpServiceProvider implements ServiceProvider {
 
   load(Program program,
        SessionsMiddleware sessionsMiddleware,
+       CsrfMiddleware csrfMiddleware,
+       StaticFilesMiddleware staticFilesMiddleware,
+       InputMiddleware inputMiddleware,
        UrlGenerator urlGenerator) {
     _urlGenerator = urlGenerator;
 
     server.addMiddleware(sessionsMiddleware);
+    server.addMiddleware(staticFilesMiddleware);
+    server.addMiddleware(inputMiddleware);
+    server.addMiddleware(csrfMiddleware);
+    server.onError = (e, s) {
+      print('');
+      program.printInfo(new trace.Chain.forTrace(s).terse
+      .toString().split('\n').take(5).toList().reversed.join('\n'));
+      print('');
+      program.printWarning('<underline>Error in HTTP layer:</underline>');
+      program.printInfo(e);
+      print('');
+    };
 
     this.program = program;
     program.addCommand(start);

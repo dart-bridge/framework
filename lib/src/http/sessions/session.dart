@@ -39,4 +39,8 @@ class Session {
     if (!_reflashedKeys.contains(key))
       _reflashedKeys.add(key);
   }
+
+  String toString() {
+    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(_sessionVariables)})';
+  }
 }

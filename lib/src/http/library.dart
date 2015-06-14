@@ -3,17 +3,19 @@ library bridge.http;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
+import 'package:stack_trace/stack_trace.dart' as trace;
 import 'package:dlog/dlog.dart' as dlog;
 import 'package:bridge/core.dart';
 import 'package:bridge/exceptions.dart';
 import 'package:bridge/cli.dart';
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' hide Cookie;
 import 'dart:convert';
 import 'package:formler/formler.dart';
 import 'dart:mirrors';
 
 import 'sessions/library.dart';
+import 'dart:collection';
 export 'sessions/library.dart';
 
 part 'http_service_provider.dart';
@@ -25,3 +27,7 @@ part 'input.dart';
 part 'input_parser.dart';
 part 'url_generator.dart';
 part 'helpers.dart';
+part 'middleware/csrf_middleware.dart';
+part 'exceptions/token_mismatch_exception.dart';
+part 'middleware/static_files_middleware.dart';
+part 'middleware/input_middleware.dart';

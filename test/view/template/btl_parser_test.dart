@@ -43,10 +43,10 @@ class BtlParserTest implements TestCase {
   @test
   it_can_repeat_markup_for_every_item_in_list() {
     expect(parser.parse(r"<for in=$items>$key</for>", {
-    'items': [
-      {'key': 'value'},
-      {'key': 'value2'},
-    ]
+      'items': [
+        {'key': 'value'},
+        {'key': 'value2'},
+      ]
     }), equals('valuevalue2'));
   }
 
@@ -111,7 +111,7 @@ class BtlParserTest implements TestCase {
         {'show': false, 'content': 'Content3'},
       ]
     }).replaceAll(new RegExp(r'\s+'), ' '), equals(
-      r'<div> <h1>Title</h1> $wag <p>Content1</p> $wag <p>Content2</p> $wag </div>'
+        r'<div> <h1>Title</h1> $wag <p>Content1</p> $wag <p>Content2</p> $wag </div>'
     ));
   }
 
