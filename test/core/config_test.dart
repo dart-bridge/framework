@@ -4,7 +4,6 @@ import 'package:bridge/core.dart';
 import 'dart:io';
 
 class ConfigTest implements TestCase {
-
   Config config;
 
   setUp() async {
@@ -20,7 +19,7 @@ class ConfigTest implements TestCase {
 
   @test
   it_contains_a_map() {
-    expect(config['config'], equals({'key':'value'}));
+    expect(config['config'], containsPair('key','value'));
   }
 
   @test
@@ -71,5 +70,10 @@ class ConfigTest implements TestCase {
   @test
   it_provides_a_fallback_if_env_key_does_not_exist() {
     expect(config.env('NOT_A_REAL_KEY', 'default'), equals('default'));
+  }
+
+  @test
+  it_supports_syntax_where_env_var_potentially_is_replacing_default_value() {
+    expect(config('config.environment_key'), equals('value'));
   }
 }

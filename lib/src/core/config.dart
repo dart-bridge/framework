@@ -133,11 +133,35 @@ class _Config implements Config {
     if (loaded == null) return null;
 
     if (loaded is Iterable)
-      return []
-        ..addAll(loaded);
+      return _replaceEnvInList(new List.from(loaded));
 
-    return {}
-      ..addAll(loaded);
+    return _replaceEnvInMap(new Map.from(loaded));
+  }
+
+  List _replaceEnvInList(List list) {
+    for (var item in list) {
+      list[list.indexOf(item)] = _replaceEnv(item);
+    }
+    return list;
+  }
+
+  Map _replaceEnvInMap(Map map) {
+    for (var key in map.keys) {
+      map[key] = _replaceEnv(map[key]);
+    }
+    return map;
+  }
+
+  Object _replaceEnv(value) {
+    if (value is List) return _replaceEnvInList(value);
+    if (value is Map) return _replaceEnvInMap(value);
+    var matcher = new RegExp(r'^env\(\s*(.*?)\s*(?:,\s*(.*?))?\s*\)$');
+    if (value is! String || !matcher.hasMatch(value)) return value;
+    return (value as String).replaceFirstMapped(matcher, (m) {
+      var envName = m[1];
+      var defaultValue = m[2];
+      return env(envName, defaultValue);
+    });
   }
 
   call(String key, [defaultValue]) {
