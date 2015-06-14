@@ -139,6 +139,7 @@ class _Config implements Config {
   }
 
   List _replaceEnvInList(List list) {
+    list = list.toList();
     for (var item in list) {
       list[list.indexOf(item)] = _replaceEnv(item);
     }
@@ -146,6 +147,7 @@ class _Config implements Config {
   }
 
   Map _replaceEnvInMap(Map map) {
+    map = new Map.from(map);
     for (var key in map.keys) {
       map[key] = _replaceEnv(map[key]);
     }
