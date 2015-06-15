@@ -28,7 +28,9 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
       --debug \
       test/all.dart|tee >(cat - >&5))
     
+    set +e
     echo $OUTPUT | grep "JSON file not found or failed to parse." &>/dev/null
+    set -e
     
     if [[ $? -ne 0 ]]; then
       break
