@@ -16,11 +16,24 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
   dart tool/create_all_tests_file.dart
 
   echo "Running coverage..."
-  pub run dart_coveralls report \
-    --retry 2 \
-    --exclude-test-files \
-    --debug \
-    test/all.dart
+
+  n=0
+  until [ $n -ge 5 ]
+  do
+    pub run dart_coveralls report \
+      --retry 2 \
+      --exclude-test-files \
+      --debug \
+      test/all.dart && break  # substitute your command here
+
+    echo "Coverage failed. Retried "$n" time."
+
+    n=$[$n+1]
+    sleep 15
+
+    echo "Rerunning coverage..."
+  done
+
   echo "Coverage complete."
 
   # Destroy test/all.dart
