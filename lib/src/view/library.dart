@@ -12,6 +12,7 @@ import 'package:bridge/http.dart';
 import 'package:bridge/exceptions.dart';
 import 'package:bridge/cli.dart';
 import 'package:bridge/tether.dart';
+import 'package:rikulo_el/el.dart';
 
 part 'exceptions/template_exception.dart';
 part 'view_service_provider.dart';
@@ -23,6 +24,7 @@ part 'template.dart';
 part 'template_parser.dart';
 part 'btl_parser.dart';
 part 'btl_to_handlebars_parser.dart';
+part 'expression_parser.dart';
 
 var _templateParsers = <String, Type>{
   'html': BtlParser,

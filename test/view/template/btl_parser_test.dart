@@ -2,6 +2,7 @@ import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/view.dart';
 import 'package:bridge/http.dart';
+import 'package:rikulo_el/el.dart';
 
 class BtlParserTest implements TestCase {
   BtlParser parser;
@@ -28,7 +29,7 @@ class BtlParserTest implements TestCase {
 
   @test
   it_throws_when_data_does_not_cover_all_variables() {
-    expect(() => parser.parse(r'<div>$var</div>'), throwsA(const isInstanceOf<TemplateException>()));
+    expect(() => parser.parse(r'<div>$var</div>'), throwsA(const isInstanceOf<PropertyNotFoundException>()));
   }
 
   @test
@@ -144,6 +145,47 @@ class BtlParserTest implements TestCase {
   it_can_access_object_fields_as_nested_variables() {
     var template = r'<div>${test.property}</div>';
     expect(parser.parse(template, {'test': new TestClass()}), equals('<div>value</div>'));
+  }
+
+  @test
+  it_allows_for_complex_expressions_within_bracketed_variables() {
+    var template = r'''
+    ${(1 + 1) * 2 / intVar}
+    ${boolVar ? 'string' : stringVar}
+    ${stringVar == 'stringValue' ? 123 : 1234}
+    ${stringVar == 'otherValue'}
+    ${2 * (1 + 1)}
+    ''';
+
+    var intVar = 4, boolVar = true, stringVar = 'stringValue';
+    var resultOne = r'''
+    1
+    string
+    123
+    false
+    4
+    ''';
+    expect(parser.parse(template, {
+      'intVar': intVar,
+      'boolVar': boolVar,
+      'stringVar': stringVar
+    }), equals(resultOne));
+
+    intVar = 1;
+    boolVar = false;
+    stringVar = 'otherValue';
+    var resultTwo = r'''
+    4
+    otherValue
+    1234
+    true
+    4
+    ''';
+    expect(parser.parse(template, {
+      'intVar': intVar,
+      'boolVar': boolVar,
+      'stringVar': stringVar
+    }), equals(resultTwo));
   }
 }
 

@@ -2,7 +2,7 @@ part of bridge.view;
 
 class BtlParser implements TemplateParser {
   Map<String, dynamic> _data;
-  static final String _variableMatchString = r'\$(?:\{([\w.]+)}|(\w+))';
+  static final String _variableMatchString = r'\$(?:\{([^]+?)}|(\w+))';
   static final RegExp _variableMatcher = new RegExp(_variableMatchString);
   UrlGenerator _urlGenerator;
 
@@ -76,17 +76,29 @@ class BtlParser implements TemplateParser {
   }
 
   _injectVariable(Match match) {
-    return _dataFromKey(_getKeyFromVariableMatch(match));
+    return _dataFromExpression(_getExpressionFromVariableMatch(match));
   }
 
-  String _getKeyFromVariableMatch(Match match) {
+  String _getExpressionFromVariableMatch(Match match) {
     return (match[1] == null) ? match[2] : match[1];
   }
 
-  _dataFromKey(String key) {
+  _dataFromExpression(String expression) {
+//    expression = expression.replaceAllMapped(new RegExp(r'\.(\d+)'), (m) => '[${m[1]}]');
+//    expression = expression.replaceAllMapped(
+//        new RegExp(r'''(['"])?([A-Za-z][A-Za-z.]*)\1?'''),
+////            (m) => m[1] != null ? m[0] : _getVariableValue(m[0]));
+//            (m) {
+//              if (m[1] == null) return _getVariableValue(m[0]);
+//              return '"${m[2]}"';
+//            });
+    return new ExpressionParser('#{$expression}').parse(_data);
+  }
+
+  _getVariableValue(String varName) {
     var pointer = _data;
-    for (dynamic segment in key.split('.'))
-      pointer = _navigatePointerToNextKey(segment, pointer, key);
+    for (dynamic segment in varName.split('.'))
+      pointer = _navigatePointerToNextKey(segment, pointer, varName);
     return pointer;
   }
 
@@ -122,19 +134,19 @@ class BtlParser implements TemplateParser {
   String _flattenRepeat(Match match) {
     var out = '';
     var key = (match[2] == null) ? match[3] : match[2];
-    for (var i = 0; i < _dataFromKey(key).length; ++i)
+    for (var i = 0; i < _getVariableValue(key).length; ++i)
       out += _prependVariables(key, match[4], i, match[1]);
     return out;
   }
 
   String _prependVariables(String prefix, String contents, int index, String alias) {
     return contents.replaceAllMapped(_variableMatcher,
-        (Match match) => '\${$prefix.$index.${_getKeyFromVariableMatchWithAlias(match, alias)}}');
+        (Match match) => '\${$prefix[$index].${_getKeyFromVariableMatchWithAlias(match, alias)}}');
   }
 
   _getKeyFromVariableMatchWithAlias(Match match, String alias) {
     alias = (alias == '') ? '' : '$alias.';
-    return _getKeyFromVariableMatch(match).replaceFirst(new RegExp('^$alias'), '');
+    return _getExpressionFromVariableMatch(match).replaceFirst(new RegExp('^$alias'), '');
   }
 
   String _formRouteActions(String btl) {

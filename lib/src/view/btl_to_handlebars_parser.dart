@@ -1,7 +1,7 @@
 part of bridge.view;
 
 class BtlToHandlebarsParser implements TemplateParser {
-  static final String _variableMatchString = r'\$(?:\{([\w.]+)}|(\w+))';
+  static final String _variableMatchString = r'\$(?:\{([^]+?)}|(\w+))';
   static final RegExp _variableMatcher = new RegExp(_variableMatchString);
   UrlGenerator _urlGenerator;
 
