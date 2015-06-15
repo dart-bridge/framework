@@ -20,16 +20,23 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
   n=0
   until [ $n -ge 5 ]
   do
-    pub run dart_coveralls report \
+    # Workaround when failed coverage script still has exit code
+    exec 5>&1
+    OUTPUT=$(pub run dart_coveralls report \
       --retry 2 \
       --exclude-test-files \
       --debug \
-      test/all.dart && break
+      test/all.dart|tee >(cat - >&5))
+    
+    echo $OUTPUT | grep "JSON file not found or failed to parse." &>/dev/null
+    
+    if [[ $? -ne 0 ]]; then
+      break
+    fi
+
+    echo "Coverage failed. Retried "$n" time."
 
     n=$[$n+1]
-
-    echo "Coverage failed. Retry number "$n
-
     sleep 15
 
     echo "Rerunning coverage..."
