@@ -48,11 +48,11 @@ class RepositoryTest implements TestCase {
     var wasCalled = false;
     collection.onSave = (data) {
       wasCalled = true;
-      expect(data, equals({
-        'id': null,
-        'stringField': 'title',
-        'intField': 1,
-      }));
+      expect(data, containsPair('id', null));
+      expect(data, containsPair('stringField', 'title'));
+      expect(data, containsPair('intField', 1));
+      expect(data['createdAt'], new isInstanceOf<DateTime>());
+      expect(data['updatedAt'], new isInstanceOf<DateTime>());
     };
     
     await repository.save(
@@ -64,8 +64,7 @@ class RepositoryTest implements TestCase {
   }
 }
 
-class TestModel {
-  @field var id;
+class TestModel extends Model {
   @field String stringField;
   @field int intField;
   String normalProperty;

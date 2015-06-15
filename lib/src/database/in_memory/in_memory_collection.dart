@@ -76,4 +76,8 @@ class InMemoryCollection implements Collection {
       return value >= constraintComparator;
     return false;
   }
+
+  Future delete(data) async {
+    _rows.remove(data);
+  }
 }

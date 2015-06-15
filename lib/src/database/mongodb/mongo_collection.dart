@@ -1,45 +1,62 @@
 part of bridge.database.mongodb;
 
 class MongoCollection implements Collection {
-  MongoSelector select;
+  MongoSelector get select => new MongoSelector(this);
   mongo.DbCollection _collection;
 
-  MongoCollection(mongo.DbCollection this._collection) {
-    select = new MongoSelector(this);
-  }
-
-  Map _setIdWithoutUnderscore(Map input) {
-    input['id'] = input['_id'];
-    input.remove('_id');
-    return input;
-  }
-
-  Map _setIdWithUnderscore(Map input) {
-    input = {}
-      ..addAll(input);
-    input['_id'] = input['id'];
-    input.remove('id');
-    return input;
-  }
-
-  List<Map> _setEachIdWithoutUnderscore(List<Map> inputs) {
-    return inputs.map(_setIdWithoutUnderscore).toList();
-  }
+  MongoCollection(mongo.DbCollection this._collection);
 
   Future<List> all() {
-    return _collection.find().toList().then(_setEachIdWithoutUnderscore);
+    return _collection.find().toList().then((m) => m.map(_fieldToStringId));
   }
 
   Future find(id) async {
-    return _collection.findOne(mongo.where.id(id)).then(_setIdWithoutUnderscore);
-  }
-
-  Future<List> get(MongoSelector query) async {
-    return _collection.find(query._builder).toList().then(_setEachIdWithoutUnderscore);
+    return _collection.findOne(_whereId(id)._builder).then(_fieldToStringId);
   }
 
   Future first(MongoSelector query) {
-    return _collection.findOne(query._builder).then(_setIdWithoutUnderscore);
+    return _collection.findOne(query._builder).then(_fieldToStringId);
+  }
+
+  Future<List> get(MongoSelector query) {
+    return _collection.find(query._builder).toList().then((m) => m.map(_fieldToStringId));
+  }
+
+  Future save(data) async {
+    if (data['id'] == null) data['id'] = _generateId();
+    await _collection.save(_fieldToObjectId(data));
+    return data['id'];
+  }
+
+  String _generateId() {
+    return new mongo.ObjectId().toHexString();
+  }
+
+  Map _fieldToObjectId(Map map) {
+    map = new Map.from(map);
+    map['_id'] = _toObjectId(map['id']);
+    map.remove('id');
+    return map;
+  }
+
+  Map _fieldToStringId(Map map) {
+    if (map == null) return {};
+    map = new Map.from(map);
+    map['id'] = _toStringId(map['_id']);
+    map.remove('_id');
+    return map;
+  }
+
+  String _toStringId(mongo.ObjectId id) {
+    return id.toHexString();
+  }
+
+  mongo.ObjectId _toObjectId(String id) {
+    return mongo.ObjectId.parse(id);
+  }
+
+  MongoSelector _whereId(String id) {
+    return select.where('_id', isEqualTo: _toObjectId(id));
   }
 
   MongoSelector where(String field,
@@ -59,10 +76,7 @@ class MongoCollection implements Collection {
         isGreaterThanOrEqualTo: isGreaterThanOrEqualTo);
   }
 
-  Future save(data) async {
-    if (data['id'] == null)
-      data['id'] = new mongo.ObjectId();
-    await _collection.save(_setIdWithUnderscore(data));
-    return data['id'];
+  Future delete(Map data) async {
+    await _collection.remove(_whereId(data['id']));
   }
 }

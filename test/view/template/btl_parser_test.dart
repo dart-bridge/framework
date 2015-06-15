@@ -139,4 +139,14 @@ class BtlParserTest implements TestCase {
     var after = "<form action='/'>";
     expect(parser.parse(before), equals(after));
   }
+
+  @test
+  it_can_access_object_fields_as_nested_variables() {
+    var template = r'<div>${test.property}</div>';
+    expect(parser.parse(template, {'test': new TestClass()}), equals('<div>value</div>'));
+  }
+}
+
+class TestClass {
+  String property = 'value';
 }

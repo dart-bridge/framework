@@ -23,14 +23,14 @@ class Repository<M> implements Collection {
     var instance = reflect(_container.make(M));
     for (var fieldName in fields.keys) {
       var symbol = new Symbol(fieldName);
-      if (instance.type.declarations.containsKey(symbol))
+      if (instance.type.instanceMembers.containsKey(symbol))
         instance.setField(symbol, fields[fieldName]);
     }
     return instance.reflectee;
   }
 
   Map<String, dynamic> _fieldsFromModel(M model) {
-    var fieldNames = _getFields();
+    var fieldNames = _getFields(model);
     var fields = <String, dynamic>{};
     var mirror = reflect(model);
     for (var fieldName in fieldNames)
@@ -38,14 +38,21 @@ class Repository<M> implements Collection {
     return fields;
   }
 
-  Iterable<Symbol> _getFields() {
-    var classMirror = reflectType(M);
+  Iterable<Symbol> _getFields(M model) {
+    var instance = reflect(model);
     var symbols = <Symbol>[];
-    var fields = classMirror.declarations;
+    var fields = _allFields(instance.type);
     for (var symbol in fields.keys)
       if (fields[symbol].metadata.any((m) => m.reflectee == field))
         symbols.add(symbol);
     return symbols;
+  }
+
+  Map<Symbol, DeclarationMirror> _allFields(ClassMirror mirror) {
+    var declarations = new Map.from(mirror.declarations);
+    if (mirror.superclass != reflectClass(Object))
+      declarations.addAll(_allFields(mirror.superclass));
+    return declarations;
   }
 
   List<M> _instantiateModelsFromListOfFields(List<Map> listOfFields) {
@@ -86,6 +93,15 @@ class Repository<M> implements Collection {
   }
 
   Future save(M model) async {
-    (model as dynamic).id = await _collection.save(_fieldsFromModel(model));
+    var fields = _fieldsFromModel(model);
+    fields['updatedAt'] = new DateTime.now();
+    if (fields['createdAt'] == null)
+      fields['createdAt'] = fields['updatedAt'];
+    (model as Model).id = await _collection.save(fields);
+  }
+
+  Future delete(M model) async {
+    var fields = _fieldsFromModel(model);
+    await _collection.delete(fields);
   }
 }

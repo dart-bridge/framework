@@ -1,7 +1,7 @@
 part of bridge.database;
 
 abstract class Collection {
-  Selector select;
+  Selector get select;
 
   Future<List> all();
 
@@ -12,6 +12,8 @@ abstract class Collection {
   Future first(Selector query);
 
   Future save(data);
+
+  Future delete(data);
 
   Selector where(String field,
                  {isEqualTo,

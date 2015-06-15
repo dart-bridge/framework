@@ -4,6 +4,7 @@ library bridge.view;
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:mirrors';
 
 // Using
 import 'package:bridge/core.dart';

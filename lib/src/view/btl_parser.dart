@@ -91,6 +91,9 @@ class BtlParser implements TemplateParser {
   }
 
   _navigatePointerToNextKey(segment, pointer, String key) {
+    var mirror = reflect(pointer);
+    if (mirror.type.instanceMembers.containsKey(new Symbol(segment)))
+      return mirror.getField(new Symbol(segment)).reflectee;
     if (_isIntParsible(segment))
       segment = int.parse(segment);
     if (_canNotNavigate(pointer, segment))
