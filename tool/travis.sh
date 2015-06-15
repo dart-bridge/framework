@@ -24,11 +24,12 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
       --retry 2 \
       --exclude-test-files \
       --debug \
-      test/all.dart && break  # substitute your command here
-
-    echo "Coverage failed. Retried "$n" time."
+      test/all.dart && break
 
     n=$[$n+1]
+
+    echo "Coverage failed. Retry number "$n
+
     sleep 15
 
     echo "Rerunning coverage..."
