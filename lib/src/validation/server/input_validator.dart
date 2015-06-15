@@ -1,6 +1,6 @@
 part of bridge.validation;
 
-abstract class InputValidator {
+abstract class InputValidator implements Input {
   final Input _input;
 
   InputValidator(Input this._input);

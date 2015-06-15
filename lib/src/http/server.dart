@@ -104,11 +104,18 @@ class _Server implements Server {
     var returnValue = await _container.resolve(route.handler,
     injecting: {
       shelf.Request: request,
-      Input: request.context['input'],
+      Input: _clearPrivates(request.context['input']),
       Session: request.context['session'],
     },
     namedParameters: route.wildcards(request.url.path));
     return _valueToResponse(returnValue);
+  }
+
+  Object _clearPrivates(Map map) {
+    map.keys.where((k) => k.startsWith('_')).toList().forEach((k) {
+      map.remove(k);
+    });
+    return map;
   }
 
   Future<shelf.Response> _valueToResponse(Object value, [int statusCode = 200]) async {

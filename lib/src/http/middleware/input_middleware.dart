@@ -3,7 +3,7 @@ part of bridge.http;
 class InputMiddleware {
   call(shelf.Handler innerHandler) {
     return (shelf.Request request) async {
-      var input = await _getInputFor(request);
+      Input input = await _getInputFor(request);
       return innerHandler(new shelf.Request(request.method, request.requestedUri,
       protocolVersion: request.protocolVersion,
       headers: request.headers,
