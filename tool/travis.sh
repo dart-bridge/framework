@@ -30,11 +30,12 @@ if [ "$COVERALLS_TOKEN" ] && [ "$TRAVIS_DART_VERSION" = "stable" ]; then
     
     set +e
     echo $OUTPUT | grep "JSON file not found or failed to parse." &>/dev/null
-    set -e
     
     if [[ $? -ne 0 ]]; then
       break
     fi
+    
+    set -e
 
     echo "Coverage failed. Retried "$n" time."
 
