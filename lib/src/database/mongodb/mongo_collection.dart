@@ -77,6 +77,6 @@ class MongoCollection implements Collection {
   }
 
   Future delete(Map data) async {
-    await _collection.remove(_whereId(data['id']));
+    await _collection.remove(_whereId(data['id'])._builder);
   }
 }
