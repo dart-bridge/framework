@@ -187,6 +187,15 @@ class BtlParserTest implements TestCase {
       'stringVar': stringVar
     }), equals(resultTwo));
   }
+
+  @test
+  it_can_have_global_functions_in_expression() {
+    expect(parser.parse(r'${globalFunction("value")}'), equals('value plus'));
+  }
+}
+
+globalFunction(String message) {
+  return '$message plus';
 }
 
 class TestClass {
