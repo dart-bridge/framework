@@ -55,4 +55,10 @@ class RouteTest implements TestCase {
     var route = new Route('GET', '/', handler, name: 'home');
     expect(route.name, equals('home'));
   }
+
+  @test
+  it_allows_head_requests_to_access_get_routes() async {
+    var route = new Route('GET', '/', handler);
+    expect(route.matches('HEAD', '/'), isTrue);
+  }
 }

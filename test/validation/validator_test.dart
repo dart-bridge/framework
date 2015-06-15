@@ -81,9 +81,10 @@ class ValidatorTest implements TestCase {
       'second': 'a lowercase string',
     }, {
       'first': 'isString',
-    }), throwsA(
-      new isInstanceOf<InvalidArgumentException>()
-    ));
+    }), throwsA(allOf(
+      new isInstanceOf<InvalidArgumentException>(),
+      predicate((e) => e.message.contains('identical'))
+    )));
   }
 
   @test

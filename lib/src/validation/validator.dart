@@ -25,9 +25,14 @@ class Validator {
     return Future.wait(values.map((v) => validate(v, expression)));
   }
 
+  bool _isIdenticalStringLists(Iterable<String> list1, Iterable<String> list2) {
+    return list1.length == list2.length
+    && list1.join('') == list2.join('');
+  }
+
   Future validateAll(Map<String, dynamic> values,
                      Map<String, String> expressions) async {
-    if (identical(values.keys,expressions.keys))
+    if (!_isIdenticalStringLists(values.keys, expressions.keys))
       throw new InvalidArgumentException('The lists of keys must be identical');
     var validations = <Future>[];
     values.forEach((k, v) {

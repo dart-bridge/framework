@@ -101,7 +101,28 @@ class MockCollection implements Collection {
   
   Future save(data) => onSave(data);
 
-  noSuchMethod(Invocation invocation) {
+  MockSelector get select => new MockSelector();
 
+  MockSelector where(String field,
+                 {isEqualTo,
+                 isNotEqualTo,
+                 isLessThan,
+                 isGreaterThan,
+                 isLessThanOrEqualTo,
+                 isGreaterThanOrEqualTo}) {
+    return select;
   }
+
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class MockSelector implements Selector {
+  String status;
+
+  MockSelector where(String field, {isEqualTo, isNotEqualTo, isLessThan, isGreaterThan, isLessThanOrEqualTo, isGreaterThanOrEqualTo}) {
+    status = '$field should be equal to $isEqualTo';
+    return this;
+  }
+
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

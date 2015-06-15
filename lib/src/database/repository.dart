@@ -5,7 +5,7 @@ class Repository<M> implements Collection {
   Database _database;
   Collection _collection;
   Container _container;
-  Selector select;
+  Selector get select => _collection.select;
 
   Repository(Container this._container, Database this._database) {
     _setCollection();
@@ -16,7 +16,6 @@ class Repository<M> implements Collection {
     if (collectionName == null)
       collectionName = MirrorSystem.getName(reflectType(M).simpleName).toLowerCase() + 's';
     _collection = _database.collection(collectionName);
-    select = _collection.select;
   }
 
   M _instantiateModelFromFields(Map<String, dynamic> fields) {

@@ -2,6 +2,7 @@ import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/core.dart';
 import 'dart:io';
+import 'package:dotenv/dotenv.dart' as dotenv;
 
 class ConfigTest implements TestCase {
   Config config;
@@ -75,5 +76,24 @@ class ConfigTest implements TestCase {
   @test
   it_supports_syntax_where_env_var_potentially_is_replacing_default_value() {
     expect(config('config.environment_key'), equals('value'));
+  }
+
+  @test
+  it_provides_a_fallback_when_a_dotenv_file_is_not_present() async {
+    await new File('.env').rename('.env.disabled');
+    dotenv.clean();
+    config = await Config.load(new Directory('test/core/config_example'));
+    await new File('.env.disabled').rename('.env');
+    expect(config.env('TEST_KEY'), isNull);
+  }
+
+  @test
+  it_displays_its_content_when_calling_toString() async {
+    expect(config.toString(), contains(config('config').toString()));
+  }
+
+  @test
+  it_supports_yaml_files_with_lists_at_root() async {
+    expect(config('list'), equals(['list', 'at', 'root']));
   }
 }

@@ -17,6 +17,13 @@ class TemplateTest implements TestCase {
   tearDown() {}
 
   @test
+  it_loads_a_template() async {
+    loader.template = 'template';
+    await template.load('');
+    expect(template.contents, equals('template'));
+  }
+
+  @test
   it_loads_partials() async {
     loader.template = '<h1>Title</h1>';
     template.contents = '<div><import template="template"/></div>';
@@ -41,12 +48,13 @@ class TemplateTest implements TestCase {
   }
 
   @test
-  it_can_inject_script_tag() {
-    template.contents = '<body></body>';
-    template.injectScript('main');
+  it_can_inject_script_tag() async {
+    loader.template = '<body></body>';
+    await template.load('');
+    await template.parse(withScripts: ['main']);
     expect(template.contents, equals("<body><script type='application/dart' src='main.dart'></script></body>"));
-    template.contents = '<body></body>';
-    template.injectScript('main', javaScript: true);
+    await template.load('');
+    await template.parse(withScripts: ['main'], javaScript: true);
     expect(template.contents, equals("<body><script src='main.dart.js'></script></body>"));
   }
 }

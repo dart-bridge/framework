@@ -86,6 +86,16 @@ class RequestTest implements TestCase {
     shelf.Response successfulResponse = await server.handle(request);
     expect(await successfulResponse.readAsString(), equals('value'));
   }
+
+  @test
+  it_injects_a_hidden_input_in_html_forms_with_csrf_token() async {
+    server.addMiddleware(new CsrfMiddleware());
+    sessions.returningSession = new Session('id');
+    router.get('/', () => '<form></form>');
+    var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
+    shelf.Response response = await server.handle(request);
+    expect(await response.readAsString(), equals("<form><input type='hidden' name='_token' value='id'></form>"));
+  }
 }
 
 class MockSessionManager implements SessionManager {

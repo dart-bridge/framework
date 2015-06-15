@@ -28,8 +28,8 @@ class CookieTest implements TestCase {
   it_can_be_parsed_into_a_setcookie_header() {
     expect(cookie.set(
         duration: const Duration(hours: 2),
-        secure: false,
+        secure: true,
         httpOnly: true),
-    equals('key=value; Path=/; Max-Age=7200; HttpOnly'));
+    equals('key=value; Path=/; Max-Age=7200; Secure; HttpOnly'));
   }
 }
