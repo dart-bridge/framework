@@ -53,7 +53,7 @@ class ExpressionParser {
         .toList());
         return '.__methodCall';
       }).replaceAllMapped(varMatcher, (m) {
-        return '(await request("${m[1]}"))';
+        return '(await request("${m[1].replaceAll('__index', '__listAccess."+__index.toString()+"')}"))';
       });
       return '\${$parsedContent}';
     });

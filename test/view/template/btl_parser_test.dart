@@ -2,6 +2,10 @@ import 'package:testcase/testcase.dart';
 //export 'package:testcase/init.dart';
 import 'package:bridge/view.dart';
 
+main() {
+  new TestCaseRunner(new BtlParserTest()).run();
+}
+
 class BtlParserTest implements TestCase {
   BtlParser parser;
 
@@ -21,11 +25,6 @@ class BtlParserTest implements TestCase {
   it_can_inject_a_variable() async {
     expect(await parser.parse(r'<div>$var</div>', {'var': 'value'}),
     equals('<div>value</div>'));
-  }
-
-  @test
-  it_throws_when_data_does_not_cover_all_variables() async {
-    expect(parser.parse(r'<div>$var</div>'), throws);
   }
 
   @test
