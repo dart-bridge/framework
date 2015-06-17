@@ -4,7 +4,6 @@ class BtlParser implements TemplateParser {
   Future<String> parse(String btl, [Map<String, dynamic> data]) async {
     btl = _removeComments(btl);
     btl = _transformRepeats(btl);
-    print(btl);
     btl = await new ExpressionParser().parse(btl, _ensureMap(data));
     btl = _transformIfStatements(btl);
     btl = _extendFormMethods(btl);
@@ -55,16 +54,16 @@ class BtlParser implements TemplateParser {
 
   String _transformRepeats(String btl) {
     return btl.replaceAllMapped(
-        new RegExp(r'<for (?:each=\$([A-Za-z_]\w*) )?in=\$([A-Za-z_]\w*|{[^}]*})>([^]*?)</for>'),
+        new RegExp(r'<for each=\$([A-Za-z_]\w*)\s+in=\$([A-Za-z_]\w*|{[^}]*})>([^]*?)</for>'),
             (m) {
-              var each = m[1] == null ? '_' : m[1];
-              var list = m[2];
-              var contents = m[3].replaceAllMapped(new RegExp(r'\$(?:''$each''|{([^]*?)''$each''([^]*?)})'), (m) {
-                var before = m[1] == null ? '' : m[1];
-                var after = m[2] == null ? '' : m[2];
-               return '\${$before$list[__index]$after}';
-              });
-              return '"""+new List.generate((await request("$list.length")), (i) => i).map((__index)async=>"""$contents""").join("")+"""';
+          var each = m[1] == null ? null : m[1];
+          var list = m[2];
+          var contents = m[3].replaceAllMapped(new RegExp(r'\$(?:''$each''|{([^]*?)''$each''([^]*?)})'), (m) {
+            var before = m[1] == null ? '' : m[1];
+            var after = m[2] == null ? '' : m[2];
+            return '\${$before$list.__index$after}';
+          });
+          return '"""+(await Future.wait(new List.generate((await request("$list.length")), (i) => i).map((__index)async=>"""$contents"""))).join("")+"""';
         });
   }
 }
