@@ -53,7 +53,7 @@ class ExpressionParser {
         .toList());
         return '.__methodCall';
       }).replaceAllMapped(varMatcher, (m) {
-        return '(await request("${m[1]}"))';
+        return '(await request("${m[1].replaceAll('__index', '__listAccess."+__index.toString()+"')}"))';
       });
       return '\${$parsedContent}';
     });
@@ -142,5 +142,14 @@ class ExpressionParser {
       pointer = reflect(pointer).getField(new Symbol(segment)).reflectee;
     }
     return pointer;
+  }
+  Object _getGlobalEntity(String name) {
+    var symbol = new Symbol(name);
+    MethodMirror method = currentMirrorSystem().libraries.values
+    .expand((l) => l.declarations.values)
+    .where((d) => d.isTopLevel && !d.isPrivate)
+    .firstWhere((d) => d.simpleName == symbol, orElse: () => null);
+    if (method == null) return null;
+    return (method.owner as LibraryMirror).getField(symbol).reflectee;
   }
 }
