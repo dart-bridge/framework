@@ -1,5 +1,5 @@
 part of bridge.view;
 
 abstract class TemplateParser {
-  String parse(String template, [Map<String, dynamic> data]);
+  Future<String> parse(String template, [Map<String, dynamic> data]);
 }

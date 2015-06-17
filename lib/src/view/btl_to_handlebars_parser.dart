@@ -7,7 +7,7 @@ class BtlToHandlebarsParser implements TemplateParser {
 
   BtlToHandlebarsParser(UrlGenerator this._urlGenerator);
 
-  String parse(String template, [Map<String, dynamic> data]) {
+  Future<String> parse(String template, [Map<String, dynamic> data]) async {
     template = _removeComments(template);
     template = _translateForLoops(template);
     template = _translateIfStatements(template);
