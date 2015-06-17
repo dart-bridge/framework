@@ -5,6 +5,8 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:mirrors';
+import 'dart:isolate';
+import 'dart:collection';
 
 // Using
 import 'package:bridge/core.dart';
@@ -12,7 +14,6 @@ import 'package:bridge/http.dart';
 import 'package:bridge/exceptions.dart';
 import 'package:bridge/cli.dart';
 import 'package:bridge/tether.dart';
-import 'package:rikulo_el/el.dart';
 
 part 'exceptions/template_exception.dart';
 part 'view_service_provider.dart';
