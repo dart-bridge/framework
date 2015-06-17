@@ -53,7 +53,7 @@ class ExpressionParser {
         .toList());
         return '.__methodCall';
       }).replaceAllMapped(varMatcher, (m) {
-        return '(await request("${m[1].replaceAll('__index', '__listAccess."+__index.toString()+"')}"))';
+        return '(await request("${m[1]}"))';
       });
       return '\${$parsedContent}';
     });
@@ -143,6 +143,7 @@ class ExpressionParser {
     }
     return pointer;
   }
+
   Object _getGlobalEntity(String name) {
     var symbol = new Symbol(name);
     MethodMirror method = currentMirrorSystem().libraries.values
