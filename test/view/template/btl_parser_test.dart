@@ -1,6 +1,10 @@
 import 'package:testcase/testcase.dart';
-export 'package:testcase/init.dart';
+//export 'package:testcase/init.dart';
 import 'package:bridge/view.dart';
+
+main() {
+  new TestCaseRunner(new BtlParserTest()).run();
+}
 
 class BtlParserTest implements TestCase {
   BtlParser parser;
@@ -24,11 +28,6 @@ class BtlParserTest implements TestCase {
   }
 
   @test
-  it_throws_when_data_does_not_cover_all_variables() async {
-    expect(parser.parse(r'<div>$var</div>'), throws);
-  }
-
-  @test
   it_can_inject_variable_nested_in_map() async {
     expect(await parser.parse(r'<div>${map["key"]}</div>', {
       'map': {
@@ -39,16 +38,6 @@ class BtlParserTest implements TestCase {
 
   @test
   it_can_repeat_markup_for_every_item_in_list() async {
-    expect(await parser.parse(r"<for in=$items>$key</for>", {
-      'items': [
-        {'key': 'value'},
-        {'key': 'value2'},
-      ]
-    }), equals('valuevalue2'));
-  }
-
-  @test
-  it_can_name_the_repeated_list_item() async {
     expect(await parser.parse(r"<for each=$item in=$items>${item['key']}</for>", {
       'items': [
         {'key': 'value'},
