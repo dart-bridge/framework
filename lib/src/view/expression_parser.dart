@@ -42,6 +42,8 @@ class GlobalFunctionMapper extends FunctionMapper {
   }
 
   bool _isGlobalFunction(DeclarationMirror element) {
-    return element is MethodMirror && (element as MethodMirror).isRegularMethod && element.isTopLevel;
+    return element is MethodMirror
+    && element.isRegularMethod
+    && element.isTopLevel;
   }
 }
