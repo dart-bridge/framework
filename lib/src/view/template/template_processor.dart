@@ -16,7 +16,9 @@ import 'package:bridge/view.dart';
 
 class Templates extends TemplateCollection {
   Map<String, TemplateCollectionItem> get templates => {
-${_scripts.keys.map((name) => '    "$name": () async => """${_scripts[name]}""",').join('\n')}
+${_scripts.keys
+  .map((name) => '    "$name": () async => """${_scripts[name]}""",')
+  .join('\n')}
   };
 }''';
 }
