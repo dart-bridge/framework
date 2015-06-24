@@ -1,12 +1,23 @@
 part of bridge.view;
 
 class BtlParser implements TemplateParser {
-  Future<String> parse(String btl, [Map<String, dynamic> data]) async {
+  Map<String, dynamic> _data;
+  static final String _variableMatchString = r'\$(?:\{([^]+?)}|(\w+))';
+  static final RegExp _variableMatcher = new RegExp(_variableMatchString);
+  UrlGenerator _urlGenerator;
+
+  BtlParser(UrlGenerator this._urlGenerator);
+
+  String parse(String btl, [Map<String, dynamic> data]) {
+    _data = _ensureMap(data);
     btl = _removeComments(btl);
-    btl = _transformRepeats(btl);
-    btl = await new ExpressionParser().parse(btl, _ensureMap(data));
-    btl = _transformIfStatements(btl);
+    btl = _preEncodeEscaped(btl);
+    btl = _flattenRepeats(btl);
+    btl = _injectVariables(btl);
+    btl = _parseIfStatements(btl);
+    btl = _postDecodeEscaped(btl);
     btl = _extendFormMethods(btl);
+    btl = _formRouteActions(btl);
 
     return btl;
   }
@@ -36,7 +47,15 @@ class BtlParser implements TemplateParser {
     .replaceAll('/_ESCAPEDCOMMENT_/', '//');
   }
 
-  String _transformIfStatements(String btl) {
+  String _preEncodeEscaped(String btl) {
+    return btl.replaceAll(r'\$', r'\$\');
+  }
+
+  String _postDecodeEscaped(String btl) {
+    return btl.replaceAll(r'\$\', r'$');
+  }
+
+  String _parseIfStatements(String btl) {
     RegExp truthyMatcher = new RegExp(r'<if true>((?:(?!<if)[^])*?)<\/if>');
     RegExp falsyMatcher = new RegExp(r'<if false>(?:(?!<if)[^])*?<\/if>');
     while (falsyMatcher.hasMatch(btl))
@@ -52,18 +71,87 @@ class BtlParser implements TemplateParser {
     return (map == null) ? <String, dynamic>{} : map;
   }
 
-  String _transformRepeats(String btl) {
+  String _injectVariables(String btl) {
+    return btl.replaceAllMapped(_variableMatcher, _injectVariable);
+  }
+
+  _injectVariable(Match match) {
+    return _dataFromExpression(_getExpressionFromVariableMatch(match));
+  }
+
+  String _getExpressionFromVariableMatch(Match match) {
+    return (match[1] == null) ? match[2] : match[1];
+  }
+
+  _dataFromExpression(String expression) {
+//    expression = expression.replaceAllMapped(new RegExp(r'\.(\d+)'), (m) => '[${m[1]}]');
+//    expression = expression.replaceAllMapped(
+//        new RegExp(r'''(['"])?([A-Za-z][A-Za-z.]*)\1?'''),
+////            (m) => m[1] != null ? m[0] : _getVariableValue(m[0]));
+//            (m) {
+//              if (m[1] == null) return _getVariableValue(m[0]);
+//              return '"${m[2]}"';
+//            });
+    return new ExpressionParser('#{$expression}').parse(_data);
+  }
+
+  _getVariableValue(String varName) {
+    var pointer = _data;
+    for (dynamic segment in varName.split('.'))
+      pointer = _navigatePointerToNextKey(segment, pointer, varName);
+    return pointer;
+  }
+
+  _navigatePointerToNextKey(segment, pointer, String key) {
+    var mirror = reflect(pointer);
+    if (mirror.type.instanceMembers.containsKey(new Symbol(segment)))
+      return mirror.getField(new Symbol(segment)).reflectee;
+    if (_isIntParsible(segment))
+      segment = int.parse(segment);
+    if (_canNotNavigate(pointer, segment))
+      throw new TemplateException('Data for with segment [$key] was not supplied.');
+    return pointer[segment];
+  }
+
+  bool _canNotNavigate(pointer, key) {
+    if (pointer is List)
+      return (pointer.length < key + 1);
+    else
+      return !pointer.containsKey(key);
+  }
+
+  bool _isIntParsible(String string) {
+    return new RegExp(r'^\d+$').hasMatch(string);
+  }
+
+  String _flattenRepeats(String btl) {
     return btl.replaceAllMapped(
-        new RegExp(r'<for each=\$([A-Za-z_]\w*)\s+in=\$([A-Za-z_]\w*|{[^}]*})>([^]*?)</for>'),
-            (m) {
-          var each = m[1] == null ? null : m[1];
-          var list = m[2];
-          var contents = m[3].replaceAllMapped(new RegExp(r'\$(?:''$each''|{([^]*?)''$each''([^]*?)})'), (m) {
-            var before = m[1] == null ? '' : m[1];
-            var after = m[2] == null ? '' : m[2];
-            return '\${$before$list.__index$after}';
-          });
-          return '"""+(await Future.wait(new List.generate((await request("$list.length")), (i) => i).map((__index)async=>"""$contents"""))).join("")+"""';
-        });
+        new RegExp(r'<for (?:each=\$(\w+) )?in='
+        + _variableMatchString + r'>([^]*?)</for>'),
+        _flattenRepeat);
+  }
+
+  String _flattenRepeat(Match match) {
+    var out = '';
+    var key = (match[2] == null) ? match[3] : match[2];
+    for (var i = 0; i < _getVariableValue(key).length; ++i)
+      out += _prependVariables(key, match[4], i, match[1]);
+    return out;
+  }
+
+  String _prependVariables(String prefix, String contents, int index, String alias) {
+    return contents.replaceAllMapped(_variableMatcher,
+        (Match match) => '\${$prefix[$index].${_getKeyFromVariableMatchWithAlias(match, alias)}}');
+  }
+
+  _getKeyFromVariableMatchWithAlias(Match match, String alias) {
+    alias = (alias == '') ? '' : '$alias.';
+    return _getExpressionFromVariableMatch(match).replaceFirst(new RegExp('^$alias'), '');
+  }
+
+  String _formRouteActions(String btl) {
+    return btl.replaceAllMapped(new RegExp(r'''<form([^]*?)route=(['"])(.*?)\2'''), (m) {
+      return "<form${m[1]}action='${_urlGenerator.route(m[3])}'";
+    });
   }
 }

@@ -16,6 +16,7 @@ dependencies:
   formler: '^0.0.8'
   mongo_dart: '^0.1.47'
   dlog: '^0.0.5'
+  rikulo_el: '^0.7.0'
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"

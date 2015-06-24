@@ -15,14 +15,14 @@ class Template {
                        List<String> withScripts,
                        bool javaScript: false,
                        TemplateParser withParser}) async {
-    TemplateParser parser = (withParser != null) ? withParser : _parser;
+    var parser = (withParser != null) ? withParser : _parser;
     await _importPartials();
     await _extendParents();
     if (withData == null) withData = {};
     if (withScripts == null) withScripts = [];
     for (var script in withScripts)
       injectScript(script, javaScript: javaScript);
-    return _compress(await parser.parse(contents, withData));
+    return _compress(parser.parse(contents, withData));
   }
 
   Future load(String id) async {

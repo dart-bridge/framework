@@ -68,7 +68,7 @@ class MockTemplateLoader implements TemplateLoader {
 }
 
 class MockTemplateParser implements TemplateParser {
-  Future<String> parse(String template, [Map<String, dynamic> data]) async {
+  String parse(String template, [Map<String, dynamic> data]) {
     return template.replaceFirst('SOME_SYNTAX_DETAIL', 'REPLACEMENT');
   }
 }
