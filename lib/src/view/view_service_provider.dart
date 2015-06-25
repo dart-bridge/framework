@@ -1,142 +1,89 @@
 part of bridge.view;
 
+TemplateCollection _templates;
+
 class ViewServiceProvider implements ServiceProvider {
-  final List<File> templates = [];
-  File templatesFile;
-  Directory publicDirectory;
+  Directory templatesDirectory;
+  File templatesCache;
+  Program program;
 
-  load(Config config,
-       Program program) async {
-    publicDirectory = new Directory(config('http.server.public_root', 'web'));
-    templatesFile = new File(config('view.templates.cache_file', 'lib/templates.dart'));
-    templates = (await new Directory(config('view.templates.root', 'lib/templates'))
-    .list(recursive: true, followLinks: false)
-    .asyncMap((e) async =>
-    (await e.stat()).type == FileSystemEntityType.FILE ? e : null)
-    .toList())
-    .where((e) => e != null).toList();
+  setUp(Config config,
+        Container container,
+        Program program) {
+    this.program = program;
+    templatesDirectory = new Directory(config('view.templates.root', 'lib/templates'));
+    templatesCache = new File(config('view.templates.cache', '.templates.dart'));
 
-    program.addCommand(build);
+    ClassMirror templatesClass = plato.classMirror(#Templates);
+    if (templatesClass == null)
+      return program.printWarning('Templates cache weren\'t loaded. Try [export "${templatesCache.path}";] in any library.');
+
+    container.bind(TemplateCollection, templatesClass.reflectedType);
+
+    _templates = container.make(TemplateCollection);
   }
 
-//  bool javaScriptTags;
-//  String publicDirectory;
-//  Program program;
-//  Container container;
-//
-//  setUp(Container container, Config config, Program program) async {
-//    this.container = container;
-//    this.program = program;
-//    var env = config.env('APP_ENV', 'production');
-//    javaScriptTags = (env == 'production');
-//    var parserId = config('view.parse_to', 'html');
-//    Type parser = parserId == null
-//    ? null
-//    : _templateParsers.containsKey(parserId)
-//    ? _templateParsers[parserId]
-//    : throw new TemplateException('Parser [$parserId] does not exist');
-//    container.bind(TemplateParser, parser);
-//    container.bind(TemplateLoader, FileTemplateLoader);
-//    publicDirectory = config('http.server.publicRoot', 'web');
-//    program.addCommand(build);
-//  }
-//
-//  Future<String> _parseTemplateResponse(Template template, TemplateResponse templateResponse) async {
-//    var parser = (templateResponse.parser != null)
-//    ? container.make(templateResponse.parser)
-//    : container.make(TemplateParser);
-//    await template.load(templateResponse.templateName);
-//    String contents = await template.parse(
-//        withData: templateResponse.data,
-//        withScripts: templateResponse.scripts,
-//        javaScript: javaScriptTags,
-//        withParser: parser);
-//    return contents;
-//  }
-//
-//  load(Server server, Template template, TetherManager tethers) {
-//    tethers.registerHandler((Tether tether) {
-//      tether.modulateBeforeSerialization((TemplateResponse value) async {
-//        if (value is! TemplateResponse) return value;
-//        value.parser = BtlToHandlebarsParser;
-//        var contents = await _parseTemplateResponse(template, value);
-//        return {
-//          'template': contents,
-//          'data': value.data,
-//        };
-//      });
-//    });
-//    server.modulateRouteReturnValue((TemplateResponse value) async {
-//      if (value is! TemplateResponse) return value;
-//      var contents = await _parseTemplateResponse(template, value);
-//      return '<!DOCTYPE html><html>$contents</html>';
-//    });
-//  }
-//
-  @Command('Perform precompilations')
-  @Option(#dart2js, 'Compile front end .dart files to .js')
-  @Option(#templates, 'Compile templates')
-  build({bool dart2js: false,
-        bool templates: false}) async {
-    if (dart2js) await _dart2js();
-    if (templates) await _buildTemplates();
+  load(TemplateProcessor processor) async {
+    await loadTemplates(processor);
   }
 
-  Future _buildTemplates() async {
-    
+  Future loadTemplates(TemplateProcessor processor) async {
+    List<File> templateFiles = await listTemplateFiles().toList();
+    DateTime templateFilesChanged = await latestChange(templateFiles);
+    DateTime templatesCacheChanged = await latestChange([templatesCache]);
+
+    if (templateFilesChanged.isBefore(templatesCacheChanged))
+      return;
+
+    for (File templateFile in templateFiles)
+      await processor.include(
+          templateId(templateFile.path),
+          await templateFile.readAsString(),
+          preProcessors: preProcessorsOf(extension(templateFile.path)));
+
+    await templatesCache.writeAsString(processor.templateScript);
+
+    program.printInfo('Templates compiled to [${templatesCache.path}]');
+
+    await program.reload();
   }
 
-  Future _dart2js() async {
-    var files = await publicDirectory.list(recursive: true, followLinks: false).toList();
-    await Future.wait(files.map((File file) async {
-  FileStat stat = await file.stat();
-  if (stat.type != FileSystemEntityType.FILE) return null;
-
-  if (!file.path.endsWith('.dart')) return null;
-
-  var outFile = '${file.path}.js';
-
-  program.printInfo('Compiling ${file.path}');
-
-  Process process = await Process.start('dart2js', ['-m', '-o', outFile, file.path]);
-
-  var sub = process.stdout.map(UTF8.decode).listen(stdout.writeln);
-
-  int exitCode = await process.exitCode;
-  await sub.cancel();
-  if (exitCode == 0) return program.printAccomplishment('$outFile generated successfully.');
-  program.printDanger('$outFile could not be generated! [Exit code $exitCode]');
-  }));
+  String templateId(String path) {
+    return path.replaceFirst('${templatesDirectory.path}/', '')
+    .replaceFirst(new RegExp('${extension(path)}\$'), '')
+    .replaceAll('/', '.');
   }
 
+  Stream<File> listTemplateFiles() {
+    return templatesDirectory.list(recursive: true, followLinks: false)
+      .where((f) => FileSystemEntity.isFileSync(f.path));
+  }
 
-//  DocumentBuilder builder;
-//
-//  setUp(Application application) {
-//    application.bind(TemplateRepository, FileTemplateRepository);
-//  }
-//
-//  load(Server server, DocumentBuilder builder) {
-//    this.builder = builder;
-//    server.modulateRouteReturnValue(_returnValueModulation);
-//  }
-//
-//  _returnValueModulation(value) {
-//    if (value is ViewResponse)
-//      return _viewResponse(value, builder);
-//    if (value is Template)
-//      return _templateResponse(value, builder);
-//    return value;
-//  }
-//
-//  Future<String> _viewResponse(ViewResponse response, DocumentBuilder builder) {
-//    return builder.fromTemplateName(
-//        response.templateName,
-//        response.scripts,
-//        response.data);
-//  }
-//
-//  Future<String> _templateResponse(Template template, DocumentBuilder builder) {
-//    return builder.fromTemplate(template);
-//  }
+  Future<DateTime> latestChange(List<File> files) async {
+    DateTime latest;
+    await for (DateTime changed in new Stream.fromIterable(files)
+    .asyncMap((File f) => f.stat())
+    .asyncMap((FileStat s) => s.modified))
+      latest = latest == null
+      ? changed : changed.isAfter(latest)
+      ? changed : latest;
+    return latest == null ? new DateTime.fromMillisecondsSinceEpoch(0) : latest;
+  }
+
+  List<TemplatePreProcessor> preProcessorsOf(String extension) {
+    var all = <String, List<TemplatePreProcessor>>{
+      '.jade': [
+//        new JadePreProcessor(),
+//        new BridgePreProcessor(),
+      ],
+      '.hbs': [
+//        new HandlebarsPreProcessor(),
+//        new BridgePreProcessor(),
+      ],
+      '.html': [
+//        new BridgePreProcessor(),
+      ],
+    };
+    return all.containsKey(extension) ? all[extension] : [];
+  }
 }

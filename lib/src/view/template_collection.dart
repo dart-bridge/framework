@@ -17,6 +17,8 @@ abstract class TemplateCollection {
   Future<String> template(String name,
                           Map<String, dynamic> data) {
     _data = data;
+    if (!templates.containsKey(name))
+      throw new InvalidArgumentException('No template [$name] is cached.');
     return templates[name]();
   }
 }
