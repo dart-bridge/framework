@@ -4,7 +4,13 @@ class InputMiddleware {
   call(shelf.Handler innerHandler) {
     return (shelf.Request request) async {
       Input input = await _getInputFor(request);
-      return innerHandler(request.change(context: {'input': input}));
+      return innerHandler(new shelf.Request(
+          request.method, request.requestedUri,
+          protocolVersion: request.protocolVersion,
+          headers: request.headers,
+          handlerPath: request.handlerPath,
+          context: {'input': input}
+            ..addAll(request.context)));
     };
   }
 

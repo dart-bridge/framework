@@ -9,7 +9,7 @@ class TetherServiceProvider implements ServiceProvider {
 
   load(http.Server server) {
     manager.registerHandler(new DefaultStructures());
-    server.addMiddleware(shelf.createMiddleware(requestHandler: _handle));
+    server.addMiddleware(shelf.createMiddleware(requestHandler: _handle), highPriority: true);
   }
 
   shelf.Response _handle(shelf.Request request) {

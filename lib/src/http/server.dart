@@ -14,7 +14,7 @@ abstract class Server {
 
   Future stop();
 
-  void addMiddleware(shelf.Middleware middleware);
+  void addMiddleware(shelf.Middleware middleware, {bool highPriority});
 
   void handleException(Type exceptionType, Function handler);
 
@@ -30,7 +30,7 @@ class _Server implements Server {
   HttpServer _server;
   String _host;
   int _port;
-  Set<shelf.Middleware> _middleware = new Set();
+  List<shelf.Middleware> _middleware = new List();
   Set<Function> _returnValueModulators = new Set();
   Container _container;
   Config _config;
@@ -52,7 +52,8 @@ class _Server implements Server {
     _router = router;
   }
 
-  void addMiddleware(shelf.Middleware middleware) {
+  void addMiddleware(shelf.Middleware middleware, {bool highPriority: false}) {
+    if (highPriority) return _middleware.insert(0, middleware);
     _middleware.add(middleware);
   }
 
