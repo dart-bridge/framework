@@ -4,9 +4,9 @@ class TemplateProcessor {
   final Map<String, String> _scripts = {};
 
   Future include(String name,
-               String script,
-               {List<TemplatePreProcessor> preProcessors: const []}) async {
-    for(var preProcessor in preProcessors)
+                 String script,
+                 {List<TemplatePreProcessor> preProcessors: const []}) async {
+    for (var preProcessor in preProcessors)
       script = await preProcessor.process(script);
     _scripts[name] = (script == null) ? '' : script;
   }

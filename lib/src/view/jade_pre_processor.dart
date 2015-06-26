@@ -1,11 +1,17 @@
 part of bridge.view;
 
 class JadePreProcessor implements TemplatePreProcessor {
+  Map<String, String> _directives = {
+    'include': 'include',
+  };
+
   Future<String> process(String template) async {
-    template = template == null ? '' : template
-    .replaceAllMapped(new RegExp(r'(\s*)include\s+(.*)', multiLine: true), (m) {
-      return '${m[1]}| @include(${m[2]})';
-    });
+    template = template == null ? '' : template;
+    for (var directive in _directives.keys)
+      template = template
+      .replaceAllMapped(new RegExp(r'(\s*)''$directive'r'\s+(.*)', multiLine: true), (m) {
+        return '${m[1]}| @''${_directives[directive]}'r'(${m[2]})';
+      });
 
     var parser = new jade.Parser(template, colons: false);
     var compiler = new jade.Compiler(parser.parse());
