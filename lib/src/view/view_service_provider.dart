@@ -71,18 +71,16 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   List<TemplatePreProcessor> preProcessorsOf(String extension) {
+    var compileBridge = new BridgePreProcessor();
+    var compileJade = new JadePreProcessor();
+    var compileMarkdown = new MarkdownPreProcessor();
+    var compileHandlebars = new HandlebarsPreProcessor();
+
     var all = <String, List<TemplatePreProcessor>>{
-      '.jade': [
-//        new JadePreProcessor(),
-//        new BridgePreProcessor(),
-      ],
-      '.hbs': [
-//        new HandlebarsPreProcessor(),
-//        new BridgePreProcessor(),
-      ],
-      '.html': [
-//        new BridgePreProcessor(),
-      ],
+      '.jade': [compileJade, compileBridge],
+      '.hbs': [compileHandlebars, compileBridge],
+      '.md': [compileMarkdown, compileBridge],
+      '.html': [compileBridge],
     };
     return all.containsKey(extension) ? all[extension] : [];
   }

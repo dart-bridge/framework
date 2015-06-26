@@ -13,6 +13,7 @@ class TemplateProcessor {
 
   String get templateScript => '''
 import 'package:bridge/view.dart';
+import 'dart:async';
 
 class Templates extends TemplateCollection {
   Map<String, TemplateCollectionItem> get templates => {

@@ -19,6 +19,8 @@ dependencies:
   plato:
     git: https://github.com/emilniklas/plato
   path: '^1.3.5'
+  jaded: '^0.1.9'
+  markdown: '^0.7.1+2'
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"

@@ -7,9 +7,15 @@ import 'package:bridge/cli.dart';
 import 'dart:io';
 import 'package:path/path.dart' show basename, extension;
 import 'package:bridge/exceptions.dart';
+import 'package:jaded/jaded.dart' as jade;
+import 'package:markdown/markdown.dart' as markdown;
 
 part 'template_processor.dart';
 part 'template_collection.dart';
 part 'template_pre_processor.dart';
 part 'view_service_provider.dart';
 part 'helpers.dart';
+part 'bridge_pre_processor.dart';
+part 'jade_pre_processor.dart';
+part 'markdown_pre_processor.dart';
+part 'handlebars_pre_processor.dart';
