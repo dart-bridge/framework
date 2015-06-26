@@ -2,8 +2,12 @@ part of bridge.view;
 
 class JadePreProcessor implements TemplatePreProcessor {
   Future<String> process(String template) async {
-    var parser = new jade.Parser(template == null ? '' : template,
-    colons: false);
+    template = template == null ? '' : template
+    .replaceAllMapped(new RegExp(r'(\s*)include\s+(.*)', multiLine: true), (m) {
+      return '${m[1]}| @include(${m[2]})';
+    });
+
+    var parser = new jade.Parser(template, colons: false);
     var compiler = new jade.Compiler(parser.parse());
     var compiled = compiler.compile();
     var expressionMatcher = new RegExp(

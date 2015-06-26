@@ -27,6 +27,21 @@ class ViewServiceProvider implements ServiceProvider {
     await loadTemplates(processor);
   }
 
+  Future<String> process(String script) async {
+    script+='main() {}';
+
+    ProcessResult result = await Process.run('dart',
+    [
+      '-p${Directory.current.absolute.path+'/packages'}',
+      'data:application/dart;charset=utf-8,${Uri.encodeComponent(script)}',
+    ]);
+
+    if (result.stderr != '')
+      throw result.stderr;
+
+    return result.stdout.trim();
+  }
+
   Future loadTemplates(TemplateProcessor processor) async {
     List<File> templateFiles = await listTemplateFiles().toList();
     DateTime templateFilesChanged = await latestChange(templateFiles);
@@ -40,6 +55,15 @@ class ViewServiceProvider implements ServiceProvider {
           templateId(templateFile.path),
           await templateFile.readAsString(),
           preProcessors: preProcessorsOf(extension(templateFile.path)));
+
+    try {
+      await process(processor.templateScript);
+    } catch(e) {
+      program.printDanger('Template malformed!\n${e.toString()
+      .replaceAll(new RegExp(r"'data:application\/dart;charset=utf-8,[^]*?':"),
+      '<template cache>')}');
+      await program.exit();
+    }
 
     await templatesCache.writeAsString(processor.templateScript);
 

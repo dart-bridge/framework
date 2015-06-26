@@ -41,4 +41,11 @@ class JadePreProcessorTest implements TestCase {
         'form(method="post") Text',
         '<form method="post">Text</form>');
   }
+
+  @test
+  it_transforms_include_directive() async {
+    await expectProcessesTo(
+        'include "partial"',
+        '@include("partial")');
+  }
 }

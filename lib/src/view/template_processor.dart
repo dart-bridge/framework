@@ -16,7 +16,7 @@ import 'package:bridge/view.dart';
 import 'dart:async';
 
 class Templates extends TemplateCollection {
-  Map<String, TemplateCollectionItem> get templates => {
+  Map<String, TemplateFragmentFunction> get templates => {
 ${_scripts.keys
   .map((name) => '    "$name": () async => """${_scripts[name]}""",')
   .join('\n')}

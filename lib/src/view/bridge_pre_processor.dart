@@ -2,26 +2,90 @@ part of bridge.view;
 
 class BridgePreProcessor implements TemplatePreProcessor {
   Future<String> process(String template) async {
-    return _removeComments(_extendFormMethods(template == null ? '' : template));
+    return
+      _removeComments(
+          _extendFormMethods(
+              _directives(template == null ? '' : template)));
   }
 
-  String _removeComments(String btl) {
-    btl = btl.replaceAllMapped(new RegExp(r'''(['"])(.*)\/\/(.*)\1'''), (Match match) {
+  RegExp _r(String expression,
+            {bool multiLine,
+            bool caseSensitive}) => new RegExp(
+      expression,
+      multiLine: multiLine,
+      caseSensitive: caseSensitive);
+
+  String _expressionMatcher =
+  r'((?:\((?:\((?:\((?:\((?:\((?:\((?:\((?:\(\)'
+  r'|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?)';
+
+  String _directives(String template) {
+    return template
+
+    // @if
+    .replaceAllMapped(_r(
+        r'@if\s*\(''$_expressionMatcher'r'\)'), (m) {
+      var expression = m[1];
+      return r'${await (() async => (''$expression'') ? """';
+    })
+
+    // @else if
+    .replaceAllMapped(_r(
+        r'@else\s+if\s*\(''$_expressionMatcher'r'\)'), (m) {
+      var expression = m[1];
+      return r'""" : (''$expression'') ? """';
+    })
+
+    // @else
+    .replaceAll(
+        _r(r'@else\s*'), '""" : true ? """'
+    )
+
+    // @end if
+    .replaceAll(
+        _r(r'@end\s+if\s*'), '""" : "")()}'
+    )
+
+    // @if
+    .replaceAllMapped(_r(
+        r'@for\s*\(\s*([A-Za-z_]\w*)\s+in\s+''$_expressionMatcher'r'\)'), (m) {
+      var varName = m[1];
+      var expression = m[2];
+      return r'${(await Future.wait((''$expression'').map((''$varName'') async => """';
+    })
+
+    // @end for
+    .replaceAll(
+        _r(r'@end\s+for\s*'), '"""))).join("")}'
+    )
+
+    // @include
+    .replaceAllMapped(_r(
+        r'@include\s*\(''$_expressionMatcher'r'\)'), (m) {
+      var expression = m[1];
+      return r'${await $include(''$expression'')}';
+    })
+
+    ;
+  }
+
+  String _removeComments(String template) {
+    template = template.replaceAllMapped(_r(r'''(['"])(.*)\/\/(.*)\1'''), (Match match) {
       return '${match[1]}${match[2]}/_ESCAPEDCOMMENT_/${match[3]}${match[1]}';
     });
-    return btl
-    .replaceAll(new RegExp(r'\/\/.*$', multiLine: true), '')
+    return template
+    .replaceAll(_r(r'\/\/.*$', multiLine: true), '')
     .replaceAll('/_ESCAPEDCOMMENT_/', '//');
   }
 
   String _extendFormMethods(String template) {
-    var matcher = new RegExp(
+    var matcher = _r(
         r'''<form([^>]*?)method=(['"])(.*?)\2([^>]*?)>''',
         caseSensitive: false);
     return template.replaceAllMapped(matcher, (Match match) {
       var method = match[3];
       var hiddenInput = '';
-      if (!new RegExp('(GET|POST)').hasMatch(method)) {
+      if (!_r('(GET|POST)').hasMatch(method)) {
         hiddenInput = "<input type='hidden' name='_method' value='${method.toUpperCase()}'>";
         method = 'POST';
       }
