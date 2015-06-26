@@ -61,8 +61,11 @@ class HttpServiceProvider implements ServiceProvider {
 
   @Command('Stop the server')
   stop() async {
-    await server.stop();
-    program.printInfo('Server stopped');
+    try {
+      await server.stop();
+      program.printInfo('Server stopped');
+    } catch (e) {
+    }
   }
 
   @Command('List all the end-points defined in the router')

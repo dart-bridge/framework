@@ -104,8 +104,8 @@ class Application implements Container {
   ///     Function presolved = container.presolve(functionWillBeInjected);
   ///     presolved(...);
   presolve(Function function,
-                {Map<String, dynamic> namedParameters,
-                Map<Type, dynamic> injecting}) => _container.presolve(
+           {Map<String, dynamic> namedParameters,
+           Map<Type, dynamic> injecting}) => _container.presolve(
       function, namedParameters: namedParameters, injecting: injecting);
 
   /// Initialize the application, given a relative path to the directory where
@@ -168,6 +168,8 @@ class Application implements Container {
 
     ClassMirror serviceClass = library.declarations[serviceClassName];
 
+    if (serviceClass == null) throw new ConfigException('${MirrorSystem.getName(serviceClassName)} does not exist');
+
     if (!serviceClass.superinterfaces.contains(reflectClass(ServiceProvider))) {
       String name = MirrorSystem.getName(serviceClassName);
 
@@ -177,21 +179,8 @@ class Application implements Container {
   }
 
   Future _runServiceProviderMethod(String name) async {
-    List<Future> futures = [];
-    ServiceProvider currentServiceProvider;
-    try {
-      for (ServiceProvider serviceProvider in _serviceProviders) {
-        currentServiceProvider = serviceProvider;
-        if (this.canResolveMethod(serviceProvider, name)) {
-          futures
-          .add(new Future.value(this.resolveMethod(serviceProvider, name)));
-        }
-      }
-
-      await Future.wait(futures);
-    } catch (e) {
-      print('$currentServiceProvider failed when running $name.');
-      rethrow;
-    }
+    return Future.wait(_serviceProviders
+    .where((s) => canResolveMethod(s, name))
+      .map((s) => new Future.value(this.resolveMethod(s, name))));
   }
 }

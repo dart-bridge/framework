@@ -144,7 +144,7 @@ class _Server implements Server {
   }
 
   Future stop() async {
-    if (_server == null) return;
+    if (_server == null) throw new Exception('The server isn\'t running');
     await _server.close();
   }
 
