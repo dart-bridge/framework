@@ -10,7 +10,7 @@ class JadePreProcessor implements TemplatePreProcessor {
     for (var directive in _directives.keys)
       template = template
       .replaceAllMapped(new RegExp(r'(\s*)''$directive'r'\s+(.*)', multiLine: true), (m) {
-        return '${m[1]}| @''${_directives[directive]}'r'(${m[2]})';
+        return '${m[1]}| @${_directives[directive]}(${m[2]})';
       });
 
     var parser = new jade.Parser(template, colons: false);
