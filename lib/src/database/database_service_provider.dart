@@ -13,9 +13,16 @@ class DatabaseServiceProvider implements ServiceProvider {
   }
 
   Future _setUpMongo(Config config) async {
-    database = new MongoDatabase();
+    try {
+      database = new MongoDatabase();
 
-    await database.connect(config);
+      await database.connect(config);
+    } on SocketException {
+      var port = config('database.mongodb.port', 27017);
+      throw new ConfigException('No MongoDB server is running on port $port. '
+      'Check your configuration or remove [bridge.database.DatabaseServiceProvder] '
+      'from your service provider list.');
+    }
   }
 
   Future tearDown() {
