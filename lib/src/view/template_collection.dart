@@ -11,16 +11,18 @@ abstract class TemplateCollection {
   noSuchMethod(Invocation invocation) {
     try {
       var key = MirrorSystem.getName(invocation.memberName);
-//    if (key == 'include') return _include;
-//    if (key == 'for') return _for;
-//    if (key == 'if') return _if;
       if (data.containsKey(key)) return data[key];
       var dataInstance = reflect(data);
       if (dataInstance != null
       && dataInstance.type.declarations.containsKey(invocation.memberName))
         return dataInstance.delegate(invocation);
       var instance = plato.instance(invocation.memberName);
-      if (instance != null) return instance.reflectee;
+      if (instance != null) {
+        var instanceValue = instance.reflectee;
+        if (invocation.isGetter) return instanceValue;
+        return (instance as ClosureMirror)
+        .apply(invocation.positionalArguments, invocation.namedArguments).reflectee;
+      }
     } catch(e) {}
     return null;
   }

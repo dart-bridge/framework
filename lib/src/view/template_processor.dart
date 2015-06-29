@@ -15,6 +15,7 @@ class TemplateProcessor {
 import 'package:bridge/view.dart';
 import 'dart:async';
 
+@proxy
 class Templates extends TemplateCollection {
   Map<String, TemplateFragmentFunction> get templates => {
 ${_scripts.keys
