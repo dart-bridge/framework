@@ -5,6 +5,7 @@ import 'dart:mirrors';
 import 'package:bridge/core.dart';
 import 'package:bridge/cli.dart';
 import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:path/path.dart' show basename, extension;
 import 'package:bridge/exceptions.dart';
 import 'package:jaded/jaded.dart' as jade;

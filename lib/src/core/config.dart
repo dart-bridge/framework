@@ -122,7 +122,7 @@ class _Config implements Config {
 
   String _makePathOfFile(File file, Directory root) {
     return file.path
-    .replaceAll(new RegExp('^${root.path}/'), '')
+    .replaceAll(new RegExp('^${root.path}${Platform.pathSeparator}'), '')
     .replaceAll(new RegExp(r'.yaml$'), '')
     .replaceAll('/', '.');
   }
