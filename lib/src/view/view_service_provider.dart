@@ -11,7 +11,8 @@ class ViewServiceProvider implements ServiceProvider {
         Container container,
         Program program) {
     this.program = program;
-    templatesDirectory = new Directory(config('view.templates.root', 'lib/templates'));
+    templatesDirectory = new Directory(
+        config('view.templates.root', path.join('lib', 'templates')));
     templatesCache = new File(config('view.templates.cache', '.templates.dart'));
 
     ClassMirror templatesClass = plato.classMirror(#Templates);
@@ -28,11 +29,11 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   Future<String> process(String script) async {
-    script+='main() {}';
+    script += 'main() {}';
 
     ProcessResult result = await Process.run('dart',
     [
-      '-p${Directory.current.absolute.path+'/packages'}',
+      '-p${path.join(Directory.current.absolute.path, 'packages')}',
       'data:application/dart;charset=utf-8,${Uri.encodeComponent(script)}',
     ]);
 
@@ -58,7 +59,7 @@ class ViewServiceProvider implements ServiceProvider {
 
     try {
       await process(processor.templateScript);
-    } catch(e) {
+    } catch (e) {
       program.printDanger('Template malformed!\n${e.toString()
       .replaceAll(new RegExp(r"'data:application\/dart;charset=utf-8,[^]*?':"),
       '<template cache>')}');
@@ -73,14 +74,14 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   String templateId(String path) {
-    return path.replaceFirst('${templatesDirectory.path}/', '')
+    return path.replaceFirst('${templatesDirectory.path}${Platform.pathSeparator}', '')
     .replaceFirst(new RegExp('${extension(path)}\$'), '')
-    .replaceAll('/', '.');
+    .replaceAll(Platform.pathSeparator, '.');
   }
 
   Stream<File> listTemplateFiles() {
     return templatesDirectory.list(recursive: true, followLinks: false)
-      .where((f) => FileSystemEntity.isFileSync(f.path));
+    .where((f) => FileSystemEntity.isFileSync(f.path));
   }
 
   Future<DateTime> latestChange(List<File> files) async {

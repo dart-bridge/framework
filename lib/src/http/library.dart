@@ -5,6 +5,7 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 import 'package:stack_trace/stack_trace.dart' as trace;
 import 'package:dlog/dlog.dart' as dlog;
+import 'package:path/path.dart' as path;
 import 'package:bridge/core.dart';
 import 'package:bridge/exceptions.dart';
 import 'package:bridge/cli.dart';
