@@ -6,15 +6,14 @@ class TemplateProcessor {
   Future include(String name,
                  String script,
                  {List<TemplatePreProcessor> preProcessors: const []}) async {
+    script = (script == null) ? '' : script;
     for (var preProcessor in preProcessors)
       script = await preProcessor.process(script);
-    _scripts[name] = (script == null) ? '' : script;
+    _scripts[name] = script;
   }
 
   String get templateScript {
-    var script =  '''
-import 'package:bridge/view.dart';
-import 'dart:async';
+    var script = '''
 
 @proxy
 class Templates extends TemplateCollection {

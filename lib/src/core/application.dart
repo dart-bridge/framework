@@ -127,6 +127,15 @@ class Application implements Container {
     }
     _config = await Config.load(configRootDirectory);
     this.singleton(_config, as: Config);
+    _setEnv(_config);
+  }
+
+  void _setEnv(Config config) {
+    var env = config.env('APP_ENV', 'production');
+    if (env == 'production') Environment.current = Environment.production;
+    else if (env == 'development') Environment.current = Environment.development;
+    else if (env == 'testing') Environment.current = Environment.testing;
+    else Environment.current = Environment.custom;
   }
 
   _setUpServiceProviders() async {
@@ -181,6 +190,6 @@ class Application implements Container {
   Future _runServiceProviderMethod(String name) async {
     return Future.wait(_serviceProviders
     .where((s) => canResolveMethod(s, name))
-      .map((s) => new Future.value(this.resolveMethod(s, name))));
+    .map((s) => new Future.value(this.resolveMethod(s, name))));
   }
 }

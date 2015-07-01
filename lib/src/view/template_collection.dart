@@ -27,15 +27,27 @@ abstract class TemplateCollection {
     return null;
   }
 
-  Future<String> $include(String name) {
+  Future<String> $include(String name) async {
     if (!templates.containsKey(name))
       throw new InvalidArgumentException('No template [$name] is cached.');
-    return templates[name]();
+    return await templates[name]();
   }
 
   Future<String> template(String name,
-                          Map<String, dynamic> data) {
+                          Map<String, dynamic> data,
+                          List<String> scripts) async {
     this.data = data;
-    return $include(name);
+    return _attachScripts(await $include(name), scripts);
+  }
+
+  String _attachScripts(String markup, List<String> scripts) {
+    productionTag(s) => "<script src='$s.dart.js'></script>";
+    developmentTag(s) => "<script type='application/dart' src='$s.dart'></script>";
+
+    return markup.replaceFirstMapped(new RegExp(r'(</\s*body\s*>|$)'), (m) {
+      return "${scripts
+      .map(Environment.isProduction ? productionTag : developmentTag)
+      .join('')}${m[1]}";
+    });
   }
 }

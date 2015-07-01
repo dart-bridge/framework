@@ -24,3 +24,4 @@ part 'config.dart';
 part 'config_exception.dart';
 part 'container_exception.dart';
 part 'service_provider.dart';
+part 'environment.dart';

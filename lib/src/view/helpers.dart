@@ -2,7 +2,8 @@ part of bridge.view;
 
 Future<String> template(String templateName,
                 {String withScript,
-                List<String> withScripts,
+                List<String> withScripts: const [],
                 Map<String, dynamic> withData: const {}}) {
-  return _templates.template(templateName, withData);
+  if (withScript != null) withScripts.add(withScript);
+  return _templates.template(templateName, withData, withScripts);
 }
