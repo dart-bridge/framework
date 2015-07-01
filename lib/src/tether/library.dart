@@ -18,3 +18,4 @@ part 'server/server_socket_adapter.dart';
 part 'server/server_tether_maker.dart';
 part 'server/tether_service_provider.dart';
 part 'server/tether_manager.dart';
+part 'server/helpers.dart';

@@ -43,16 +43,31 @@ class TetherManagerTest implements TestCase {
     expect(wasCalledFirst, isTrue);
     expect(wasCalledSecond, isTrue);
   }
+
+  @test
+  it_can_broadcast_messages() async {
+    var firstTether = new MockTether();
+    var secondTether = new MockTether();
+    manager.manage(firstTether);
+    manager.manage(secondTether);
+    manager.broadcast('_', 'data');
+    await null;
+    await null;
+    expect(firstTether.didSend, equals('data'));
+    expect(secondTether.didSend, equals('data'));
+  }
 }
 
 class MockTether implements Tether {
+  var didSend;
+
   String get token => null;
 
   Future get onConnectionLost => null;
 
   Future get onConnectionEstablished => null;
 
-  Future send(String key, [data]) => null;
+  Future send(String key, [data]) async => didSend = data;
 
   void listen(String key, Future listener(data)) => null;
 

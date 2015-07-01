@@ -1,9 +1,12 @@
 part of bridge.tether;
 
+Container _helperContainer;
+
 class TetherServiceProvider implements ServiceProvider {
   TetherManager manager = new TetherManager();
 
-  setUp(Application app) async {
+  setUp(Application app, Container helperContainer) async {
+    _helperContainer = helperContainer;
     app.singleton(manager, as: TetherManager);
   }
 
