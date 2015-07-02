@@ -4,6 +4,7 @@ TemplateCollection _templates;
 
 class ViewServiceProvider implements ServiceProvider {
   Directory templatesDirectory;
+  Directory publicDirectory;
   File templatesCache;
   Program program;
 
@@ -108,5 +109,29 @@ class ViewServiceProvider implements ServiceProvider {
       '.html': [compileBridge],
     };
     return all.containsKey(extension) ? all[extension] : [];
+  }
+
+  @Command('Compile front end .dart files to .js')
+  build() async {
+    var files = await publicDirectory.list(recursive: true, followLinks: false).toList();
+    await Future.wait(files.map((File file) async {
+      FileStat stat = await file.stat();
+      if (stat.type != FileSystemEntityType.FILE) return null;
+
+      if (!file.path.endsWith('.dart')) return null;
+
+      var outFile = '${file.path}.js';
+
+      program.printInfo('Compiling ${file.path}');
+
+      Process process = await Process.start('dart2js', ['-m', '-o', outFile, file.path]);
+
+      var sub = process.stdout.map(UTF8.decode).listen(stdout.writeln);
+
+      int exitCode = await process.exitCode;
+      await sub.cancel();
+      if (exitCode == 0) return program.printAccomplishment('$outFile generated successfully.');
+      program.printDanger('$outFile could not be generated! [Exit code $exitCode]');
+    }));
   }
 }
