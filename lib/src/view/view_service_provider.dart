@@ -23,6 +23,8 @@ class ViewServiceProvider implements ServiceProvider {
     container.bind(TemplateCollection, templatesClass.reflectedType);
 
     _templates = container.make(TemplateCollection);
+
+    program.addCommand(build);
   }
 
   load(TemplateProcessor processor) async {
