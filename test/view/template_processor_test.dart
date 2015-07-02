@@ -16,12 +16,12 @@ class TemplateProcessorTest implements TestCase {
   tearDown() {
   }
 
-  Future<String> parse(String template, [String dataMap = '{}']) async {
+  Future<String> _parse(String template, String mainFunction) async {
     await processor.include('test', template, preProcessors: preProcessors);
 
     var script = processor.templateScript;
 
-    script+='main() async {print(await new Templates().template("test", $dataMap, []));}';
+    script+=mainFunction;
 
     ProcessResult result = await Process.run('dart',
     [
@@ -33,6 +33,18 @@ class TemplateProcessorTest implements TestCase {
       throw result.stderr;
 
     return result.stdout.trim();
+  }
+
+  Future<String> parse(String template, [String dataMap = '{}']) async {
+    return _parse(template, 'main() async {print((await new Templates().template("test", $dataMap, [])).parsed);}');
+  }
+
+  Future<String> data(String template, [String dataMap = '{}']) async {
+    return _parse(template, 'main() async {print((await new Templates().template("test", $dataMap, [])).data);}');
+  }
+
+  Future<String> asHandlebars(String template) async {
+    return _parse(template, 'main() async {print((await new Templates().template("test", {}, [])).asHandlebars);}');
   }
 
   @test
@@ -67,6 +79,16 @@ class TemplateProcessorTest implements TestCase {
     preProcessors.add(processor);
     expect(await parse(r'unparsed'), equals('parsed'));
     expect(processor.wasCalled, isTrue);
+  }
+
+  @test
+  it_keeps_the_data_map() async {
+    expect(await data(r'$key', '{"key": "value"}'), equals('{key: value}'));
+  }
+
+  @test
+  it_keeps_a_handlebars_version() async {
+    expect(await asHandlebars(r'$key\$key${key}'), equals(r'{{ key }}$key{{ key }}'));
   }
 }
 

@@ -1,11 +1,11 @@
 part of bridge.view;
 
-typedef Future<String> TemplateFragmentFunction();
+typedef Future<Template> TemplateGenerator();
 
 typedef Future<String> TemplateForEachIteration(element);
 
 abstract class TemplateCollection {
-  Map<String, TemplateFragmentFunction> get templates;
+  Map<String, TemplateGenerator> get templates;
   Map<String, dynamic> data;
 
   noSuchMethod(Invocation invocation) {
@@ -27,27 +27,31 @@ abstract class TemplateCollection {
     return null;
   }
 
-  Future<String> $include(String name) async {
+  Future<Template> $include(String name) async {
     if (!templates.containsKey(name))
       throw new InvalidArgumentException('No template [$name] is cached.');
     return await templates[name]();
   }
 
-  Future<String> template(String name,
+  Future<Template> template(String name,
                           Map<String, dynamic> data,
                           List<String> scripts) async {
     this.data = data;
     return _attachScripts(await $include(name), scripts);
   }
 
-  String _attachScripts(String markup, List<String> scripts) {
+  Template _attachScripts(Template template, List<String> scripts) {
+    String markup = template.parsed;
     productionTag(s) => "<script src='$s.dart.js'></script>";
     developmentTag(s) => "<script type='application/dart' src='$s.dart'></script>";
 
-    return markup.replaceFirstMapped(new RegExp(r'(</\s*body\s*>|$)'), (m) {
+    return new Template(
+        data: template.data,
+        asHandlebars: template.asHandlebars,
+        parsed: markup.replaceFirstMapped(new RegExp(r'(</\s*body\s*>|$)'), (m) {
       return "${scripts
       .map(Environment.isProduction ? productionTag : developmentTag)
       .join('')}${m[1]}";
-    });
-  }
+    }));
+}
 }

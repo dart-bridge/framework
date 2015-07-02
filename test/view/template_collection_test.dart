@@ -19,7 +19,7 @@ class TemplateCollectionTest implements TestCase {
                         String expectedReturn,
                         {Map<String, dynamic> data : const {},
                         Iterable<String> scripts : const []}) async {
-    expect(await collection.template(name, data, scripts), equals(expectedReturn));
+    expect((await collection.template(name, data, scripts)).parsed, equals(expectedReturn));
   }
 
   @test
@@ -64,10 +64,10 @@ class TemplateCollectionTest implements TestCase {
 
 @proxy
 class MockTemplateCollection extends TemplateCollection {
-  Map<String, TemplateFragmentFunction> get templates => {
-    'testOne': () async => 'template',
-    'testTwo': () async => '${key}',
-    'testThree': () async => '${globalFunction()}${globalVariable}${globalVariable = 'newResponse'}',
-    'testFour': () async => '<html><body></body></html>',
+  Map<String, TemplateGenerator> get templates => {
+    'testOne': () async => new Template(parsed: 'template'),
+    'testTwo': () async => new Template(parsed: '${key}'),
+    'testThree': () async => new Template(parsed: '${globalFunction()}${globalVariable}${globalVariable = 'newResponse'}'),
+    'testFour': () async => new Template(parsed: '<html><body></body></html>'),
   };
 }

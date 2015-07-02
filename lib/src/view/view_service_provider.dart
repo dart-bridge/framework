@@ -27,8 +27,12 @@ class ViewServiceProvider implements ServiceProvider {
     program.addCommand(build);
   }
 
-  load(TemplateProcessor processor) async {
+  load(TemplateProcessor processor, Server server) async {
     await loadTemplates(processor);
+    server.modulateRouteReturnValue((Template template) {
+      if (template is! Template) return template;
+      return template.parsed;
+    });
   }
 
   Future<String> process(String script) async {

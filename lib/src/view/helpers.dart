@@ -1,9 +1,13 @@
 part of bridge.view;
 
-Future<String> template(String templateName,
+Future<Template> template(String templateName,
                 {String withScript,
-                List<String> withScripts: const [],
+                List<String> withScripts,
                 Map<String, dynamic> withData: const {}}) {
-  if (withScript != null) withScripts.add(withScript);
-  return _templates.template(templateName, withData, withScripts);
+
+  List<String> scripts = withScripts != null ? withScripts.toList() : [];
+
+  if (withScript != null) scripts.add(withScript);
+
+  return _templates.template(templateName, withData, scripts);
 }
