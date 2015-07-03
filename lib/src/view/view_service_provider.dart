@@ -12,6 +12,8 @@ class ViewServiceProvider implements ServiceProvider {
         Container container,
         Program program) {
     this.program = program;
+    publicDirectory = new Directory(
+        config('http.server.publicRoot', 'web'));
     templatesDirectory = new Directory(
         config('view.templates.root', path.join('lib', 'templates')));
     templatesCache = new File(config('view.templates.cache', '.templates.dart'));
