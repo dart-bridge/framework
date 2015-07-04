@@ -1,4 +1,4 @@
-part of bridge.database;
+part of bridge.database.shared;
 
 abstract class Model {
   @field var id;
