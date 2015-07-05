@@ -9,7 +9,6 @@ class Message {
   final String key;
   final String token;
   var data;
-  String structure;
   String _returnToken;
 
   Message(String this.key, String this.token, this.data, [String this._returnToken]);
@@ -19,12 +18,11 @@ class Message {
   }
 
   factory Message._fromMap(Map data) {
-    return new Message(data['key'], data['token'], data['data'], data['returnToken'])
-    ..structure = data['structure'];
+    return new Message(data['key'], data['token'], data['data'], data['returnToken']);
   }
 
   String get serialized => JSON.encode(
-      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken, 'structure': structure},
+      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken},
       toEncodable: (o) {
         try {
           try {

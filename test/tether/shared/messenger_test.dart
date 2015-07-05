@@ -6,12 +6,12 @@ import 'dart:async';
 class MessengerTest implements TestCase {
   MockSocket socket;
   Messenger messenger;
-  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT","structure":null}';
+  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT"}';
   final Message exampleMessage = new Message('k', 't', 1, 'rT');
 
   setUp() {
     socket = new MockSocket();
-    messenger = new Messenger(socket);
+    messenger = new Messenger(socket, new SerializationManager());
   }
 
   tearDown() {
@@ -33,39 +33,6 @@ class MessengerTest implements TestCase {
     await null;
     expect(socket.sentData, equals(exampleJson));
   }
-
-  @test
-  it_can_register_serializable_items_that_can_then_be_transfered() async {
-    messenger.registerStructure(
-        'TestSerializable',
-        TestSerializable,
-            (d) => new TestSerializable(d['someString']));
-    socket.socketInput.add('{"key":"k","token":"t","data":{"someString":"value"},"returnToken":"rT","structure":"TestSerializable"}');
-    Message message = await messenger.listen('k').first;
-    expect(message.data, new isInstanceOf<TestSerializable>());
-    expect(message.data.someString, equals('value'));
-  }
-
-  @test
-  it_can_send_serializable_items() async {
-    messenger.registerStructure(
-        'TestSerializable',
-        TestSerializable,
-            (d) => new TestSerializable(d['someString']));
-    messenger.send(new Message('k', 't', new TestSerializable('value'), 'rT'));
-    await null;
-    expect(socket.sentData, equals('{"key":"k","token":"t","data":{"someString":"value"},"returnToken":"rT","structure":"TestSerializable"}'));
-  }
-}
-
-class TestSerializable implements Serializable {
-  final String someString;
-
-  TestSerializable(String this.someString);
-
-  Object serialize() => {
-    'someString': someString
-  };
 }
 
 class MockSocket implements SocketInterface {

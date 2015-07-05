@@ -7,7 +7,7 @@ class ServerTetherMaker {
   }
 
   static Messenger _makeMessenger(http_parser.CompatibleWebSocket socket) {
-    return new Messenger(new ServerSocketAdapter(socket));
+    return new Messenger(new ServerSocketAdapter(socket), new SerializationManager());
   }
 
   static _sendToken(http_parser.CompatibleWebSocket socket, String token) {

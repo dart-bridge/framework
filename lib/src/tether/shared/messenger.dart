@@ -9,7 +9,8 @@ abstract class Messenger {
   final Future onConnectionEnd;
   final Future onConnectionOpen;
 
-  factory Messenger(SocketInterface socket) => new _Messenger(socket);
+  factory Messenger(SocketInterface socket, SerializationManager serializationManager) =>
+  new _Messenger(socket, serializationManager);
 
   Future<Message> send(Message message);
 
@@ -21,7 +22,7 @@ abstract class Messenger {
 class _Messenger implements Messenger {
   SocketInterface _socket;
   Map<String, StreamController<Message>> _listeners = {};
-  Map<String, dynamic> _structures = {};
+  SerializationManager _serializationManager;
 
   bool get socketIsOpen => _socket.isOpen;
 
@@ -29,7 +30,7 @@ class _Messenger implements Messenger {
 
   Future get onConnectionOpen => _socket.onOpen;
 
-  _Messenger(SocketInterface this._socket) {
+  _Messenger(SocketInterface this._socket, SerializationManager this._serializationManager) {
     _listenOnSocket();
   }
 
@@ -53,7 +54,7 @@ class _Messenger implements Messenger {
 
   Stream<Message> listen(String key) {
     _ensureUniqueListener(key);
-    return _registerListener(key).stream.asyncMap(_makeStructure);
+    return _registerListener(key).stream.asyncMap(_deserializeData);
   }
 
   StreamController<Message> _registerListener(String key) {
@@ -68,9 +69,7 @@ class _Messenger implements Messenger {
   }
 
   Future<Message> send(Message message) async {
-    if (_structures.keys.any((k) => _structures[k][0] == message.data.runtimeType))
-      message.structure = _structures.keys.firstWhere((k)
-      => _structures[k][0] == message.data.runtimeType);
+    message.data = _serializationManager.serialize(message.data);
     _socket.send(message.serialized);
     return _returnMessage(message);
   }
@@ -86,12 +85,11 @@ class _Messenger implements Messenger {
   }
 
   void registerStructure(String id, Type serializable, Serializable factory(data)) {
-    _structures[id] = [serializable, factory];
+    _serializationManager.registerStructure(id, serializable, factory);
   }
 
-  Message _makeStructure(Message message) {
-    if (message.structure != null)
-      message.data = _structures[message.structure][1](message.data);
+  Message _deserializeData(Message message) {
+    message.data = _serializationManager.deserialize(message.data);
     return message;
   }
 }
