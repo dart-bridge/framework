@@ -75,6 +75,20 @@ class ContainerTest implements TestCase {
   }
 
   @test
+  it_can_make_the_temporary_singleton_propagate_to_dependencies() {
+    var wasCalled = false;
+    var instance = new ClassImplementingInterface();
+    var closure = (ClassDependingOnInterface dependency) {
+      expect(instance, equals(dependency.dependency));
+      wasCalled = true;
+    };
+    container.resolve(closure, injecting: {
+      Interface: instance
+    });
+    expect(wasCalled, isTrue);
+  }
+
+  @test
   it_retains_type_arguments_when_resolving_a_dependency() {
     closure(ClassWithTypeArgument<LonelyClass> dependency) {
       return reflect(dependency).type.typeArguments[0].reflectedType;

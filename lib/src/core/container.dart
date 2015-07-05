@@ -190,7 +190,7 @@ class _Container implements Container {
           return positionalParameters.add(injecting[type]);
         }
 
-        positionalParameters.add(make(type));
+        positionalParameters.add(make(type, injecting: injecting));
       }
     });
 
