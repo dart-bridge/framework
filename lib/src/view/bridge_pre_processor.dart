@@ -5,7 +5,8 @@ class BridgePreProcessor implements TemplatePreProcessor {
     return
       _removeComments(
           _extendFormMethods(
-              _directives(template == null ? '' : template)));
+              _transpileInstantiations(
+                  _directives(template == null ? '' : template))));
   }
 
   RegExp _r(String expression,
@@ -18,6 +19,10 @@ class BridgePreProcessor implements TemplatePreProcessor {
   String _expressionMatcher =
   r'((?:\((?:\((?:\((?:\((?:\((?:\((?:\((?:\(\)'
   r'|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?\)|[^])*?)';
+
+  String _bracedExpressionMatcher =
+  r'(^|(?!\\).)\$\{((?:\{(?:\{(?:\{(?:\{(?:\{(?:\{(?:\{(?:\'
+  r'{\}|[^])*?\}|[^])*?\}|[^])*?\}|[^])*?\}|[^])*?\}|[^])*?\}|[^])*?\}|[^])*?)\}';
 
   String _directives(String template) {
     return template
@@ -91,6 +96,19 @@ class BridgePreProcessor implements TemplatePreProcessor {
       }
       var reconstruction = "<form${match[1]}method='$method'${match[4]}>$hiddenInput";
       return reconstruction;
+    });
+  }
+
+  String _transpileInstantiations(String template) {
+    return template.replaceAllMapped(_r(_bracedExpressionMatcher), (m) {
+      return '${m[1]}\${${_transpileInstantiationsInExpression(m[2])}}';
+    });
+  }
+
+  String _transpileInstantiationsInExpression(String expression) {
+    return expression.replaceAllMapped(_r(r'''new\s*([A-Za-z_][\w.]*)\s*\(\s*([^]*)\s*\)(?=([^"\\]*(\\.|"([^"\\]*\\.)*[^"\\]*"))*[^"]*$)(?=([^'\\]*(\\.|'([^'\\]*\\.)*[^'\\]*'))*[^']*$)'''), (m) {
+      var afterSymbol = m[2] == '' ? '' : ', ${m[2]}';
+      return '\$instantiate(#${m[1]}$afterSymbol)';
     });
   }
 }

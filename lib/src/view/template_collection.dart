@@ -9,6 +9,7 @@ abstract class TemplateCollection {
   Map<String, dynamic> data;
 
   noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #$instantiate) return _instantiate(invocation);
     try {
       var key = MirrorSystem.getName(invocation.memberName);
       if (data.containsKey(key)) return data[key];
@@ -25,6 +26,19 @@ abstract class TemplateCollection {
       }
     } catch(e) {}
     return null;
+  }
+
+  Object _instantiate(Invocation invocation) {
+    var positional = invocation.positionalArguments.toList();
+    Symbol symbol = positional.removeAt(0);
+    var symbolSegments = MirrorSystem.getName(symbol).split('.');
+    Symbol constructor = const Symbol('');
+    if (symbolSegments.last.contains(new RegExp(r'^[a-z]'))) {
+      constructor = new Symbol(symbolSegments.removeLast());
+      symbol = new Symbol(symbolSegments.join('.'));
+    }
+    var named = invocation.namedArguments;
+    return plato.instantiate(plato.classMirror(symbol), positional, named, constructor);
   }
 
   Future<Template> $include(String name) async {

@@ -62,4 +62,10 @@ class BridgePreProcessorTest implements TestCase {
     await expectProcessesTo('@include("partial")',
     r'${await $include("partial")}');
   }
+
+  @test
+  it_creates_a_proxy_for_dynamic_instantiation() async {
+    await expectProcessesTo(r'${new library.Thing(arg1, arg2).property + "new Text in a string"}',
+    r'${$instantiate(#library.Thing, arg1, arg2).property + "new Text in a string"}');
+  }
 }

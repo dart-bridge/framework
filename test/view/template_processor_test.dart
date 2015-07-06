@@ -21,11 +21,13 @@ class TemplateProcessorTest implements TestCase {
 
     var script = processor.templateScript;
 
-    script+=mainFunction;
+    script += mainFunction;
+
+    script = script.replaceFirst('import "dart:async";', 'import "dart:async";export "dart:io";');
 
     ProcessResult result = await Process.run('dart',
     [
-      '-p${Directory.current.absolute.path+'/packages'}',
+      '-p${Directory.current.absolute.path + '/packages'}',
       'data:application/dart;charset=utf-8,${Uri.encodeComponent(script)}',
     ]);
 
@@ -70,7 +72,8 @@ class TemplateProcessorTest implements TestCase {
 
   @test
   it_can_parse_expressions_with_global_data() async {
-    expect(await parse(r'${new Templates()}'), equals("Instance of 'Templates'"));
+    preProcessors.add(new BridgePreProcessor());
+    expect(await parse(r'${new dart.io.File.fromUri(Uri.parse("/path"))}'), equals("File: '/path'"));
   }
 
   @test
@@ -94,6 +97,7 @@ class TemplateProcessorTest implements TestCase {
 
 class MockPreProcessor implements TemplatePreProcessor {
   bool wasCalled = false;
+
   Future<String> process(String template) async {
     wasCalled = true;
     return template.replaceAll('un', '');
