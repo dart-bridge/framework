@@ -94,7 +94,10 @@ class Repository<M> implements Collection {
   Future save(M model) async {
     var fields = _fieldsFromModel(model);
     fields['updatedAt'] = new DateTime.now();
-    if (fields['createdAt'] == null)
+    var currentlySaved = await _collection.find((model as Model).id);
+    if (currentlySaved != null)
+      fields['createdAt'] = currentlySaved['createdAt'];
+    else if (fields['createdAt'] == null)
       fields['createdAt'] = fields['updatedAt'];
     (model as Model).id = await _collection.save(fields);
   }

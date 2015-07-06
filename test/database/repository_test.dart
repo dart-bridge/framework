@@ -15,7 +15,8 @@ class RepositoryTest implements TestCase {
     repository = new Repository<TestModel>(new Application(), database);
   }
 
-  tearDown() {}
+  tearDown() {
+  }
 
   @test
   it_gets_all_in_collection() async {
@@ -54,12 +55,12 @@ class RepositoryTest implements TestCase {
       expect(data['createdAt'], new isInstanceOf<DateTime>());
       expect(data['updatedAt'], new isInstanceOf<DateTime>());
     };
-    
+
     await repository.save(
         new TestModel()
           ..stringField = 'title'
           ..intField = 1);
-    
+
     expect(wasCalled, isTrue);
   }
 }
@@ -94,22 +95,24 @@ class MockCollection implements Collection {
   }
 
   Future<Map> find(id) async {
-    return allFields[0];
+    if (allFields != null)
+      return allFields[0];
+    return null;
   }
-  
+
   Function onSave;
-  
+
   Future save(data) => onSave(data);
 
   MockSelector get select => new MockSelector();
 
   MockSelector where(String field,
-                 {isEqualTo,
-                 isNotEqualTo,
-                 isLessThan,
-                 isGreaterThan,
-                 isLessThanOrEqualTo,
-                 isGreaterThanOrEqualTo}) {
+                     {isEqualTo,
+                     isNotEqualTo,
+                     isLessThan,
+                     isGreaterThan,
+                     isLessThanOrEqualTo,
+                     isGreaterThanOrEqualTo}) {
     return select;
   }
 
