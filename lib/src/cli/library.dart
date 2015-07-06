@@ -1,5 +1,9 @@
 library bridge.cli;
 
+// Core libraries
+import 'dart:io';
+import 'dart:async';
+
 // Server side
 import 'package:bridge/core.dart';
 
