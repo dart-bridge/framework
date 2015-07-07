@@ -9,13 +9,13 @@ bootstrap(List<String> arguments, {String configPath}) async {
     _printToLog = true;
     arguments.remove('--production');
   }
-  await _makeProgram(configPath).run(arguments);
+  await _makeProgram(configPath, arguments).run(arguments);
 }
 
 bool _printToLog = false;
 
-Program _makeProgram(configPath) {
-  return new BridgeCli(_chooseConfigPath(configPath), printToLog: _printToLog);
+Program _makeProgram(configPath, arguments) {
+  return new BridgeCli(arguments, _chooseConfigPath(configPath), printToLog: _printToLog);
 }
 
 String _chooseConfigPath(String configPath) {

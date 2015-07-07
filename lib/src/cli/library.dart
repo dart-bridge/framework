@@ -11,5 +11,7 @@ import 'package:bridge/core.dart';
 import 'package:cupid/cupid.dart';
 export 'package:cupid/cupid.dart';
 
+import 'package:path/path.dart' as path;
+
 part 'bootstrap.dart';
 part 'program.dart';
