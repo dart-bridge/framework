@@ -40,7 +40,7 @@ ${_scripts.keys
     return template.replaceAllMapped(new RegExp(r'''(^|(?!\\).)\$(?:([A-Za-z_]\w+)|\{\s*([A-Za-z_]\w+)\s*\}|\{([^]*?)\})'''), (m) {
       if (m[4] != null) return m[0];
       return m[1] + '{{ ${m[2] != null ? m[2] : m[3]} }}';
-    }).replaceAllMapped(new RegExp(r'\$\{await \$include\(([^]*)\)\}'), (m) {
+    }).replaceAllMapped(new RegExp(r'\$\{await \$include\(([^]*?)\)\}'), (m) {
       return r'${(await $include(''${m[1]}'r')).asHandlebars}';
     });
   }
