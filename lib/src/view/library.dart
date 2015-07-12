@@ -10,7 +10,7 @@ import 'package:path/path.dart' show basename, extension;
 import 'package:bridge/exceptions.dart';
 import 'package:jaded/jaded.dart' as jade;
 import 'package:markdown/markdown.dart' as markdown;
-import 'dart:convert' show UTF8;
+import 'dart:convert' show UTF8, HtmlEscape;
 import 'shared/library.dart';
 import 'package:bridge/http.dart';
 export 'shared/library.dart';

@@ -30,8 +30,12 @@ class HandlebarsPreProcessor implements TemplatePreProcessor {
   }
 
   String _variables(String template) {
-    return template.replaceAllMapped(
+    return template
+    .replaceAllMapped(
+        new RegExp(r'{{{([^]*?)}}}'),
+            (m) => '\${${m[1]}}')
+    .replaceAllMapped(
         new RegExp(r'{{([^]*?)}}'),
-            (m) => '\${${m[1]}}');
+            (m) => '\${\$escape(${m[1]})}');
   }
 }

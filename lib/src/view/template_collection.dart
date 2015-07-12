@@ -6,7 +6,10 @@ typedef Future<String> TemplateForEachIteration(element);
 
 abstract class TemplateCollection {
   Map<String, TemplateGenerator> get templates;
+
   Map<String, dynamic> data;
+
+  final Map<String, String> _blocks = <String, String>{};
 
   noSuchMethod(Invocation invocation) {
     if (invocation.memberName == #$instantiate) return _instantiate(invocation);
@@ -24,7 +27,8 @@ abstract class TemplateCollection {
         return (instance as ClosureMirror)
         .apply(invocation.positionalArguments, invocation.namedArguments).reflectee;
       }
-    } catch(e) {}
+    } catch (e) {
+    }
     return null;
   }
 
@@ -47,24 +51,41 @@ abstract class TemplateCollection {
     return await templates[name]();
   }
 
+  String $escape(String template) {
+    return new HtmlEscape().convert(template);
+  }
+
+  Future<String> $extends(String parent, Map<String, String> blocks) async {
+    _blocks.addAll(blocks);
+    var parsed = (await $include(parent)).parsed;
+    _blocks.clear();
+    return parsed;
+  }
+
+  String $block(String block) {
+    return _blocks.containsKey(block) ? _blocks[block] : '';
+  }
+
   Future<Template> template(String name,
-                          Map<String, dynamic> data,
-                          List<String> scripts) async {
+                            Map<String, dynamic> data,
+                            List<String> scripts) async {
     this.data = data;
     return _attachScripts(await $include(name), scripts);
   }
 
   Template _attachScripts(Template template, List<String> scripts) {
     String markup = template.parsed;
+
     productionTag(s) => "<script src='$s.dart.js'></script>";
+
     developmentTag(s) => "<script type='application/dart' src='$s.dart'></script>";
 
     return new Template(
         data: template.data,
         parsed: markup.replaceFirstMapped(new RegExp(r'(</\s*body\s*>|$)'), (m) {
-      return "${scripts
-      .map(Environment.isProduction ? productionTag : developmentTag)
-      .join('')}${m[1]}";
-    }));
-}
+          return "${scripts
+          .map(Environment.isProduction ? productionTag : developmentTag)
+          .join('')}${m[1]}";
+        }));
+  }
 }

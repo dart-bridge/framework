@@ -27,6 +27,32 @@ class BridgePreProcessor implements TemplatePreProcessor {
   String _directives(String template) {
     return template
 
+    // @extends @block @end block
+    .replaceAllMapped(_r(
+        r'@extends\s*\(''$_expressionMatcher'r'\)([^]*@end\s*block)'), (m) {
+      var expression = m[1];
+      var contents = m[2];
+      var outerBlockMatcher = _r(r'^(\s*)@block\s*\(''$_expressionMatcher'r'\)([^]*?)^\1@end\s*block', multiLine: true);
+      var inlineOuterBlockMatcher = _r(r'()@start block\s*\(''$_expressionMatcher'r'\)(.*?)@end\s*block', multiLine: true);
+      List<Match> matches = []
+        ..addAll(inlineOuterBlockMatcher.allMatches(contents))
+        ..addAll(outerBlockMatcher.allMatches(contents));
+      Iterable<String> blocks = matches.map((m) {
+        var expression = m[2];
+        var contents = m[3];
+        return '$expression: """$contents"""';
+      });
+
+      return r'${await $extends(''$expression, {${blocks.join(',')}})}';
+    })
+
+    // @block
+    .replaceAllMapped(_r(
+        r'@(?:start )?block\s*\(''$_expressionMatcher'r'\)'), (m) {
+      var expression = m[1];
+      return r'${$block(''$expression'')}';
+    })
+
     // @if
     .replaceAllMapped(_r(
         r'@if\s*\(''$_expressionMatcher'r'\)'), (m) {

@@ -64,6 +64,18 @@ class BridgePreProcessorTest implements TestCase {
   }
 
   @test
+  it_has_a_syntax_for_extending_templates() async {
+    await expectProcessesTo('@extends("parent")\n@block("block")\ncontents\n@end block',
+    r'${await $extends("parent", {"block": """''\ncontents\n"""})}');
+  }
+
+  @test
+  it_has_a_syntax_for_accepting_extension() async {
+    await expectProcessesTo('@block("block")',
+    r'${$block("block")}');
+  }
+
+  @test
   it_creates_a_proxy_for_dynamic_instantiation() async {
     await expectProcessesTo(r'${new library.Thing(arg1, arg2).property + "new Text in a string"}',
     r'${$instantiate(#library.Thing, arg1, arg2).property + "new Text in a string"}');

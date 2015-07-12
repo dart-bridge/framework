@@ -7,10 +7,12 @@ class ViewServiceProvider implements ServiceProvider {
   Directory publicDirectory;
   File templatesCache;
   Program program;
+  Container container;
 
   setUp(Config config,
         Container container,
         Program program) {
+    this.container = container;
     this.program = program;
     publicDirectory = new Directory(
         config('http.server.publicRoot', 'web'));
@@ -72,6 +74,7 @@ class ViewServiceProvider implements ServiceProvider {
       program.printDanger('Template malformed!\n${e.toString()
       .replaceAll(new RegExp(r"'data:application\/dart;charset=utf-8,[^]*?':"),
       '<template cache>')}');
+      print(processor.templateScript);
       await program.exit();
     }
 
@@ -105,10 +108,10 @@ class ViewServiceProvider implements ServiceProvider {
   }
 
   List<TemplatePreProcessor> preProcessorsOf(String extension) {
-    var compileBridge = new BridgePreProcessor();
-    var compileJade = new JadePreProcessor();
-    var compileMarkdown = new MarkdownPreProcessor();
-    var compileHandlebars = new HandlebarsPreProcessor();
+    var compileBridge = container.make(BridgePreProcessor);
+    var compileJade = container.make(JadePreProcessor);
+    var compileMarkdown = container.make(MarkdownPreProcessor);
+    var compileHandlebars = container.make(HandlebarsPreProcessor);
 
     var all = <String, List<TemplatePreProcessor>>{
       '.jade': [compileJade, compileBridge],

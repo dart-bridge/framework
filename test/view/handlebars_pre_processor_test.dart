@@ -23,8 +23,9 @@ class HandlebarsPreProcessorTest implements TestCase {
   }
 
   @test
-  it_converts_variable_syntax() async {
-    await expectProcessesTo(r'{{expression}}', r'${expression}');
+  it_converts_variable_syntax_escaped_and_not() async {
+    await expectProcessesTo(r'{{expression}}', r'${$escape(expression)}');
+    await expectProcessesTo(r'{{{expression}}}', r'${expression}');
   }
 
   @test

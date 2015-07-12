@@ -60,6 +60,16 @@ class TemplateCollectionTest implements TestCase {
         "</body></html>",
         scripts: ['main', 'test']);
   }
+
+  @test
+  it_can_include_other_templates() async {
+    await expectTemplate('testIncludes', '<div>template</div>');
+  }
+
+  @test
+  it_can_extend_other_templates() async {
+    await expectTemplate('testChild', '<div>inner</div>');
+  }
 }
 
 @proxy
@@ -69,5 +79,8 @@ class MockTemplateCollection extends TemplateCollection {
     'testTwo': () async => new Template(parsed: '${key}'),
     'testThree': () async => new Template(parsed: '${globalFunction()}${globalVariable}${globalVariable = 'newResponse'}'),
     'testFour': () async => new Template(parsed: '<html><body></body></html>'),
+    'testIncludes': () async => new Template(parsed: '<div>${await $include('testOne')}</div>'),
+    'testParent': () async => new Template(parsed: '<div>${$block('block')}</div>'),
+    'testChild': () async => new Template(parsed: '${await $extends('testParent', {'block': 'inner'})}'),
   };
 }
