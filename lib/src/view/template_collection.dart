@@ -61,7 +61,6 @@ abstract class TemplateCollection {
 
     return new Template(
         data: template.data,
-        asHandlebars: template.asHandlebars,
         parsed: markup.replaceFirstMapped(new RegExp(r'(</\s*body\s*>|$)'), (m) {
       return "${scripts
       .map(Environment.isProduction ? productionTag : developmentTag)

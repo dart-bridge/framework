@@ -45,10 +45,6 @@ class TemplateProcessorTest implements TestCase {
     return _parse(template, 'main() async {print((await new Templates().template("test", $dataMap, [])).data);}');
   }
 
-  Future<String> asHandlebars(String template) async {
-    return _parse(template, 'main() async {print((await new Templates().template("test", {}, [])).asHandlebars);}');
-  }
-
   @test
   empty_template_is_always_string() async {
     expect(await parse(null), equals(''));
@@ -87,11 +83,6 @@ class TemplateProcessorTest implements TestCase {
   @test
   it_keeps_the_data_map() async {
     expect(await data(r'$key', '{"key": "value"}'), equals('{key: value}'));
-  }
-
-  @test
-  it_keeps_a_handlebars_version() async {
-    expect(await asHandlebars(r'$key\$key${key}'), equals(r'{{ key }}$key{{ key }}'));
   }
 }
 

@@ -3,7 +3,14 @@ part of bridge.view;
 class HandlebarsPreProcessor implements TemplatePreProcessor {
   Future<String> process(String template) async {
     if (template == null) return '';
-    return _variables(_blocks(template));
+    return _variables(_blocks(_partials(template)));
+  }
+
+  String _partials(String template) {
+    var matcher = new RegExp(r'{{>\s*([^]*?)\s*}}');
+    return template.replaceAllMapped(matcher, (m) {
+      return '@include (${m[1]})';
+    });
   }
 
   String _blocks(String template) {

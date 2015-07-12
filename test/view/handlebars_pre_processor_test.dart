@@ -35,4 +35,9 @@ class HandlebarsPreProcessorTest implements TestCase {
     return (await Future.wait(c.map((i) async {var o = data;data = i;
     var r = await compile();data = o;return r;}))).join('');}()}''');
   }
+
+  @test
+  it_converts_include_syntax() async {
+    await expectProcessesTo(r'{{>partial}}', r'@include (partial)');
+  }
 }
