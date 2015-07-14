@@ -150,8 +150,12 @@ class _Server implements Server {
 
   void handleException(Type exceptionType, Function handler, {int statusCode: 500}) {
     this.addMiddleware(shelf.createMiddleware(errorHandler: (Object exception, StackTrace stack) async {
-      if (exception.runtimeType == exceptionType)
-        return _valueToResponse(await _container.resolve(handler, injecting: {Exception: exception}), statusCode);
+      if (reflectType(exception.runtimeType).isAssignableTo(reflectType(exceptionType)))
+        return _valueToResponse(await _container.resolve(handler, injecting: {
+          exceptionType: exception,
+          Exception: exception,
+          StackTrace: stack,
+        }), statusCode);
       throw exception;
     }));
   }
