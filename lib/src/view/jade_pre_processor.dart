@@ -57,7 +57,7 @@ __--import 'package:jaded/runtime.dart' as jade;
         template = template.replaceAllMapped(
             new RegExp(r'(^[ \t]*)''$directive'r'\s*(.*)\n((?:[ \t]*(?:\n|$)|\1\s+.*(?:\n|$))+)', multiLine: true),
                 (m) {
-              var contents = m[3].replaceAll(new RegExp('^${m[1]}\\s+', multiLine: true), m[1]);
+              var contents = m[3].replaceAll(new RegExp('^${_smallestCommonIndent(m[3])}', multiLine: true), m[1]);
               if (contents.trim() == '') return m[0];
               return '${m[1]}| @start $directive (${m[2]})\n$contents${m[1]}| @${directives[directive]}\n';
             });
@@ -66,5 +66,16 @@ __--import 'package:jaded/runtime.dart' as jade;
     }
 
     return template;
+  }
+
+  String _smallestCommonIndent(String input) {
+    var lines = input.split('\n');
+    var lineIndents = lines.map((s) => new RegExp(r'^\s*').firstMatch(input)[0]);
+    String smallestIndent;
+    for (var lineIndent in lineIndents)
+      smallestIndent = smallestIndent == null
+      ? lineIndent
+      : lineIndent.length < smallestIndent.length ? lineIndent : smallestIndent;
+    return smallestIndent;
   }
 }
