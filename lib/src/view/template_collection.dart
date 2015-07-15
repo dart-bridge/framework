@@ -23,6 +23,7 @@ abstract class TemplateCollection {
       var instance = plato.instance(invocation.memberName);
       if (instance != null) {
         var instanceValue = instance.reflectee;
+        if (instanceValue is Type) return new StaticAccessor(instance);
         if (invocation.isGetter) return instanceValue;
         return (instance as ClosureMirror)
         .apply(invocation.positionalArguments, invocation.namedArguments).reflectee;
@@ -87,5 +88,23 @@ abstract class TemplateCollection {
           .map(Environment.isProduction ? productionTag : developmentTag)
           .join('')}${m[1]}";
         }));
+  }
+}
+
+class StaticAccessor {
+  InstanceMirror _type;
+
+  StaticAccessor(InstanceMirror this._type);
+
+  noSuchMethod(Invocation invocation) {
+    ClassMirror classMirror = reflectClass(_type.reflectee);
+    if (invocation.isGetter)
+      return classMirror.getField(invocation.memberName).reflectee;
+    if (invocation.isSetter)
+      return classMirror.setField(invocation.memberName, invocation.positionalArguments[0]).reflectee;
+    return classMirror.invoke(
+        invocation.memberName,
+        invocation.positionalArguments,
+        invocation.namedArguments).reflectee;
   }
 }

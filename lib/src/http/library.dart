@@ -1,6 +1,7 @@
 library bridge.http;
 
 import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/src/message.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 import 'package:stack_trace/stack_trace.dart' as trace;
@@ -32,3 +33,4 @@ part 'middleware/csrf_middleware.dart';
 part 'exceptions/token_mismatch_exception.dart';
 part 'middleware/static_files_middleware.dart';
 part 'middleware/input_middleware.dart';
+part 'middleware.dart';
