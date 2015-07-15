@@ -10,12 +10,14 @@ class HttpServiceProvider implements ServiceProvider {
   setUp(Container container,
         Server server,
         Router router,
+        _ResponseMapper responseMapper,
         SessionManager manager) {
     this.server = server;
     this.router = router;
 
     server.attachRouter(router);
 
+    container.singleton(responseMapper);
     container.singleton(server, as: Server);
     container.singleton(router, as: Router);
     container.singleton(manager);

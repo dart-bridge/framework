@@ -14,7 +14,7 @@ abstract class Server {
 
   Future stop();
 
-  void addMiddleware(shelf.Middleware middleware, {bool highPriority});
+  void addMiddleware(Object middleware, {bool highPriority});
 
   void handleException(Type exceptionType, Function handler);
 
@@ -31,9 +31,9 @@ class _Server implements Server {
   String _host;
   int _port;
   List<shelf.Middleware> _middleware = new List();
-  Set<Function> _returnValueModulators = new Set();
   Container _container;
   Config _config;
+  _ResponseMapper _responseMapper;
   Function onError = (e, s) {
     print(e);
     print(s);
@@ -44,6 +44,7 @@ class _Server implements Server {
   int get port => _port;
 
   _Server(Config this._config, Container this._container) {
+    _responseMapper = _container.make(_ResponseMapper);
     _host = _config('http.server.host', 'localhost');
     _port = _config('http.server.port', 1337);
   }
@@ -52,9 +53,15 @@ class _Server implements Server {
     _router = router;
   }
 
-  void addMiddleware(shelf.Middleware middleware, {bool highPriority: false}) {
-    if (highPriority) return _middleware.insert(0, middleware);
-    _middleware.add(middleware);
+  void addMiddleware(Object middleware, {bool highPriority: false}) {
+    shelf.Middleware shelfMiddleware;
+    if (middleware is shelf.Middleware) shelfMiddleware = middleware;
+    if (middleware is Middleware) shelfMiddleware = middleware.transform(_container);
+    if (shelfMiddleware == null) throw new InvalidArgumentException(
+        'Must be a [shelf.Middleware] or a [bridge.http.Middleware]');
+
+    if (highPriority) return _middleware.insert(0, shelfMiddleware);
+    _middleware.add(shelfMiddleware);
   }
 
   Future<HttpServer> start() async {
@@ -109,7 +116,7 @@ class _Server implements Server {
       Session: request.context['session'],
     },
     namedParameters: route.wildcards(request.url.path));
-    return _valueToResponse(returnValue);
+    return _responseMapper.valueToResponse(returnValue);
   }
 
   Object _clearPrivates(Map map) {
@@ -119,14 +126,42 @@ class _Server implements Server {
     return map;
   }
 
-  Future<shelf.Response> _valueToResponse(Object value, [int statusCode = 200]) async {
-    for (var m in _returnValueModulators) {
+  Future stop() async {
+    if (_server == null) throw new Exception('The server isn\'t running');
+    await _server.close();
+  }
+
+  void handleException(Type exceptionType, Function handler, {int statusCode: 500}) {
+    this.addMiddleware(shelf.createMiddleware(errorHandler: (Object exception, StackTrace stack) async {
+      if (reflectType(exception.runtimeType).isAssignableTo(reflectType(exceptionType)))
+        return _responseMapper.valueToResponse(await _container.resolve(handler, injecting: {
+          exceptionType: exception,
+          Exception: exception,
+          StackTrace: stack,
+        }), statusCode);
+      throw exception;
+    }));
+  }
+
+  void modulateRouteReturnValue(modulation(value)) {
+    _responseMapper.modulateRouteReturnValue(modulation);
+  }
+}
+
+class _ResponseMapper {
+  Set<Function> _returnValueModulators = new Set();
+
+  Future<shelf.Response> valueToResponse(Object value, [int statusCode = 200]) async {
+    for (var m in _returnValueModulators)
       value = await m(value);
-    }
     if (value is shelf.Response) return value;
     return new shelf.Response(statusCode, body: _bodyFromValue(value), headers: {
       'Content-Type': _contentTypeFromValue(value).toString()
     });
+  }
+
+  void modulateRouteReturnValue(modulation(value)) {
+    _returnValueModulators.add(modulation);
   }
 
   String _bodyFromValue(Object value) {
@@ -141,26 +176,5 @@ class _Server implements Server {
 
   bool _isJsonEncodable(Object value) {
     return value is Iterable || value is Map;
-  }
-
-  Future stop() async {
-    if (_server == null) throw new Exception('The server isn\'t running');
-    await _server.close();
-  }
-
-  void handleException(Type exceptionType, Function handler, {int statusCode: 500}) {
-    this.addMiddleware(shelf.createMiddleware(errorHandler: (Object exception, StackTrace stack) async {
-      if (reflectType(exception.runtimeType).isAssignableTo(reflectType(exceptionType)))
-        return _valueToResponse(await _container.resolve(handler, injecting: {
-          exceptionType: exception,
-          Exception: exception,
-          StackTrace: stack,
-        }), statusCode);
-      throw exception;
-    }));
-  }
-
-  void modulateRouteReturnValue(modulation(value)) {
-    _returnValueModulators.add(modulation);
   }
 }
