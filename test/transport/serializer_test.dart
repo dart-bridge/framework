@@ -1,14 +1,14 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
-import 'package:bridge/tether.dart';
+import 'package:bridge/transport.dart';
 import 'dart:convert';
 
-class SerializationManagerTest implements TestCase {
-  SerializationManager manager;
+class SerializerTest implements TestCase {
+  Serializer serializer;
 
   setUp() {
-    manager = new SerializationManager();
-    manager.registerStructure(
+    serializer = new Serializer();
+    serializer.registerStructure(
         'ExampleSerializable',
         ExampleSerializable,
             (s) => new ExampleSerializable.deserialize(s));
@@ -18,7 +18,7 @@ class SerializationManagerTest implements TestCase {
   }
 
   Object _serializeAndDeserialize(Object object) {
-    return manager.deserialize(JSON.decode(JSON.encode(manager.serialize(object))));
+    return serializer.deserialize(JSON.decode(JSON.encode(serializer.serialize(object))));
   }
 
   expectSerializes(Object object) {
@@ -71,11 +71,11 @@ class SerializationManagerTest implements TestCase {
 
   @test
   it_casts_unregistered_classes_to_json_if_possible_otherwise_string() async {
-    expect(manager.serialize(new UnregisteredSerializable()),
+    expect(serializer.serialize(new UnregisteredSerializable()),
     equals({'key': 'value'}));
-    expect(manager.serialize(new ExampleUnserializableWithToJsonMethod()),
+    expect(serializer.serialize(new ExampleUnserializableWithToJsonMethod()),
     equals({'key': 'value'}));
-    expect(manager.serialize(new ExampleUnserializable()),
+    expect(serializer.serialize(new ExampleUnserializable()),
     equals('Instance of \'ExampleUnserializable\''));
   }
 }

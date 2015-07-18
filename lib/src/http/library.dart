@@ -5,6 +5,7 @@ import 'package:shelf/src/message.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 import 'package:stack_trace/stack_trace.dart' as trace;
+import 'package:http_server/http_server.dart' as http_server;
 import 'package:dlog/dlog.dart' as dlog;
 import 'package:path/path.dart' as path;
 import 'package:bridge/core.dart';
@@ -18,6 +19,8 @@ import 'dart:mirrors';
 
 import 'sessions/library.dart';
 import 'dart:collection';
+import 'package:mime/mime.dart';
+import 'package:bridge/transport.dart';
 export 'sessions/library.dart';
 
 part 'http_service_provider.dart';
@@ -34,3 +37,4 @@ part 'exceptions/token_mismatch_exception.dart';
 part 'middleware/static_files_middleware.dart';
 part 'middleware/input_middleware.dart';
 part 'middleware.dart';
+part 'uploaded_file.dart';

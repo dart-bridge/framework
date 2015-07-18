@@ -9,6 +9,7 @@ import 'dart:async';
 //import 'package:bridge/bridge.dart';
 
 // Using
+import 'package:bridge/transport.dart';
 import 'package:bridge/exceptions.dart';
 
 part 'shared/exceptions/socket_occupied_exception.dart';
@@ -17,6 +18,4 @@ part 'shared/message.dart';
 part 'shared/socket_interface.dart';
 part 'shared/messenger.dart';
 part 'shared/tether.dart';
-part 'shared/serializable.dart';
 part 'shared/default_structures.dart';
-part 'shared/serialization_manager.dart';

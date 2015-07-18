@@ -1,7 +1,7 @@
-part of bridge.tether.shared;
+part of bridge.transport;
 
-abstract class SerializationManager {
-  factory SerializationManager() => new _SerializationManager();
+abstract class Serializer {
+  factory Serializer() => new _Serializer();
 
   Object serialize(Object object);
 
@@ -12,7 +12,7 @@ abstract class SerializationManager {
 
 typedef Serializable SerializableFactory(serialized);
 
-class _SerializationManager implements SerializationManager {
+class _Serializer implements Serializer {
   final Map<String, dynamic> _structures = {};
   static final _structureIdentifier = '__STRUCTURE';
 

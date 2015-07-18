@@ -150,6 +150,9 @@ class _Server implements Server {
 
 class _ResponseMapper {
   Set<Function> _returnValueModulators = new Set();
+  Serializer _serializer;
+
+  _ResponseMapper(Serializer this._serializer);
 
   Future<shelf.Response> valueToResponse(Object value, [int statusCode = 200]) async {
     for (var m in _returnValueModulators)
@@ -165,7 +168,7 @@ class _ResponseMapper {
   }
 
   String _bodyFromValue(Object value) {
-    if (_isJsonEncodable(value)) return JSON.encode(value);
+    if (_isJsonEncodable(value)) return JSON.encode(_serializer.serialize(value));
     return value.toString();
   }
 

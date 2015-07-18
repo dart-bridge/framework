@@ -1,5 +1,5 @@
 library bridge.view.shared;
 
-import 'package:bridge/src/tether/library_shared.dart';
+import 'package:bridge/transport.dart';
 
 part 'template.dart';

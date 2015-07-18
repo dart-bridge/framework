@@ -9,8 +9,8 @@ abstract class Messenger {
   final Future onConnectionEnd;
   final Future onConnectionOpen;
 
-  factory Messenger(SocketInterface socket, SerializationManager serializationManager) =>
-  new _Messenger(socket, serializationManager);
+  factory Messenger(SocketInterface socket, Serializer serializer) =>
+  new _Messenger(socket, serializer);
 
   Future<Message> send(Message message);
 
@@ -22,7 +22,7 @@ abstract class Messenger {
 class _Messenger implements Messenger {
   SocketInterface _socket;
   Map<String, StreamController<Message>> _listeners = {};
-  SerializationManager _serializationManager;
+  Serializer _serializer;
 
   bool get socketIsOpen => _socket.isOpen;
 
@@ -30,7 +30,7 @@ class _Messenger implements Messenger {
 
   Future get onConnectionOpen => _socket.onOpen;
 
-  _Messenger(SocketInterface this._socket, SerializationManager this._serializationManager) {
+  _Messenger(SocketInterface this._socket, Serializer this._serializer) {
     _listenOnSocket();
   }
 
@@ -69,7 +69,7 @@ class _Messenger implements Messenger {
   }
 
   Future<Message> send(Message message) async {
-    message.data = _serializationManager.serialize(message.data);
+    message.data = _serializer.serialize(message.data);
     _socket.send(message.serialized);
     return _returnMessage(message);
   }
@@ -85,11 +85,11 @@ class _Messenger implements Messenger {
   }
 
   void registerStructure(String id, Type serializable, Serializable factory(data)) {
-    _serializationManager.registerStructure(id, serializable, factory);
+    _serializer.registerStructure(id, serializable, factory);
   }
 
   Message _deserializeData(Message message) {
-    message.data = _serializationManager.deserialize(message.data);
+    message.data = _serializer.deserialize(message.data);
     return message;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/tether.dart';
+import 'package:bridge/transport.dart';
 import 'dart:async';
 
 class MessengerTest implements TestCase {
@@ -11,7 +12,7 @@ class MessengerTest implements TestCase {
 
   setUp() {
     socket = new MockSocket();
-    messenger = new Messenger(socket, new SerializationManager());
+    messenger = new Messenger(socket, new Serializer());
   }
 
   tearDown() {

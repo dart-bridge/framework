@@ -1,4 +1,4 @@
-part of bridge.tether.shared;
+part of bridge.transport;
 
 abstract class Serializable {
   Object serialize();

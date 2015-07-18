@@ -1,43 +1,78 @@
 part of bridge.http;
 
 class InputParser {
-  Formler _formler;
   final shelf.Request _request;
-  List<int> _bytes;
+  Stream<List<int>> _bytes;
+  MimeMultipartTransformer _transformer;
+  String __bytesAsString;
 
-  InputParser(shelf.Request this._request);
-
-  Future<Input> parse() async {
-    _formler = new Formler(await _getBytes(), _getBoundary());
-    return new Input(_getBody());
+  InputParser(shelf.Request this._request) {
+    _transformer = new MimeMultipartTransformer(_getBoundary());
+    _bytes = _request.read().asBroadcastStream();
   }
 
-  Future<List<int>> _getBytes() async {
-    List<List<int>> lines = await _request.read().toList();
-    _bytes = lines.expand((l) => l).toList();
-    return _bytes;
+  Future<String> get _bytesAsString async {
+    if (__bytesAsString == null)
+      __bytesAsString = UTF8.decode((await _bytes.toList()).expand((l) => l).toList());
+    return __bytesAsString;
+  }
+
+  Future<Input> parse() async {
+    var body = await _getBody();
+    return new Input(body);
   }
 
   String _getBoundary() {
     try {
       return new RegExp(r'boundary=(-+[^ ]*)')
-      .firstMatch(_request.headers['Content-Type'])[1]
+      .firstMatch(_request.headers['Content-Type'])[1]/*
       .replaceAll(new RegExp(r'^-*'), '')
-      .replaceAll(new RegExp(r'-*$'), '');
+      .replaceAll(new RegExp(r'-*$'), '')*/;
     } catch (e) {
       return '';
     }
   }
 
-  Object _getBody() {
+  Future<Object> _getBody() async {
     if (_request.headers['Content-Type'].contains('application/x-www-form-urlencoded'))
-      return Formler.parseUrlEncoded(new String.fromCharCodes(_bytes));
+      return Formler.parseUrlEncoded(await _bytesAsString);
     if (_request.headers['Content-Type'].contains('boundary'))
-      return _formler.parse();
+      return _multiPart(_transformMultipartData());
     try {
-      return JSON.decode(new String.fromCharCodes(_bytes));
+      return JSON.decode(await _bytesAsString);
     } catch(e) {
-      return new String.fromCharCodes(_bytes);
+      return {'data': await _bytesAsString};
     }
+  }
+
+  Stream<http_server.HttpMultipartFormData> _transformMultipartData() {
+    return _bytes.transform(_transformer).map(http_server.HttpMultipartFormData.parse);
+  }
+
+  Future<Object> _multiPart(Stream<http_server.HttpMultipartFormData> data) async {
+    List<http_server.HttpMultipartFormData> datas = await data.toList();
+    return new Map<String, dynamic>.fromIterables(_namesOf(datas), await _valuesOf(datas));
+  }
+
+  Iterable<String> _namesOf(List<http_server.HttpMultipartFormData> datas) sync* {
+    for (var data in datas) {
+      if (data.contentDisposition.parameters.containsKey('name'))
+        yield data.contentDisposition.parameters['name'];
+      else if (data.contentDisposition.parameters.containsKey('filename'))
+        yield data.contentDisposition.parameters['filename'];
+      else yield new DateTime.now().millisecondsSinceEpoch.toString();
+    }
+  }
+
+  Future<Iterable> _valuesOf(List<http_server.HttpMultipartFormData> datas) {
+    return Future.wait(datas.map((data) => (data.isText) ? _asString(data) : _asFile(data)));
+  }
+
+  Future<String> _asString(Stream<String> data) async {
+    return (await data.toList()).join('\n');
+  }
+
+  Future<UploadedFile> _asFile(http_server.HttpMultipartFormData data) async {
+    return new UploadedFile(data);
   }
 }
