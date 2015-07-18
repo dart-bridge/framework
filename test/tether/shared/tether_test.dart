@@ -1,6 +1,7 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/tether.dart';
+import 'package:bridge/transport.dart';
 import 'dart:async';
 
 class TetherTest implements TestCase {
