@@ -1,6 +1,6 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
-import 'package:bridge/database.dart';
+import 'package:bridge/src/database/in_memory/library.dart';
 
 class InMemoryDatabaseTest implements TestCase {
   InMemoryDatabase database;
