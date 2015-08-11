@@ -6,10 +6,16 @@ class DatabaseServiceProvider implements ServiceProvider {
   Future setUp(Config config, Container container) async {
     String driver = config('database.driver', 'mongodb');
 
-    if (driver == 'mongodb') await _setUpMongo(config);
+    if (driver == 'in_memory') await _setUpInMemory(config);
+    else if (driver == 'mongodb') await _setUpMongo(config);
+
     else throw new ConfigException('Driver [$driver] is not implemented.');
 
     container.singleton(database, as: Database);
+  }
+
+  Future _setUpInMemory(Config config) async {
+    database = new InMemoryDatabase();
   }
 
   Future _setUpMongo(Config config) async {

@@ -12,8 +12,7 @@ export 'shared.dart';
 
 // Drivers
 import 'mongodb/library.dart';
-export 'mongodb/library.dart';
-export 'in_memory/library.dart';
+import 'in_memory/library.dart';
 
 part 'database_service_provider.dart';
 part 'repository.dart';
