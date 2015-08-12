@@ -5,11 +5,13 @@ class Route {
   final String route;
   final Function handler;
   final String name;
+  final bool middleware;
 
   const Route(String this.method,
               String this.route,
               Function this.handler,
-              {String this.name});
+              {String this.name,
+              bool this.middleware});
 
   bool matches(String method, String uri) {
     if (_doesntMatchMethod(method)) return false;

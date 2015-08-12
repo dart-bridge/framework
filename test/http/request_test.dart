@@ -14,6 +14,9 @@ class RequestTest implements TestCase {
   Map<String, String> jsonHeaders = {
     'Content-Type': 'application/json'
   };
+  Map<String, String> textHeaders = {
+    'Content-Type': 'text/plain'
+  };
   MockSessionManager sessions;
 
   setUp() {
@@ -95,6 +98,15 @@ class RequestTest implements TestCase {
     var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
     shelf.Response response = await server.handle(request);
     expect(await response.readAsString(), equals("<form><input type='hidden' name='_token' value='id'></form>"));
+  }
+
+  @test
+  it_can_ignore_middleware_for_a_route() async {
+    server.addMiddleware(new CsrfMiddleware());
+    router.post('/', () => 'response', middleware: false);
+    var request = new shelf.Request('POST', new Uri.http('example.com', '/'), headers: textHeaders);
+    shelf.Response response = await server.handle(request);
+    expect(await response.readAsString(), equals('response'));
   }
 }
 
