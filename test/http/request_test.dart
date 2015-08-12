@@ -108,6 +108,15 @@ class RequestTest implements TestCase {
     shelf.Response response = await server.handle(request);
     expect(await response.readAsString(), equals('response'));
   }
+
+  @test
+  it_can_ignore_specific_middleware_for_a_route() async {
+    server.addMiddleware(new CsrfMiddleware());
+    router.post('/', () => 'response', ignoreMiddleware: [CsrfMiddleware]);
+    var request = new shelf.Request('POST', new Uri.http('example.com', '/'), headers: textHeaders);
+    shelf.Response response = await server.handle(request);
+    expect(await response.readAsString(), equals('response'));
+  }
 }
 
 class MockSessionManager implements SessionManager {

@@ -90,17 +90,17 @@ class _Server implements Server {
   shelf.Middleware _conditionalMiddleware(shelf.Middleware middleware) {
     return (shelf.Handler innerHandler) {
       return (shelf.Request request) {
-        if (_shouldUseMiddlewareForRequest(request))
+        if (_shouldUseMiddlewareForRequest(request, middleware))
           return middleware(innerHandler)(request);
         return innerHandler(request);
       };
     };
   }
 
-  bool _shouldUseMiddlewareForRequest(shelf.Request request) {
+  bool _shouldUseMiddlewareForRequest(shelf.Request request, shelf.Middleware middleware) {
     for (Route route in _router._routes) {
       if (_routeMatch(route, request))
-        return route.middleware;
+        return route.useMiddleware && !route.ignoredMiddleware.contains(middleware.runtimeType);
     }
     return true;
   }
