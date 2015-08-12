@@ -4,7 +4,8 @@ part of bridge.cli;
 /// arguments should be passed directly from the main function. The `configPath`
 /// is the relative path to the root config directory. This will be passed
 /// into the [Application] and bootstrap the entire system.
-bootstrap(List<String> arguments, {String configPath}) async {
+bootstrap(List<String> args, {String configPath}) async {
+  var arguments = args.toList();
   if (arguments.contains('--production')) {
     _printToLog = true;
     arguments.remove('--production');
