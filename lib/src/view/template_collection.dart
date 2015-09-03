@@ -77,9 +77,9 @@ abstract class TemplateCollection {
   Template _attachScripts(Template template, List<String> scripts) {
     String markup = template.parsed;
 
-    productionTag(s) => "<script src='$s.dart.js'></script>";
+    productionTag(s) => "<script src='/$s.dart.js'></script>";
 
-    developmentTag(s) => "<script type='application/dart' src='$s.dart'></script>";
+    developmentTag(s) => "<script type='application/dart' src='/$s.dart'></script>";
 
     return new Template(
         data: template.data,
