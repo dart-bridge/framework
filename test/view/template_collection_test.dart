@@ -43,8 +43,8 @@ class TemplateCollectionTest implements TestCase {
     await expectTemplate(
         'testFour',
         "<html><body>"
-        "<script type='application/dart' src='main.dart'></script>"
-        "<script type='application/dart' src='test.dart'></script>"
+        "<script type='application/dart' src='/main.dart'></script>"
+        "<script type='application/dart' src='/test.dart'></script>"
         "</body></html>",
         scripts: ['main', 'test']);
   }
@@ -55,8 +55,8 @@ class TemplateCollectionTest implements TestCase {
     await expectTemplate(
         'testFour',
         "<html><body>"
-        "<script src='main.dart.js'></script>"
-        "<script src='test.dart.js'></script>"
+        "<script src='/main.dart.js'></script>"
+        "<script src='/test.dart.js'></script>"
         "</body></html>",
         scripts: ['main', 'test']);
   }

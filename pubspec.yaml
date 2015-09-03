@@ -1,10 +1,10 @@
 name: bridge
 description: Extensible end-to-end framework
 author: Emil Persson <emil.n.persson@gmail.com>
-version: 1.0.0-alpha4
+version: 1.0.0-alpha5
 homepage: http://github.com/dart-bridge/framework
 environment:
-  sdk: ">=1.8.0 <2.0.0"
+  sdk: ">=1.12.0 <2.0.0"
 dependencies:
   shelf: ">=0.5.7 <0.7.0"
   shelf_static: ">=0.2.2 <0.3.0"

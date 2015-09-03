@@ -83,8 +83,26 @@ class _Server implements Server {
     var pipeline = const shelf.Pipeline()
     .addMiddleware(shelf.createMiddleware(errorHandler: _globalErrorHandler))
     .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
-    _middleware.forEach((m) => pipeline = pipeline.addMiddleware(m));
+    _middleware.forEach((m) => pipeline = pipeline.addMiddleware(_conditionalMiddleware(m)));
     return pipeline.addHandler(_handle);
+  }
+
+  shelf.Middleware _conditionalMiddleware(shelf.Middleware middleware) {
+    return (shelf.Handler innerHandler) {
+      return (shelf.Request request) {
+        if (_shouldUseMiddlewareForRequest(request, middleware))
+          return middleware(innerHandler)(request);
+        return innerHandler(request);
+      };
+    };
+  }
+
+  bool _shouldUseMiddlewareForRequest(shelf.Request request, shelf.Middleware middleware) {
+    for (Route route in _router._routes) {
+      if (_routeMatch(route, request))
+        return route.useMiddleware && !route.ignoredMiddleware.contains(middleware.runtimeType);
+    }
+    return true;
   }
 
   Future<shelf.Response> handle(shelf.Request request) async {
@@ -101,7 +119,7 @@ class _Server implements Server {
 
   bool _routeMatch(Route route, shelf.Request request) {
     Input input = request.context['input'];
-    var method = input.containsKey('_method')
+    String method = (input != null && input.containsKey('_method'))
     ? input['_method']
     : request.method;
     return route.matches(method, request.url.path);
@@ -109,12 +127,15 @@ class _Server implements Server {
 
   Future<shelf.Response> _routeResponse(Route route,
                                         shelf.Request request) async {
-    var returnValue = await _container.resolve(route.handler,
-    injecting: {
+    var injecting = {
       shelf.Request: request,
-      Input: _clearPrivates(request.context['input']),
-      Session: request.context['session'],
-    },
+    };
+    if (request.context.containsKey('input'))
+      injecting[Input] = _clearPrivates(request.context['input']);
+    if (request.context.containsKey('session'))
+      injecting[Session] = request.context['session'];
+    var returnValue = await _container.resolve(route.handler,
+    injecting: injecting,
     namedParameters: route.wildcards(request.url.path));
     return _responseMapper.valueToResponse(returnValue);
   }
