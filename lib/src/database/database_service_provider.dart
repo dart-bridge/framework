@@ -1,37 +1,40 @@
 part of bridge.database;
 
 class DatabaseServiceProvider implements ServiceProvider {
-  Database database;
+  Gateway gateway;
 
-  Future setUp(Config config, Container container) async {
-    String driver = config('database.driver', 'mongodb');
-
-    if (driver == 'in_memory') await _setUpInMemory(config);
-    else if (driver == 'mongodb') await _setUpMongo(config);
-
-    else throw new ConfigException('Driver [$driver] is not implemented.');
-
-    container.singleton(database, as: Database);
+  Future setUp(Application app) async {
+    gateway = new Gateway(_chooseDriver(app));
   }
 
-  Future _setUpInMemory(Config config) async {
-    database = new InMemoryDatabase();
-  }
-
-  Future _setUpMongo(Config config) async {
-    try {
-      database = new MongoDatabase();
-
-      await database.connect(config);
-    } on SocketException {
-      var port = config('database.mongodb.port', 27017);
-      throw new ConfigException('No MongoDB server is running on port $port. '
-      'Check your configuration or remove [bridge.database.DatabaseServiceProvder] '
-      'from your service provider list.');
+  Driver _chooseDriver(Application app) {
+    switch (app.config('database.driver', 'in_memory')) {
+      case 'in_memory':
+        return new InMemoryDriver();
+      case 'my_sql':
+        final conf = 'database.drivers.my_sql';
+        return new MySqlDriver(
+            host: app.config('$conf.host', 'localhost'),
+            port: app.config('$conf.port', 3306),
+            user: app.config('$conf.username', 'root'),
+            password: app.config('$conf.password', 'password'),
+            db: app.config('$conf.database', 'database'),
+            max: app.config('$conf.max', 5),
+            maxPacketSize: app.config('$conf.max_packet_size', 16 * 1024 * 1024),
+            useSSL: app.config('$conf.ssl', false));
+      case 'postgres':
+        final conf = 'database.drivers.postgres';
+        return new PostgresqlDriver(
+            host: app.config('$conf.host', 'localhost'),
+            port: app.config('$conf.port', 5432),
+            username: app.config('$conf.username', 'root'),
+            password: app.config('$conf.password', 'password'),
+            database: app.config('$conf.database', 'database'),
+            ssl: app.config('$conf.ssl', false));
+      default:
+        throw new ConfigException(
+            '${app.config('database.driver')} '
+                'is not an available database driver');
     }
-  }
-
-  Future tearDown() {
-    return database.close();
   }
 }

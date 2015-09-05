@@ -21,6 +21,7 @@ dependencies:
   jaded: '^0.1.9'
   markdown: '^0.7.1+2'
   http_server: '^0.9.5+1'
+  trestle: '>=0.1.0 <1.0.0'
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"
