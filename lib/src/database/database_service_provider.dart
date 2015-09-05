@@ -5,6 +5,15 @@ class DatabaseServiceProvider implements ServiceProvider {
 
   Future setUp(Application app) async {
     gateway = new Gateway(_chooseDriver(app));
+    app.singleton(gateway);
+  }
+
+  Future load() async {
+    await gateway.connect();
+  }
+
+  Future tearDown() async {
+    await gateway.disconnect();
   }
 
   Driver _chooseDriver(Application app) {
