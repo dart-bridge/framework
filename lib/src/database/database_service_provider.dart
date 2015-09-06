@@ -1,19 +1,25 @@
 part of bridge.database;
 
-class DatabaseServiceProvider implements ServiceProvider {
-  Gateway gateway;
+Gateway _gateway;
 
-  Future setUp(Application app) async {
-    gateway = new Gateway(_chooseDriver(app));
-    app.singleton(gateway);
+class Repository<M> extends trestle.Repository<M> {
+  Repository() {
+    super.connect(_gateway);
+  }
+}
+
+class DatabaseServiceProvider implements ServiceProvider {
+  Future setUp(Application app, Container container) async {
+    _gateway = new Gateway(_chooseDriver(app));
+    app.singleton(_gateway);
   }
 
   Future load() async {
-    await gateway.connect();
+    await _gateway.connect();
   }
 
   Future tearDown() async {
-    await gateway.disconnect();
+    await _gateway.disconnect();
   }
 
   Driver _chooseDriver(Application app) {
@@ -26,7 +32,7 @@ class DatabaseServiceProvider implements ServiceProvider {
             host: app.config('$conf.host', 'localhost'),
             port: app.config('$conf.port', 3306),
             user: app.config('$conf.username', 'root'),
-            password: app.config('$conf.password', 'password'),
+            password: app.config('$conf.password'),
             db: app.config('$conf.database', 'database'),
             max: app.config('$conf.max', 5),
             maxPacketSize: app.config('$conf.max_packet_size', 16 * 1024 * 1024),
