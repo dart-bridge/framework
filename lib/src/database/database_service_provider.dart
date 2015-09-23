@@ -31,12 +31,15 @@ class DatabaseServiceProvider implements ServiceProvider {
         return new MySqlDriver(
             host: app.config('$conf.host', 'localhost'),
             port: app.config('$conf.port', 3306),
-            user: app.config('$conf.username', 'root'),
+            username: app.config('$conf.username', 'root'),
             password: app.config('$conf.password'),
-            db: app.config('$conf.database', 'database'),
+            database: app.config('$conf.database', 'database'),
             max: app.config('$conf.max', 5),
             maxPacketSize: app.config('$conf.max_packet_size', 16 * 1024 * 1024),
-            useSSL: app.config('$conf.ssl', false));
+            ssl: app.config('$conf.ssl', false));
+      case 'sqlite':
+        final conf = 'database.drivers.sqlite.file';
+        return new SqliteDriver(app.config(conf, ':memory:'));
       case 'postgres':
         final conf = 'database.drivers.postgres';
         return new PostgresqlDriver(
