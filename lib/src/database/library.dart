@@ -3,6 +3,8 @@ library bridge.database;
 import 'dart:async';
 
 import 'package:bridge/core.dart';
+import 'package:bridge/cli.dart';
+import 'package:plato/plato.dart' as plato;
 
 import 'package:trestle/gateway.dart';
 import 'package:trestle/trestle.dart' as trestle;

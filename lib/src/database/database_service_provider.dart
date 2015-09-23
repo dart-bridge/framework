@@ -9,12 +9,20 @@ class Repository<M> extends trestle.Repository<M> {
 }
 
 class DatabaseServiceProvider implements ServiceProvider {
+  Application _app;
+  Program _program;
+
   Future setUp(Application app, Container container) async {
+    _app = app;
     _gateway = new Gateway(_chooseDriver(app));
     app.singleton(_gateway);
   }
 
-  Future load() async {
+  Future load(Program program) async {
+    _program = program;
+    program.addCommand(db_migrate);
+    program.addCommand(db_rollback);
+    program.addCommand(db_refresh);
     await _gateway.connect();
   }
 
@@ -35,7 +43,8 @@ class DatabaseServiceProvider implements ServiceProvider {
             password: app.config('$conf.password'),
             database: app.config('$conf.database', 'database'),
             max: app.config('$conf.max', 5),
-            maxPacketSize: app.config('$conf.max_packet_size', 16 * 1024 * 1024),
+            maxPacketSize: app.config(
+                '$conf.max_packet_size', 16 * 1024 * 1024),
             ssl: app.config('$conf.ssl', false));
       case 'sqlite':
         final conf = 'database.drivers.sqlite.file';
@@ -54,5 +63,35 @@ class DatabaseServiceProvider implements ServiceProvider {
             '${app.config('database.driver')} '
                 'is not an available database driver');
     }
+  }
+
+  Set<Type> _migrations;
+
+  Set<Type> _getMigrations() {
+    final migrationStrings = _app.config('database.migrations', []);
+    if (migrationStrings is! List)
+      throw new ConfigException('[database.migrations] must be a list');
+    return migrationStrings
+        .map((n) => plato.classMirror(new Symbol(n)))
+        .map((m) => m.reflectedType)
+        .toSet();
+  }
+
+  Set<Type> get migrations => _migrations ??= _getMigrations();
+
+  @Command('Migrate the database')
+  db_migrate() async {
+    await _gateway.migrate(migrations);
+  }
+
+  @Command('Roll back all database migrations')
+  db_rollback() async {
+    await _gateway.rollback(migrations);
+  }
+
+  @Command('Roll back and re migrate all database migrations')
+  db_refresh() async {
+    await db_rollback();
+    await db_migrate();
   }
 }
