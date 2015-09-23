@@ -82,11 +82,13 @@ class DatabaseServiceProvider implements ServiceProvider {
   @Command('Migrate the database')
   db_migrate() async {
     await _gateway.migrate(migrations);
+    _program.printAccomplishment('Database successfully migrated');
   }
 
   @Command('Roll back all database migrations')
   db_rollback() async {
     await _gateway.rollback(migrations);
+    _program.printAccomplishment('Database successfully rolled back');
   }
 
   @Command('Roll back and re migrate all database migrations')
