@@ -51,3 +51,6 @@ Contributing to Bridge can be done in different ways. You can:
 * Fork the repository, create a **failing** unit test, and make a pull request.
 * Better yet, fix the issue yourself, and make the PR.
 * Help with the documentation by posting pull requests to the [docs repo](https://github.com/dart-bridge/docs).
+
+If you have feature requests, please join our [Gitter channel](https://gitter.im/dart-bridge/framework) and raise your
+voice!
