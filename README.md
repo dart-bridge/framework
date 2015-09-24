@@ -8,3 +8,6 @@
 This is the framework repository. The application package is [here](http://github.com/dart-bridge/bridge).
 Documentation is [here](http://dart-bridge.github.io).
 
+
+
+[![Join the chat at https://gitter.im/dart-bridge/framework](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dart-bridge/framework?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
