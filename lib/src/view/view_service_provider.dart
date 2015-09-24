@@ -14,8 +14,9 @@ class ViewServiceProvider implements ServiceProvider {
         Program program) {
     this.container = container;
     this.program = program;
+    // http.server.publicRoot is deprecated
     publicDirectory = new Directory(
-        config('http.server.publicRoot', 'web'));
+        config('http.server.public_root', config('http.server.publicRoot', 'web')));
     templatesDirectory = new Directory(
         config('view.templates.root', path.join('lib', 'templates')));
     templatesCache = new File(config('view.templates.cache', '.templates.dart'));

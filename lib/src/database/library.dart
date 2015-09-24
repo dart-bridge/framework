@@ -1,21 +1,14 @@
 library bridge.database;
 
-// Core libraries
-import 'dart:mirrors';
 import 'dart:async';
-import 'dart:io';
 
-// Server side
 import 'package:bridge/core.dart';
-import 'shared.dart';
-export 'shared.dart';
+import 'package:bridge/cli.dart';
+import 'package:plato/plato.dart' as plato;
 
-// Drivers
-import 'mongodb/library.dart';
-import 'in_memory/library.dart';
+import 'package:trestle/gateway.dart';
+import 'package:trestle/trestle.dart' as trestle;
+export 'package:trestle/gateway.dart';
+export 'package:trestle/trestle.dart' hide Repository;
 
 part 'database_service_provider.dart';
-part 'repository.dart';
-part 'database.dart';
-part 'collection.dart';
-part 'selector.dart';
