@@ -25,8 +25,6 @@ export 'sessions/library.dart';
 
 part 'http_service_provider.dart';
 part 'server.dart';
-part 'router.dart';
-part 'route.dart';
 part 'exceptions/http_not_found_exception.dart';
 part 'input.dart';
 part 'input_parser.dart';
@@ -37,4 +35,8 @@ part 'exceptions/token_mismatch_exception.dart';
 part 'middleware/static_files_middleware.dart';
 part 'middleware/input_middleware.dart';
 part 'middleware.dart';
+part 'router/router.dart';
+part 'router/route.dart';
+part 'router/router_attachments.dart';
+part 'router/route_group.dart';
 part 'uploaded_file.dart';

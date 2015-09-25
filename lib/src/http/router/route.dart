@@ -1,20 +1,22 @@
 part of bridge.http;
 
-class Route {
+class Route implements RouterAttachments<Route> {
   final String method;
   final String route;
   final Function handler;
   String name;
-  final bool useMiddleware;
+  final List<Type> appendedMiddleware;
   final List<Type> ignoredMiddleware;
   final Map<Type, Object> _shouldInject = {};
 
   Route(String this.method,
-              String this.route,
-              Function this.handler,
-              {String this.name,
-              bool this.useMiddleware: true,
-              List<Type> this.ignoredMiddleware: const []});
+      String this.route,
+      Function this.handler,
+      {String this.name,
+      List<Type> appendMiddleware,
+      List<Type> ignoreMiddleware}) :
+        this.appendedMiddleware = appendMiddleware ?? [],
+        this.ignoredMiddleware = ignoreMiddleware ?? [];
 
   bool matches(String method, String uri) {
     if (_doesntMatchMethod(method)) return false;
@@ -71,7 +73,8 @@ class Route {
     return true;
   }
 
-  bool _segmentListsDoNotHaveEqualLength(List<String> segments1, List<String> segments2) {
+  bool _segmentListsDoNotHaveEqualLength(List<String> segments1,
+      List<String> segments2) {
     return segments1.length != segments2.length;
   }
 
@@ -86,14 +89,35 @@ class Route {
   }
 
   List<String> _getSegments(String uri) {
-    return _trimSlashes(uri).split('/')..removeWhere(_isEmpty);
+    return _trimSlashes(uri).split('/')
+      ..removeWhere(_isEmpty);
   }
 
   bool _isEmpty(String s) => s.trim() == '';
 
   String _trimSlashes(String input) {
     return input
-    .replaceFirst(new RegExp(r'^/'), '')
-    .replaceFirst(new RegExp(r'/$'), '');
+        .replaceFirst(new RegExp(r'^/'), '')
+        .replaceFirst(new RegExp(r'/$'), '');
+  }
+
+  Route named(String name) {
+    this.name = name;
+    return this;
+  }
+
+  Route inject(Object object, {Type as}) {
+    _shouldInject[as ?? object.runtimeType] = object;
+    return this;
+  }
+
+  Route ignoreMiddleware(Type middleware) {
+    ignoredMiddleware.add(middleware);
+    return this;
+  }
+
+  Route withMiddleware(Type middleware) {
+    appendedMiddleware.add(middleware);
+    return this;
   }
 }

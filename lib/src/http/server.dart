@@ -54,14 +54,21 @@ class _Server implements Server {
   }
 
   void addMiddleware(Object middleware, {bool highPriority: false}) {
-    shelf.Middleware shelfMiddleware;
-    if (middleware is shelf.Middleware) shelfMiddleware = middleware;
-    if (middleware is Middleware) shelfMiddleware = middleware.transform(_container);
-    if (shelfMiddleware == null) throw new InvalidArgumentException(
-        'Must be a [shelf.Middleware] or a [bridge.http.Middleware]');
-
+    shelf.Middleware shelfMiddleware = _createMiddleware(middleware);
     if (highPriority) return _middleware.insert(0, shelfMiddleware);
     _middleware.add(shelfMiddleware);
+  }
+
+  shelf.Middleware _createMiddleware(Object middleware) {
+    shelf.Middleware shelfMiddleware;
+    if (middleware is Type)
+      return _createMiddleware(_container.make(middleware));
+    if (middleware is shelf.Middleware) shelfMiddleware = middleware;
+    if (middleware is Middleware)
+      shelfMiddleware = middleware.transform(_container);
+    if (shelfMiddleware == null) throw new InvalidArgumentException(
+        'Must be a [shelf.Middleware] or a [bridge.http.Middleware]');
+    return shelfMiddleware;
   }
 
   Future<HttpServer> start() async {
@@ -72,7 +79,8 @@ class _Server implements Server {
     onError(error, stack);
     if (error is HttpNotFoundException)
       return new shelf.Response.notFound('404 Not Found');
-    return new shelf.Response.internalServerError(body: 'Internal Server Error');
+    return new shelf.Response.internalServerError(
+        body: 'Internal Server Error');
   }
 
   shelf.Response _globalResponseHandler(shelf.Response response) {
@@ -81,9 +89,12 @@ class _Server implements Server {
 
   shelf.Handler _buildPipeline() {
     var pipeline = const shelf.Pipeline()
-    .addMiddleware(shelf.createMiddleware(errorHandler: _globalErrorHandler))
-    .addMiddleware(shelf.createMiddleware(responseHandler: _globalResponseHandler));
-    _middleware.forEach((m) => pipeline = pipeline.addMiddleware(_conditionalMiddleware(m)));
+        .addMiddleware(
+        shelf.createMiddleware(errorHandler: _globalErrorHandler))
+        .addMiddleware(
+        shelf.createMiddleware(responseHandler: _globalResponseHandler));
+    _middleware.forEach((m) =>
+    pipeline = pipeline.addMiddleware(_conditionalMiddleware(m)));
     return pipeline.addHandler(_handle);
   }
 
@@ -97,10 +108,11 @@ class _Server implements Server {
     };
   }
 
-  bool _shouldUseMiddlewareForRequest(shelf.Request request, shelf.Middleware middleware) {
+  bool _shouldUseMiddlewareForRequest(shelf.Request request,
+      shelf.Middleware middleware) {
     for (Route route in _router._routes) {
       if (_routeMatch(route, request))
-        return route.useMiddleware && !route.ignoredMiddleware.contains(middleware.runtimeType);
+        return !route.ignoredMiddleware.contains(middleware.runtimeType);
     }
     return true;
   }
@@ -120,24 +132,35 @@ class _Server implements Server {
   bool _routeMatch(Route route, shelf.Request request) {
     Input input = request.context['input'];
     String method = (input != null && input.containsKey('_method'))
-    ? input['_method']
-    : request.method;
+        ? input['_method']
+        : request.method;
     return route.matches(method, request.url.path);
   }
 
   Future<shelf.Response> _routeResponse(Route route,
-                                        shelf.Request request) async {
-    var injecting = {
-      shelf.Request: request,
-    };
-    if (request.context.containsKey('input'))
-      injecting[Input] = _clearPrivates(request.context['input']);
-    if (request.context.containsKey('session'))
-      injecting[Session] = request.context['session'];
-    var returnValue = await _container.resolve(route.handler,
-    injecting: injecting..addAll(route._shouldInject),
-    namedParameters: route.wildcards(request.url.path));
-    return _responseMapper.valueToResponse(returnValue);
+      shelf.Request request) {
+    return _routeMiddleware(route, request, (request) async {
+      var injecting = {
+        shelf.Request: request,
+      };
+      if (request.context.containsKey('input'))
+        injecting[Input] = _clearPrivates(request.context['input']);
+      if (request.context.containsKey('session'))
+        injecting[Session] = request.context['session'];
+      var returnValue = await
+      _container.resolve(route.handler,
+          injecting: injecting..addAll(route._shouldInject),
+          namedParameters: route.wildcards(request.url.path));
+      return _responseMapper.valueToResponse(returnValue);
+    });
+  }
+
+  Future<shelf.Response> _routeMiddleware(Route route, shelf.Request request, shelf.Handler handler) {
+    var pipeline = const shelf.Pipeline();
+    for (final middleware in route.appendedMiddleware) {
+      pipeline = pipeline.addMiddleware(_createMiddleware(middleware));
+    }
+    return pipeline.addHandler(handler)(request);
   }
 
   Object _clearPrivates(Map map) {
@@ -152,16 +175,20 @@ class _Server implements Server {
     await _server.close();
   }
 
-  void handleException(Type exceptionType, Function handler, {int statusCode: 500}) {
-    this.addMiddleware(shelf.createMiddleware(errorHandler: (Object exception, StackTrace stack) async {
-      if (reflectType(exception.runtimeType).isAssignableTo(reflectType(exceptionType)))
-        return _responseMapper.valueToResponse(await _container.resolve(handler, injecting: {
-          exceptionType: exception,
-          Exception: exception,
-          StackTrace: stack,
-        }), statusCode);
-      throw exception;
-    }));
+  void handleException(Type exceptionType, Function handler,
+      {int statusCode: 500}) {
+    this.addMiddleware(shelf.createMiddleware(
+        errorHandler: (Object exception, StackTrace stack) async {
+          if (reflectType(exception.runtimeType).isAssignableTo(
+              reflectType(exceptionType)))
+            return _responseMapper.valueToResponse(
+                await _container.resolve(handler, injecting: {
+                  exceptionType: exception,
+                  Exception: exception,
+                  StackTrace: stack,
+                }), statusCode);
+          throw exception;
+        }));
   }
 
   void modulateRouteReturnValue(modulation(value)) {
@@ -175,11 +202,13 @@ class _ResponseMapper {
 
   _ResponseMapper(Serializer this._serializer);
 
-  Future<shelf.Response> valueToResponse(Object value, [int statusCode = 200]) async {
+  Future<shelf.Response> valueToResponse(Object value,
+      [int statusCode = 200]) async {
     for (var m in _returnValueModulators)
       value = await m(value);
     if (value is shelf.Response) return value;
-    return new shelf.Response(statusCode, body: _bodyFromValue(value), headers: {
+    return new shelf.Response(
+        statusCode, body: _bodyFromValue(value), headers: {
       'Content-Type': _contentTypeFromValue(value).toString()
     });
   }
@@ -189,7 +218,8 @@ class _ResponseMapper {
   }
 
   String _bodyFromValue(Object value) {
-    if (_isJsonEncodable(value)) return JSON.encode(_serializer.serialize(value));
+    if (_isJsonEncodable(value)) return JSON.encode(
+        _serializer.serialize(value));
     return value.toString();
   }
 

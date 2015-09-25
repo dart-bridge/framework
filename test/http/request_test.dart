@@ -26,8 +26,8 @@ class RequestTest implements TestCase {
     sessions = new MockSessionManager();
     server = new Server(config, container)
       ..attachRouter(router)
-      ..addMiddleware(new SessionsMiddleware(sessions))
-      ..addMiddleware(new InputMiddleware());
+      ..addMiddleware(new SessionsMiddleware(sessions))..addMiddleware(
+          new InputMiddleware());
   }
 
   tearDown() {
@@ -97,23 +97,27 @@ class RequestTest implements TestCase {
     router.get('/', () => '<form></form>');
     var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
     shelf.Response response = await server.handle(request);
-    expect(await response.readAsString(), equals("<form><input type='hidden' name='_token' value='id'></form>"));
+    expect(await response.readAsString(),
+        equals("<form><input type='hidden' name='_token' value='id'></form>"));
   }
 
   @test
-  it_can_ignore_middleware_for_a_route() async {
-    server.addMiddleware(new CsrfMiddleware());
-    router.post('/', () => 'response', middleware: false);
-    var request = new shelf.Request('POST', new Uri.http('example.com', '/'), headers: textHeaders);
+  it_can_add_specific_middleware_for_a_route() async {
+    router.post('/', () => 'response')
+        .withMiddleware(CsrfMiddleware);
+    var request = new shelf.Request(
+        'POST', new Uri.http('example.com', '/'), headers: textHeaders);
     shelf.Response response = await server.handle(request);
-    expect(await response.readAsString(), equals('response'));
+    expect(await response.readAsString(), equals('Token mismatch'));
   }
 
   @test
   it_can_ignore_specific_middleware_for_a_route() async {
     server.addMiddleware(new CsrfMiddleware());
-    router.post('/', () => 'response', ignoreMiddleware: [CsrfMiddleware]);
-    var request = new shelf.Request('POST', new Uri.http('example.com', '/'), headers: textHeaders);
+    router.post('/', () => 'response')
+        .ignoreMiddleware(CsrfMiddleware);
+    var request = new shelf.Request(
+        'POST', new Uri.http('example.com', '/'), headers: textHeaders);
     shelf.Response response = await server.handle(request);
     expect(await response.readAsString(), equals('response'));
   }
