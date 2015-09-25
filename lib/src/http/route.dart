@@ -4,11 +4,12 @@ class Route {
   final String method;
   final String route;
   final Function handler;
-  final String name;
+  String name;
   final bool useMiddleware;
   final List<Type> ignoredMiddleware;
+  final Map<Type, Object> _shouldInject = {};
 
-  const Route(String this.method,
+  Route(String this.method,
               String this.route,
               Function this.handler,
               {String this.name,

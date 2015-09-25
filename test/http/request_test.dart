@@ -117,6 +117,14 @@ class RequestTest implements TestCase {
     shelf.Response response = await server.handle(request);
     expect(await response.readAsString(), equals('response'));
   }
+
+  @test
+  it_injects_the_dependencies_of_the_route() async {
+    router.get('/', (String input) => input).inject('injected');
+    final request = new shelf.Request('GET', new Uri.http('example.com', '/'));
+    final response = await server.handle(request);
+    expect(await response.readAsString(), equals('injected'));
+  }
 }
 
 class MockSessionManager implements SessionManager {
