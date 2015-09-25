@@ -135,7 +135,7 @@ class _Server implements Server {
     if (request.context.containsKey('session'))
       injecting[Session] = request.context['session'];
     var returnValue = await _container.resolve(route.handler,
-    injecting: injecting,
+    injecting: injecting..addAll(route._shouldInject),
     namedParameters: route.wildcards(request.url.path));
     return _responseMapper.valueToResponse(returnValue);
   }
