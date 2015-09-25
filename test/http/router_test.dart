@@ -3,9 +3,16 @@ library bridge.http;
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'dart:mirrors';
+import 'package:shelf/shelf.dart' as shelf;
+import 'package:bridge/http.dart';
 
-part 'packages/bridge/src/http/router.dart';
-part 'packages/bridge/src/http/route.dart';
+part 'packages/bridge/src/http/router/router_attachments.dart';
+
+part 'packages/bridge/src/http/router/router.dart';
+
+part 'packages/bridge/src/http/router/route.dart';
+
+part 'packages/bridge/src/http/router/route_group.dart';
 
 class RouterTest implements TestCase {
   Router router;
@@ -32,7 +39,7 @@ class RouterTest implements TestCase {
     router.get('/', emptyHandler);
 
     expectRoutes([
-      new Route('GET', '/', emptyHandler)
+      new Route('GET', '', emptyHandler)
     ]);
   }
 
@@ -46,12 +53,12 @@ class RouterTest implements TestCase {
     router.delete('/', emptyHandler);
 
     expectRoutes([
-      new Route('GET', '/', emptyHandler),
-      new Route('POST', '/', emptyHandler),
-      new Route('PUT', '/', emptyHandler),
-      new Route('UPDATE', '/', emptyHandler),
-      new Route('PATCH', '/', emptyHandler),
-      new Route('DELETE', '/', emptyHandler),
+      new Route('GET', '', emptyHandler),
+      new Route('POST', '', emptyHandler),
+      new Route('PUT', '', emptyHandler),
+      new Route('UPDATE', '', emptyHandler),
+      new Route('PATCH', '', emptyHandler),
+      new Route('DELETE', '', emptyHandler),
     ]);
   }
 
@@ -89,7 +96,7 @@ class RouterTest implements TestCase {
         .named('name');
 
     expectRoutes([
-      new Route('GET', '/', emptyHandler, name: 'name')
+      new Route('GET', '', emptyHandler, name: 'name')
     ]);
   }
 
@@ -116,6 +123,68 @@ class RouterTest implements TestCase {
       BaseClass: subClass
     }));
   }
+
+  @test
+  it_can_have_a_base_path() {
+    router = new Router(base: 'base');
+    router.get('sub', emptyHandler);
+    expectRoutes([
+      new Route('GET', 'base/sub', emptyHandler)
+    ]);
+  }
+
+  @test
+  it_can_have_groups() {
+    router.group('base', () {
+      router.get('sub', emptyHandler);
+    });
+
+    expectRoutes([
+      new Route('GET', 'base/sub', emptyHandler)
+    ]);
+  }
+
+  @test
+  it_can_have_nested_groups() {
+    router.group('base', () {
+      router.group('nested', () {
+        router.get('sub', emptyHandler);
+      });
+    });
+
+    expectRoutes([
+      new Route('GET', 'base/nested/sub', emptyHandler)
+    ]);
+  }
+
+  @test
+  it_can_ignore_and_append_middleware() {
+    router.get('/', emptyHandler)
+        .withMiddleware(ShelfMiddleware);
+
+    router.group('base', () {
+      router.get('sub', emptyHandler)
+          .withMiddleware(BridgeMiddleware)
+          .ignoreMiddleware(ShelfMiddleware);
+    }).withMiddleware(ShelfMiddleware);
+
+    expectRoutes([
+      new Route('GET', '', emptyHandler,
+          appendMiddleware: [ShelfMiddleware]),
+      new Route('GET', 'base/sub', emptyHandler,
+          appendMiddleware: [ShelfMiddleware, BridgeMiddleware],
+          ignoreMiddleware: [CsrfMiddleware]),
+    ]);
+  }
+}
+
+class ShelfMiddleware {
+  shelf.Handler call(shelf.Handler innerHandler) {
+    return innerHandler;
+  }
+}
+
+class BridgeMiddleware extends Middleware {
 }
 
 class BaseClass {
