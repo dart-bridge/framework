@@ -2,19 +2,18 @@ part of bridge.database;
 
 Gateway _gateway;
 
-class Repository<M> extends trestle.Repository<M> {
-  Repository() {
-    super.connect(_gateway);
-  }
-}
-
 class DatabaseServiceProvider implements ServiceProvider {
   Application _app;
   Program _program;
 
   Future setUp(Application app, Container container) async {
     _app = app;
-    _gateway = new Gateway(_chooseDriver(app));
+    var driver = _chooseDriver(app);
+    if (driver is SqlDriver)
+      driver = container.make(EventEmittingSqlDriver, injecting: {
+        SqlDriver: driver
+      });
+    _gateway = new Gateway(driver);
     app.singleton(_gateway);
   }
 
