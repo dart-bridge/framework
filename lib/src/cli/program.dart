@@ -24,7 +24,7 @@ class BridgeCli extends Program {
   @override
   @Command('Exit and restart the program')
   reload([List<String> arguments = const []]) {
-    return super.reload(_bootArguments..addAll(arguments));
+    return super.reload(_bootArguments..add(',')..addAll(arguments));
   }
 
   bool _watching = false;
@@ -44,7 +44,7 @@ class BridgeCli extends Program {
           if (_reloading || path.basename(event.path).startsWith('.')) return;
           printAccomplishment('Reloading...');
           _reloading = true;
-          await reload(['watch']);
+          await reload(_bootArguments.toString().contains('watch') ? [] : ['watch']);
         });
     printInfo('Watching files...');
   }
