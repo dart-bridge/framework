@@ -1,25 +1,30 @@
 part of bridge.cli;
 
 class BridgeCli extends Program {
-  Application app;
-  String _configPath;
-  List<String> _arguments;
+  final Application app = new Application();
+  final String _configPath;
+  final List<String> _bootArguments;
 
-  BridgeCli(List<String> this._arguments, String this._configPath, {bool printToLog: false})
-  : super(io: printToLog ? new LogIoDevice() : null) {
-    app = new Application()
-      ..singleton(this)
-      ..singleton(this, as: Program);
+  BridgeCli(List<String> this._bootArguments,
+      String this._configPath,
+      Shell shell) : super(shell) {
+    app..singleton(this)..singleton(this, as: Program);
   }
 
   setUp() async {
     await app.setUp(_configPath);
-    this.setPrompter('<cyan>=</cyan> ');
+    InputDevice.prompt = new Output('<cyan>=</cyan> ');
   }
 
   tearDown() async {
     await unwatch();
     await app.tearDown();
+  }
+
+  @override
+  @Command('Exit and restart the program')
+  reload([List<String> arguments = const []]) {
+    return super.reload(_bootArguments..addAll(arguments));
   }
 
   bool _watching = false;
@@ -33,17 +38,14 @@ class BridgeCli extends Program {
       return;
     }
     _watching = true;
-    var arguments = this._arguments.isEmpty
-    ? ['watch']
-    : ['watch,']
-      ..addAll(this._arguments.toList().where((s) => !new RegExp(r',?watch,?').hasMatch(s)));
-    _watchSubscription = Directory.current.watch(recursive: true).listen((event) async {
-      if (path.split(event.path).any((s) => s.startsWith('.'))) return;
-      if (_reloading || path.basename(event.path).startsWith('.')) return;
-      printAccomplishment('Reloading...');
-      _reloading = true;
-      await reload(arguments);
-    });
+    _watchSubscription =
+        Directory.current.watch(recursive: true).listen((event) async {
+          if (path.split(event.path).any((s) => s.startsWith('.'))) return;
+          if (_reloading || path.basename(event.path).startsWith('.')) return;
+          printAccomplishment('Reloading...');
+          _reloading = true;
+          await reload(['watch']);
+        });
     printInfo('Watching files...');
   }
 
