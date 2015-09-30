@@ -1,3 +1,3 @@
-library bridge.proxy.validation.client;
+library bridge.validation.client;
 
-export 'src/validation/library_client.dart';
+export 'validation_shared.dart';

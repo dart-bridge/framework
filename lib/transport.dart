@@ -1,3 +1,4 @@
-library bridge.proxy.transport;
+library bridge.transport;
 
-export 'src/transport/library.dart';
+part 'src/transport/serializable.dart';
+part 'src/transport/serializer.dart';

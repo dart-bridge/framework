@@ -1,3 +1,8 @@
-library bridge.proxy.events;
+library bridge.events;
 
-export 'src/events/library.dart';
+import 'dart:async';
+
+import 'package:bridge/core.dart';
+
+part 'src/events/events.dart';
+part 'src/events/events_service_provider.dart';
