@@ -22,5 +22,6 @@ import 'dart:async';
 import 'package:bridge/cli.dart';
 
 Future bridgeCommand(List<String> commands) {
-  return new BridgeCli([], 'config', new Shell(new StaticInputDevice(commands))).run();
+  return new BridgeCli('config', new Shell(new StaticInputDevice(commands)))
+      .run();
 }
