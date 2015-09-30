@@ -3,37 +3,48 @@ export 'package:testcase/init.dart';
 import 'package:bridge/events.dart';
 
 class EventsTest implements TestCase {
+  Events events;
+
   setUp() {
+    events = new Events();
   }
 
   tearDown() {}
 
   @test
   it_can_be_used_to_fire_domain_events() async {
-    var wasCalled = false;
-    Event.on('test').listen((event) {
-      wasCalled = true;
-      expect(event, equals('hello'));
+    final event = new MyEvent();
+
+    events.on(MyEvent).listen((MyEvent event) {
+      event.wasCalled = true;
     });
-    Event.fire('test', 'hello');
+
+    events.fire(event);
+
+    // Skip a tick for event to be sent to the listeners
     await null;
-    expect(wasCalled, isTrue);
+
+    expect(event.wasCalled, isTrue);
   }
 
   @test
-  it_can_be_used_as_a_mixin() async {
-    var instance = new MyEmittingClass();
-    var wasCalled = false;
-    instance.on('test').listen((event) {
+  event_ids_can_be_overriden() async {
+    bool wasCalled = false;
+
+    events.on(#custom).listen((String message) {
+      expect(message, equals('x'));
       wasCalled = true;
-      expect(event, equals('hello'));
     });
-    instance.fire('test', 'hello');
+
+    events.fire('x', as: #custom);
+
+    // Skip a tick for event to be sent to the listeners
     await null;
+
     expect(wasCalled, isTrue);
   }
 }
 
-class MyEmittingClass extends Object with Events {
-
+class MyEvent {
+  bool wasCalled = false;
 }
