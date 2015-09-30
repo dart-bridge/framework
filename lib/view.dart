@@ -13,8 +13,8 @@ import 'package:markdown/markdown.dart' as markdown;
 import 'dart:convert' show UTF8, HtmlEscape;
 import 'package:bridge/http.dart';
 
-import 'src/view/shared/library.dart';
-export 'src/view/shared/library.dart';
+import 'view_shared.dart';
+export 'view_shared.dart';
 
 part 'src/view/template_processor.dart';
 part 'src/view/template_collection.dart';

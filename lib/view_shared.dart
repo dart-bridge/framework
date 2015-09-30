@@ -2,4 +2,4 @@ library bridge.view.shared;
 
 import 'package:bridge/transport.dart';
 
-part 'template.dart';
+part 'src/view/shared/template.dart';
