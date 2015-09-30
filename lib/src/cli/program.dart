@@ -3,11 +3,8 @@ part of bridge.cli;
 class BridgeCli extends Program {
   final Application app = new Application();
   final String _configPath;
-  final List<String> _bootArguments;
 
-  BridgeCli(List<String> this._bootArguments,
-      String this._configPath,
-      Shell shell) : super(shell) {
+  BridgeCli(String this._configPath, Shell shell) : super(shell) {
     app..singleton(this)..singleton(this, as: Program);
   }
 
@@ -19,12 +16,6 @@ class BridgeCli extends Program {
   tearDown() async {
     await unwatch();
     await app.tearDown();
-  }
-
-  @override
-  @Command('Exit and restart the program')
-  reload([List<String> arguments = const []]) {
-    return super.reload(_bootArguments..add(',')..addAll(arguments));
   }
 
   bool _watching = false;
@@ -44,7 +35,7 @@ class BridgeCli extends Program {
           if (_reloading || path.basename(event.path).startsWith('.')) return;
           printAccomplishment('Reloading...');
           _reloading = true;
-          await reload(_bootArguments.toString().contains('watch') ? [] : ['watch']);
+          await reload(['watch']);
         });
     printInfo('Watching files...');
   }
