@@ -6,4 +6,5 @@ export 'tether_client.dart';
 export 'validation_client.dart';
 export 'view_client.dart';
 export 'transport_client.dart';
+export 'database_client.dart';
 export 'exceptions_client.dart';
