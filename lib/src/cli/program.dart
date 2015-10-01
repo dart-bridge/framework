@@ -18,6 +18,14 @@ class BridgeCli extends Program {
     await app.tearDown();
   }
 
+  @override
+  Future run({String bootArguments: '', stdinBroadcast, reloadPort}) {
+    return super.run(
+        bootArguments: bootArguments.replaceAll('--production', ''),
+        stdinBroadcast: stdinBroadcast,
+        reloadPort: reloadPort);
+  }
+
   bool _watching = false;
   bool _reloading = false;
   StreamSubscription _watchSubscription;
