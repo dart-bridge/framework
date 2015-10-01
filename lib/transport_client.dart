@@ -1,3 +1,3 @@
-library bridge.transport;
+library bridge.transport.client;
 
 export 'transport_shared.dart';

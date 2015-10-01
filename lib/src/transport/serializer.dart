@@ -1,80 +1,91 @@
-part of bridge.transport;
+part of bridge.transport.shared;
+
+typedef Object SerializationTransform(Object object);
 
 abstract class Serializer {
+  static final Serializer instance = new Serializer();
+
   factory Serializer() => new _Serializer();
 
   Object serialize(Object object);
 
   Object deserialize(Object serialized);
 
-  void registerStructure(String id, Type serializable, SerializableFactory factory);
+  void register(String id,
+      Type type,
+      {SerializationTransform serialize: _defaultTransform,
+      SerializationTransform deserialize: _defaultTransform});
+
+  static Object _defaultTransform(Object object) {
+    return object.toString();
+  }
 }
 
-typedef Serializable SerializableFactory(serialized);
-
 class _Serializer implements Serializer {
-  final Map<String, dynamic> _structures = {};
-  static final _structureIdentifier = '__STRUCTURE';
+  final Map<Type, String> _types = {};
+  final Map<Type, SerializationTransform> _serializers = {};
+  final Map<String, SerializationTransform> _deserializers = {};
 
   Object serialize(Object object) {
-    if (_isARegisteredStructure(object))
-      return _toStructureTuplet(object);
-    return _cast(_treatMapAndListValues(object, serialize));
-  }
-
-  Object _cast(object) {
-    if (object is num
-    || object is bool
-    || object is String
-    || object == null
-    || object is List
-    || object is Map<String, dynamic>)
+    if ([String, int, double, bool, Null].contains(object.runtimeType))
       return object;
-    if (object is Serializable) return object.serialize();
-    try {
-      return object.toJson();
-    } on NoSuchMethodError {
-      return object.toString();
-    }
+    if (object is List) return _transformList(object, serialize);
+    if (object is Map) return _transformMap(object, serialize);
+    if (_serializers.containsKey(object.runtimeType))
+      return _serializeRegistered(object);
+    return object.toString();
   }
 
-  Object _treatMapAndListValues(object, treat(object)) {
-    if (object is Map) return new Map.fromIterables(object.keys, object.values.map(treat));
-    if (object is List) return object.map(treat).toList();
-    return object;
+  Object _serializeRegistered(Object object) {
+    return serialize({
+      r'$$': _types[object.runtimeType],
+      r'$$$': _serializers[object.runtimeType](object),
+    });
   }
 
-  bool _isARegisteredStructure(Object object) {
-    return _structures.keys.any(
-            (type) => object.runtimeType.toString() == type
-    ) && object is Serializable;
+  Object _transformList(List list, SerializationTransform transform) {
+    return list.map(transform).toList();
   }
 
-  Object _toStructureTuplet(Serializable object) {
-    return [_structureIdentifier, _structures[object.runtimeType.toString()][0], object.serialize()];
+  Object _transformMap(Map map, SerializationTransform transform) {
+    return new Map.fromIterables(map.keys, map.values.map(transform));
   }
 
-  Object deserialize(serialized) {
-    if (_isStructureTuplet(serialized)) {
-      var factory = _getFactoryFromTuplet(serialized);
-      return factory(_getSerializedDataFromTuplet(serialized));
-    }
-    return _treatMapAndListValues(serialized, deserialize);
+  Object deserialize(Object serialized) {
+    if (_isSerializedStructure(serialized))
+      return _deserializeRegistered(serialized);
+    if (serialized is List) return _transformList(serialized, deserialize);
+    if (serialized is Map) return _transformMap(serialized, deserialize);
+    return serialized;
   }
 
-  bool _isStructureTuplet(serialized) {
-    return serialized is List && serialized.length > 0 && serialized[0] == _structureIdentifier;
+  bool _isSerializedStructure(Object serialized) {
+    return serialized is Map
+        && serialized.containsKey(r'$$')
+        && serialized.containsKey(r'$$$');
   }
 
-  SerializableFactory _getFactoryFromTuplet(List tuplet) {
-    return _structures.values.firstWhere((s) => s[0] == tuplet[1])[1];
+  Object _deserializeRegistered(Map serialized) {
+    final id = serialized[r'$$'];
+    final deserializer = _deserializers[id];
+    if (deserializer == null)
+      throw new SerializationException(id);
+    return deserializer(deserialize(serialized[r'$$$']));
   }
 
-  _getSerializedDataFromTuplet(serialized) {
-    return serialized[2];
+  void register(String id, Type type,
+      {SerializationTransform serialize: Serializer._defaultTransform,
+      SerializationTransform deserialize: Serializer._defaultTransform}) {
+    _types[type] = id;
+    _serializers[type] = serialize;
+    _deserializers[id] = deserialize;
   }
+}
 
-  void registerStructure(String id, Type serializable, SerializableFactory factory) {
-    _structures[serializable.toString()] = [id, factory];
-  }
+class SerializationException implements Exception {
+  final String id;
+
+  SerializationException(String this.id);
+
+  String toString() => 'Structure [$id] is not registered.';
 }

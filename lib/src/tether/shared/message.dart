@@ -23,21 +23,7 @@ class Message {
 
   String get serialized => JSON.encode(
       {'key': key, 'token': token, 'data': data, 'returnToken': returnToken},
-      toEncodable: (o) {
-        try {
-          try {
-            JSON.encode(o.serialize());
-            return o.serialize();
-          } on NoSuchMethodError {
-            if (o is Serializable)
-              (() async => throw new TetherException('$o failed serialization!'))();
-            JSON.encode(o.toJson());
-            return o.toJson();
-          }
-        } on NoSuchMethodError {
-          return o.toString();
-        }
-      });
+      toEncodable: Serializer.instance.serialize);
 
   String get returnToken {
     if (_returnToken != null) return _returnToken;

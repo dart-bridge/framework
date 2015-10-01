@@ -64,8 +64,6 @@ abstract class Tether {
   /// [Exception] on arrival.
   void sendException(String key, Exception exception);
 
-  void registerStructure(String id, Type serializable, Serializable factory(data));
-
   void modulateBeforeSerialization(modulation(value));
 }
 
@@ -140,10 +138,6 @@ class _Tether implements Tether {
 
   void _sendPingPong() {
     this.send('_pingpong', null);
-  }
-
-  void registerStructure(String id, Type serializable, Serializable factory(data)) {
-    _messenger.registerStructure(id, serializable, factory);
   }
 
   void modulateBeforeSerialization(modulation(value)) {

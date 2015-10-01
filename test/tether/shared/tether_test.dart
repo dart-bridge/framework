@@ -1,7 +1,6 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/tether.dart';
-import 'package:bridge/transport.dart';
 import 'dart:async';
 
 class TetherTest implements TestCase {
@@ -76,7 +75,4 @@ class MockMessenger implements Messenger {
   }
 
   bool get socketIsOpen => true;
-
-  void registerStructure(String id, Type serializable, Serializable factory(data)) {
-  }
 }

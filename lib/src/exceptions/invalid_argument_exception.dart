@@ -1,4 +1,4 @@
-part of bridge.exceptions;
+part of bridge.exceptions.shared;
 
 class InvalidArgumentException extends BaseException {
 

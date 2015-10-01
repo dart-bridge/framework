@@ -1,6 +1,6 @@
 part of bridge.http;
 
-class UploadedFile implements Serializable {
+class UploadedFile {
   http_server.HttpMultipartFormData _data;
 
   UploadedFile(http_server.HttpMultipartFormData this._data);
@@ -14,9 +14,4 @@ class UploadedFile implements Serializable {
   ContentType get contentType => _data.contentType;
 
   String get name => _data.contentDisposition.parameters['filename'];
-
-  Object serialize() => {
-    'name': name,
-    'contentType': contentType.toString(),
-  };
 }

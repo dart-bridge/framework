@@ -9,7 +9,6 @@ export 'tether_shared.dart';
 
 // Using
 import 'package:bridge/core.dart';
-import 'package:bridge/transport.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_web_socket/shelf_web_socket.dart' as ws;
 import 'package:http_parser/http_parser.dart' as http_parser;

@@ -5,4 +5,4 @@ library bridge.client;
 export 'tether_client.dart';
 export 'validation_client.dart';
 export 'view_client.dart';
-export 'transport.dart';
+export 'transport_client.dart';

@@ -4,7 +4,6 @@ class ClientTetherMaker {
   static Future<Tether> makeTether() async {
     WebSocket socket = await _openSocket();
     Tether tether = await _handshake(socket);
-    new DefaultStructures()(tether);
     return tether..initiatePersistentConnection();
   }
 
@@ -20,7 +19,7 @@ class ClientTetherMaker {
   }
 
   static Future<Tether> _handshake(WebSocket socket) async {
-    Messenger messenger = new Messenger(new ClientSocketAdapter(socket), new Serializer());
+    Messenger messenger = new Messenger(new ClientSocketAdapter(socket));
     Message handshakeMessage = await messenger.listen('_handshake').first;
     return new Tether(handshakeMessage.token, messenger);
   }

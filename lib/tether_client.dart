@@ -8,8 +8,6 @@ import 'dart:async';
 import 'tether_shared.dart';
 export 'tether_shared.dart';
 
-import 'package:bridge/transport.dart';
-
 part 'src/tether/client/client_socket_adapter.dart';
 part 'src/tether/client/client_tether_maker.dart';
 
