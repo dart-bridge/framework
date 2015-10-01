@@ -8,8 +8,9 @@ bootstrap(List<String> arguments, connector, {String configPath}) async {
   final List args = arguments?.toList() ?? [];
   var shell = new Shell();
   if (args.contains('--production')) {
-    shell = new Shell(null, new FileOutputDevice('storage/bridge.log'));
-    args.remove('--production');
+    shell = new Shell(
+        new SilentInputDevice(),
+        new FileOutputDevice('storage/bridge.log'));
   }
   return cupid(new BridgeCli(_chooseConfigPath(configPath), shell),
       args, connector);
