@@ -5,3 +5,4 @@ library bridge.shared;
 export 'tether_shared.dart';
 export 'validation_shared.dart';
 export 'view_shared.dart';
+export 'transport.dart';
