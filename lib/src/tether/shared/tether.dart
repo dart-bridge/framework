@@ -125,6 +125,7 @@ abstract class TetherBase implements Tether {
   }
 
   Future _respondToMessage(Message message, Function listener) async {
+    session.apply(message.session);
     var returnValue;
     try {
       returnValue = await applyData(message.data, listener);

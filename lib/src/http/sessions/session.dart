@@ -40,6 +40,16 @@ class Session {
       _reflashedKeys.add(key);
   }
 
+  void apply(Session session) {
+    if (session.id != id)
+      throw new ArgumentError('Applied Session must have the same id');
+    variables.addAll(session.variables);
+    _flashedSessionVariables.addAll(session._flashedSessionVariables);
+    for (final key in session._reflashedKeys)
+        if (!_reflashedKeys.contains(key))
+          _reflashedKeys.add(key);
+  }
+
   String toString() {
     return 'Session(${new Map.from(_flashedSessionVariables)..addAll(variables)})';
   }
