@@ -8,3 +8,4 @@ export 'view_shared.dart';
 export 'transport_shared.dart';
 export 'database_shared.dart';
 export 'exceptions_shared.dart';
+export 'http_shared.dart';
