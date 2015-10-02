@@ -31,7 +31,7 @@ class HttpServiceProvider implements ServiceProvider {
        UrlGenerator urlGenerator) {
     _urlGenerator = urlGenerator;
 
-    server.addMiddleware(sessionsMiddleware);
+    server.addMiddleware(sessionsMiddleware, highPriority: true);
     server.addMiddleware(staticFilesMiddleware);
     server.addMiddleware(inputMiddleware);
     server.addMiddleware(csrfMiddleware);

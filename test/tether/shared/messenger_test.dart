@@ -1,15 +1,22 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/tether.dart';
+import 'package:bridge/http.dart';
 import 'dart:async';
 
 class MessengerTest implements TestCase {
   MockSocket socket;
   Messenger messenger;
-  final String exampleJson = '{"key":"k","token":"t","data":1,"returnToken":"rT"}';
-  final Message exampleMessage = new Message('k', 't', 1, 'rT');
+  final String exampleJson = '{'
+      '"key":"k",'
+      r'"session":{"$$":"Session","$$$":["t",{}]},'
+      '"data":1,'
+      '"returnToken":"rT"'
+      '}';
+  final Message exampleMessage = new Message('k', new Session('t'), 1, 'rT');
 
   setUp() {
+    registerTetherTransport();
     socket = new MockSocket();
     messenger = new Messenger(socket);
   }
@@ -22,7 +29,7 @@ class MessengerTest implements TestCase {
     socket.socketInput.add(exampleJson);
     Message message = await messenger.listen('k').first;
     expect(message.key, equals('k'));
-    expect(message.token, equals('t'));
+    expect(message.session.id, equals('t'));
     expect(message.data, equals(1));
     expect(message.returnToken, equals('rT'));
   }

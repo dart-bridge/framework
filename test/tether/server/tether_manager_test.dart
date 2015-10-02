@@ -1,6 +1,6 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
-import 'package:bridge/tether.dart';
+import 'package:bridge/bridge.dart';
 import 'dart:async';
 
 class TetherManagerTest implements TestCase {
@@ -61,7 +61,7 @@ class TetherManagerTest implements TestCase {
 class MockTether implements Tether {
   var didSend;
 
-  String get token => null;
+  Session get session => null;
 
   Future get onConnectionLost => null;
 
@@ -73,9 +73,13 @@ class MockTether implements Tether {
 
   void initiatePersistentConnection() => null;
 
-  void sendException(String key, Exception exception) {
+  void sendException(String key, Exception exception) {}
+
+  void modulateBeforeSerialization(modulation(value)) {}
+
+  Future applyData(data, Function listener) {
+    return listener(data);
   }
 
-  void modulateBeforeSerialization(modulation(value)) {
-  }
+  void listenOnce(String key, Function listener) {}
 }

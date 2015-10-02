@@ -1,16 +1,18 @@
 part of bridge.tether;
 
 class ServerTetherMaker {
-  static Tether makeTether(http_parser.CompatibleWebSocket socket, String token) {
-    _sendToken(socket, token);
-    return new Tether(token, _makeMessenger(socket));
+  static Tether makeTether(Container container,
+      http_parser.CompatibleWebSocket socket, http.Session session) {
+    _sendSession(socket, session);
+    return new Tether.make(container, session, _makeMessenger(socket));
   }
 
   static Messenger _makeMessenger(http_parser.CompatibleWebSocket socket) {
     return new Messenger(new ServerSocketAdapter(socket));
   }
 
-  static _sendToken(http_parser.CompatibleWebSocket socket, String token) {
-    socket.add(new Message('_handshake', token, null).serialized);
+  static _sendSession(http_parser.CompatibleWebSocket socket,
+      http.Session session) {
+    socket.add(new Message('_handshake', session, null).serialized);
   }
 }

@@ -53,9 +53,11 @@ class _Server implements Server {
     _router = router;
   }
 
+  var _highPriorityMiddleware = 0;
+
   void addMiddleware(Object middleware, {bool highPriority: false}) {
     shelf.Middleware shelfMiddleware = _createMiddleware(middleware);
-    if (highPriority) return _middleware.insert(0, shelfMiddleware);
+    if (highPriority) return _middleware.insert(_highPriorityMiddleware++, shelfMiddleware);
     _middleware.add(shelfMiddleware);
   }
 

@@ -25,11 +25,8 @@ part of bridge.tether.shared;
 ///     // On the client
 ///     Map mostCommonTopic = await tether.send('topics.mostCommon');
 abstract class Tether {
-  factory Tether(String token, Messenger messenger) => new _Tether(token, messenger);
-
-  /// The token representing this specific session with the
-  /// other side.
-  String get token;
+  /// An object representing the session with the other side.
+  Session get session;
 
   /// Provides a hook for when connection to the other side
   /// has been lost. This could induce a pop up in the
@@ -52,7 +49,9 @@ abstract class Tether {
   /// [send] method responsible of the request on the other side.
   ///
   /// Therefore this can not be handled as a stream.
-  void listen(String key, Future listener(data));
+  void listen(String key, Function listener);
+
+  void listenOnce(String key, Function listener);
 
   /// Sends pings back and fourth so that the [WebSocket] will
   /// not time out.
@@ -67,18 +66,18 @@ abstract class Tether {
   void modulateBeforeSerialization(modulation(value));
 }
 
-class _Tether implements Tether {
+abstract class TetherBase implements Tether {
   Messenger _messenger;
-  String _token;
+  Session _session;
   Set<Function> _returnValueModulators = new Set();
 
-  String get token => _token;
+  Session get session => _session;
 
   Future get onConnectionLost => _messenger.onConnectionEnd;
 
   Future get onConnectionEstablished => _messenger.onConnectionOpen;
 
-  _Tether(String this._token, Messenger this._messenger) {
+  TetherBase(Session this._session, Messenger this._messenger) {
     _listenForPingPong();
   }
 
@@ -96,7 +95,7 @@ class _Tether implements Tether {
 
   Future send(String key, [data]) async {
     data = await _applyModulators(data);
-    var message = new Message(key, _token, data);
+    var message = new Message(key, _session, data);
     Message returnValue = await _send(message);
     if (returnValue.data is Exception)
       throw returnValue.data;
@@ -104,26 +103,38 @@ class _Tether implements Tether {
   }
 
   void sendException(String key, Exception exception) {
-    _send(new Message(key, token, exception));
+    _send(new Message(key, session, exception));
   }
 
   Future _send(Message message) {
     return _messenger.send(message);
   }
 
-  void listen(String key, Future listener(data)) {
+  void listen(String key, Function listener) {
     _messenger.listen(key).listen((m) => _respondToMessage(m, listener));
   }
 
-  Future _respondToMessage(Message message, Future listener(data)) async {
+  void listenOnce(String key, Function listener) {
+    _messenger
+        .listen(key)
+        .first
+        .then((m) => _respondToMessage(m, listener))
+        .then((_) {
+      _messenger.removeListener(key);
+    });
+  }
+
+  Future _respondToMessage(Message message, Function listener) async {
     var returnValue;
     try {
-      returnValue = await listener(message.data);
+      returnValue = await applyData(message.data, listener);
       send(message.returnToken, returnValue);
     } catch (e) {
       sendException(message.returnToken, e);
     }
   }
+
+  Future applyData(data, Function listener);
 
   Future _applyModulators(returnValue) async {
     for (var modulator in _returnValueModulators) {

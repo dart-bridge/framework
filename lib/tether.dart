@@ -4,8 +4,8 @@ library bridge.tether;
 import 'dart:async';
 
 // Server side of library
-import 'tether_shared.dart';
-export 'tether_shared.dart';
+import 'tether_shared.dart' hide Tether;
+export 'tether_shared.dart' hide Tether;
 
 // Using
 import 'package:bridge/core.dart';
@@ -18,4 +18,4 @@ part 'src/tether/server/server_socket_adapter.dart';
 part 'src/tether/server/server_tether_maker.dart';
 part 'src/tether/server/tether_service_provider.dart';
 part 'src/tether/server/tether_manager.dart';
-part 'src/tether/server/helpers.dart';
+part 'src/tether/server/tether.dart';

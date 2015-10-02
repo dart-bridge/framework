@@ -7,7 +7,9 @@ import 'package:shelf/src/message.dart' as shelf;
 
 import 'dart:math' show Random;
 
+import 'session.dart';
+export 'session.dart';
+
 part 'session_manager.dart';
-part 'session.dart';
 part 'cookie.dart';
 part '../middleware/sessions_middleware.dart';

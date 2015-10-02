@@ -7,23 +7,25 @@ part of bridge.tether.shared;
 /// message.
 class Message {
   final String key;
-  final String token;
+  final Session session;
   var data;
   String _returnToken;
 
-  Message(String this.key, String this.token, this.data, [String this._returnToken]);
+  Message(String this.key, Session this.session,
+      this.data, [String this._returnToken]);
 
   factory Message.deserialize(String json) {
     return new Message._fromMap(JSON.decode(json));
   }
 
   factory Message._fromMap(Map data) {
-    return new Message(data['key'], data['token'], data['data'], data['returnToken']);
+    return new Message(data['key'], serializer.deserialize(data['session']),
+        serializer.deserialize(data['data']), data['returnToken']);
   }
 
   String get serialized => JSON.encode(
-      {'key': key, 'token': token, 'data': data, 'returnToken': returnToken},
-      toEncodable: Serializer.instance.serialize);
+      {'key': key, 'session': session, 'data': data, 'returnToken': returnToken},
+      toEncodable: serializer.serialize);
 
   String get returnToken {
     if (_returnToken != null) return _returnToken;

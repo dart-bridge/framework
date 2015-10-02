@@ -21,6 +21,6 @@ class ClientTetherMaker {
   static Future<Tether> _handshake(WebSocket socket) async {
     Messenger messenger = new Messenger(new ClientSocketAdapter(socket));
     Message handshakeMessage = await messenger.listen('_handshake').first;
-    return new Tether(handshakeMessage.token, messenger);
+    return new Tether(handshakeMessage.session, messenger);
   }
 }

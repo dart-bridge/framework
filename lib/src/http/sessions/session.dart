@@ -1,7 +1,7 @@
-part of bridge.http.sessions;
+library bridge.http.sessions.session;
 
 class Session {
-  final Map<String, dynamic> _sessionVariables = {};
+  final Map<String, dynamic> variables = {};
   final Map<String, dynamic> _flashedSessionVariables = {};
   final List<String> _reflashedKeys = [];
   final String id;
@@ -12,11 +12,11 @@ class Session {
   Object get(String key) {
     if (_flashedSessionVariables.containsKey(key))
       return _flashedSessionVariables[key];
-    return _sessionVariables[key];
+    return variables[key];
   }
 
   void set(String key, value) {
-    _sessionVariables[key] = value;
+    variables[key] = value;
   }
 
   operator [](String key) => get(key);
@@ -41,6 +41,6 @@ class Session {
   }
 
   String toString() {
-    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(_sessionVariables)})';
+    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(variables)})';
   }
 }
