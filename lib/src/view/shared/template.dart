@@ -1,11 +1,9 @@
 part of bridge.view.shared;
 
 class Template {
-  final String parsed;
+  final Stream<String> content;
   final Map<String, dynamic> data;
 
-  Template({String this.parsed: '',
-           Map<String, dynamic> this.data: const {}});
-
-  String toString() => parsed;
+  Template(Stream<String> this.content,
+      {Map<String, dynamic> this.data: const {}});
 }

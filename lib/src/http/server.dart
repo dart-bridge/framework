@@ -57,7 +57,8 @@ class _Server implements Server {
 
   void addMiddleware(Object middleware, {bool highPriority: false}) {
     shelf.Middleware shelfMiddleware = _createMiddleware(middleware);
-    if (highPriority) return _middleware.insert(_highPriorityMiddleware++, shelfMiddleware);
+    if (highPriority) return _middleware.insert(
+        _highPriorityMiddleware++, shelfMiddleware);
     _middleware.add(shelfMiddleware);
   }
 
@@ -157,7 +158,8 @@ class _Server implements Server {
     });
   }
 
-  Future<shelf.Response> _routeMiddleware(Route route, shelf.Request request, shelf.Handler handler) {
+  Future<shelf.Response> _routeMiddleware(Route route, shelf.Request request,
+      shelf.Handler handler) {
     var pipeline = const shelf.Pipeline();
     for (final middleware in route.appendedMiddleware) {
       pipeline = pipeline.addMiddleware(_createMiddleware(middleware));
@@ -209,9 +211,28 @@ class _ResponseMapper {
     for (var m in _returnValueModulators)
       value = await m(value);
     if (value is shelf.Response) return value;
+    if (value is Stream)
+      return _streamResponse(value, statusCode);
     return new shelf.Response(
         statusCode, body: _bodyFromValue(value), headers: {
       'Content-Type': _contentTypeFromValue(value).toString()
+    });
+  }
+
+  shelf.Response _streamResponse(Stream stream, int statusCode) {
+    var contentType = ContentType.HTML;
+    final newStream = () async* {
+      await for (final item in stream) {
+        if (item is String) yield item;
+        else {
+          contentType = ContentType.JSON;
+          yield JSON.encode(serializer.serialize(item));
+        }
+      }
+    }().map(UTF8.encode);
+    return new shelf.Response(
+        statusCode, body: newStream, headers: {
+      'Content-Type': contentType.toString()
     });
   }
 
@@ -219,7 +240,7 @@ class _ResponseMapper {
     _returnValueModulators.add(modulation);
   }
 
-  String _bodyFromValue(Object value) {
+  Object _bodyFromValue(Object value) {
     if (_isJsonEncodable(value)) return JSON.encode(
         _serializer.serialize(value));
     return value.toString();
