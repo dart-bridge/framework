@@ -19,6 +19,7 @@ dependencies:
   path: '^1.3.5'
   http_server: '^0.9.5+1'
   trestle: '>=0.5.4 <1.0.0'
+  async: '^1.3.0'
 dev_dependencies:
   test: any
   testcase: ">=0.1.0 <1.0.0"

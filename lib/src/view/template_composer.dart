@@ -10,8 +10,30 @@ class TemplateComposer {
   Future cache(String filename, Stream<String> lines) async {
     final parser = _pickParser(filename);
     final name = _nameTemplate(filename, parser.extension);
-    if (await _io.shouldRecompile(filename, name))
-      await _io.put(name, parser.parse(lines));
+    if (await _io.shouldRecompile(filename, name)) {
+      final streams = new StreamSplitter(parser.parse(lines));
+      try {
+        await _validateParsedTemplate(
+            filename, await streams.split().join('\n'));
+        await _io.put(name, streams.split());
+        print('<blue>Template [$name] was compiled.</blue>');
+      } on ParserException catch (e) {
+        await _io.put(name, _errorTemplate(e));
+        rethrow;
+      }
+    }
+  }
+
+  Stream<String> _errorTemplate(ParserException e) {
+    final message = e.message
+        .replaceAll('yield \'\'\'', '')
+        .replaceAll('\'\'\';', '')
+        .replaceAll('\'\'\'', '\'');
+    return new PlainTemplateParser().parse(
+        new Stream.fromIterable('''
+        <h1>ParserException on line ${e.lineNumber}</h1>
+        <pre>$message</pre>
+        '''.trim().split('\n')));
   }
 
   TemplateParser _pickParser(String filename) {
@@ -43,7 +65,8 @@ class TemplateComposer {
         .join('.');
   }
 
-  void registerParser(TemplateParser factory(), {List<String> imports: const []}) {
+  void registerParser(TemplateParser factory(),
+      {List<String> imports: const []}) {
     _parsers[factory().extension] = factory;
     _imports.addAll(imports);
   }
@@ -68,5 +91,59 @@ class TemplateComposer {
       yield "};";
       yield "}";
     }());
+  }
+
+  Future<String> _validateParsedTemplate(String filename,
+      String template) async {
+    final content = 'main() {} template() async* {\n$template}';
+    final uri = Uri.parse(
+        'data:application/dart;charset=utf-8,${Uri.encodeComponent(content)}');
+
+    final errorPort = new ReceivePort();
+    final exitPort = new ReceivePort();
+    final commPort = new ReceivePort();
+
+    final completer = new Completer();
+
+    var output = '';
+
+    errorPort.listen((err) {
+      if (!completer.isCompleted)
+        completer.completeError(err);
+    });
+    exitPort.listen((_) {
+      if (!completer.isCompleted)
+        completer.complete(output);
+    });
+    commPort.listen((message) {
+      output += 'message\n';
+    });
+
+    await Isolate.spawnUri(uri, [], commPort.sendPort,
+        onExit: exitPort.sendPort,
+        onError: errorPort.sendPort,
+        errorsAreFatal: false).catchError((err) {
+      if (!completer.isCompleted)
+        completer.completeError(err);
+    });
+
+    try {
+      return await completer.future.whenComplete(() {
+        errorPort.close();
+        exitPort.close();
+        commPort.close();
+      });
+    } catch (e) {
+      final error = e.toString()
+          .replaceFirst('IsolateSpawnException: ', '')
+          .replaceFirst('\'data:${uri.path}\': error: ', '');
+      final match = new RegExp(r'line (\d+) pos (\d+): ([^]*)')
+          .firstMatch(error);
+      final lineNumber = int.parse(match[1]) - 1;
+//      final columnNumber = int.parse(match[2]);
+      final message = match[3];
+      throw new ParserException(
+          lineNumber, 'Template [$filename] failed to compile: ${message}');
+    }
   }
 }

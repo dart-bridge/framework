@@ -24,15 +24,19 @@ class ViewServiceProvider implements ServiceProvider {
     final root = new Directory(
         app.config('view.templates.root', 'lib/templates'));
 
-    await for (File file in root.list(recursive: true)) {
+    await Future.wait(await root.list(recursive: true).map((File file) async {
       if (await FileSystemEntity.isFile(file.path)) {
         final source = path.relative(file.path, from: root.path);
         templateFiles.add(source);
-        await composer.cache(source, file.openRead()
-            .map(UTF8.decode)
-            .expand((String multiLine) => multiLine.split('\n')));
+        try {
+          await composer.cache(source, file.openRead()
+              .map(UTF8.decode)
+              .expand((String multiLine) => multiLine.split('\n')));
+        } on ParserException catch(e) {
+          print('<red>$e</red>');
+        }
       }
-    }
+    }).toList());
 
     server.modulateRouteReturnValue((Template template) {
       if (template is! Template) return template;

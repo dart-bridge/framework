@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:mirrors';
 import 'dart:io';
 import 'dart:convert' show HtmlEscape, UTF8;
+import 'dart:isolate';
 
 import 'package:bridge/core.dart';
 import 'package:bridge/exceptions.dart';
@@ -12,6 +13,7 @@ import 'package:bridge/cli.dart';
 
 import 'package:plato/plato.dart' as plato;
 import 'package:path/path.dart' as path;
+import 'package:async/async.dart';
 
 import 'view_shared.dart';
 export 'view_shared.dart';

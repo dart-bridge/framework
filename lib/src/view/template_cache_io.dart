@@ -32,7 +32,6 @@ class _TemplateCacheIo implements TemplateCacheIo {
   }
 
   Future put(String name, Stream<String> lines) async {
-    print('<blue>Template [$name] was compiled.</blue>');
     ViewServiceProvider.didCompile = true;
     return _writeLines(_cacheFile(name), lines);
   }
