@@ -1,11 +1,13 @@
 part of bridge.view.shared;
 
 class Template {
-  final String parsed;
+  final Stream<String> content;
   final Map<String, dynamic> data;
 
-  Template({String this.parsed: '',
-           Map<String, dynamic> this.data: const {}});
+  Template(Stream<String> this.content,
+      {Map<String, dynamic> this.data: const {}});
 
-  String toString() => parsed;
+  Future<String> get parsed => content.join('\n');
+
+  Stream<List<int>> get encoded => content.map(UTF8.encode);
 }

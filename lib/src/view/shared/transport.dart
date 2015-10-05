@@ -1,10 +1,10 @@
 part of bridge.view.shared;
 
 void registerViewTransport() {
-  Serializer.instance.register('Template', Template,
-      serialize: (Template o) {
-        return [o.data, o.parsed];
-      }, deserialize: (List o) {
-        return new Template(data: o[0], parsed: o[1]);
-      });
+  serializer.register('bridge.view.Template', Template,
+      serialize: (Template template) => [
+        template.content, template.data
+      ],
+      deserialize: (List serialized) =>
+      new Template(serialized[0], data: serialized[1]));
 }

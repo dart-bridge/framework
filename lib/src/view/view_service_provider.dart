@@ -1,149 +1,53 @@
 part of bridge.view;
 
-TemplateCollection _templates;
-
 class ViewServiceProvider implements ServiceProvider {
-  Directory templatesDirectory;
-  Directory publicDirectory;
-  File templatesCache;
+  Application app;
   Program program;
-  Container container;
+  TemplateComposer composer;
+  static bool didCompile = false;
+  final List<String> templateFiles = [];
 
-  setUp(Config config,
-        Container container,
-        Program program) {
-    this.container = container;
-    this.program = program;
-    // http.server.publicRoot is deprecated
-    publicDirectory = new Directory(
-        config('http.server.public_root', config('http.server.publicRoot', 'web')));
-    templatesDirectory = new Directory(
-        config('view.templates.root', path.join('lib', 'templates')));
-    templatesCache = new File(config('view.templates.cache', '.templates.dart'));
-
-    ClassMirror templatesClass = plato.classMirror(#Templates);
-    if (templatesClass == null)
-      return program.printWarning('Templates cache weren\'t loaded. Try [export "${templatesCache.path}";] in any library.');
-
-    container.bind(TemplateCollection, templatesClass.reflectedType);
-
-    _templates = container.make(TemplateCollection);
-
-    program.addCommand(build);
+  void setUp(Application app, TemplateCacheIo io) {
+    final composer = new TemplateComposer(io);
+    this.composer = composer;
+    this.app = app;
+    app.singleton(composer);
+    app.resolve(_registerParsers);
   }
 
-  load(TemplateProcessor processor, Server server) async {
-    await loadTemplates(processor);
+  void _registerParsers() {
+    composer.registerParser(app.presolve((ChalkTemplateParser p) => p));
+  }
+
+  Future load(Program program, Server server) async {
+    this.program = program;
+    final root = new Directory(
+        app.config('view.templates.root', 'lib/templates'));
+
+    await Future.wait(await root.list(recursive: true).map((File file) async {
+      if (await FileSystemEntity.isFile(file.path)) {
+        final source = path.relative(file.path, from: root.path);
+        templateFiles.add(source);
+        try {
+          await composer.cache(source, file.openRead()
+              .map(UTF8.decode)
+              .expand((String multiLine) => multiLine.split('\n')));
+        } on ParserException catch(e) {
+          print('<red>$e</red>');
+        }
+      }
+    }).toList());
+
     server.modulateRouteReturnValue((Template template) {
       if (template is! Template) return template;
-      return template.parsed;
+      return template.content.join('\n');
     });
   }
 
-  Future<String> process(String script) async {
-    script += 'main() {}';
-
-    ProcessResult result = await Process.run('dart',
-    [
-      '-p${path.join(Directory.current.absolute.path, 'packages')}',
-      'data:application/dart;charset=utf-8,${Uri.encodeComponent(script)}',
-    ]);
-
-    if (result.stderr != '')
-      throw result.stderr;
-
-    return result.stdout.trim();
-  }
-
-  Future loadTemplates(TemplateProcessor processor) async {
-    List<File> templateFiles = await listTemplateFiles().toList();
-    DateTime templateFilesChanged = await latestChange(templateFiles);
-    DateTime templatesCacheChanged = await latestChange([templatesCache]);
-
-    if (templateFilesChanged.isBefore(templatesCacheChanged))
-      return;
-
-    for (File templateFile in templateFiles)
-      await processor.include(
-          templateId(templateFile.path),
-          await templateFile.readAsString(),
-          preProcessors: preProcessorsOf(extension(templateFile.path)));
-
-    try {
-      await process(processor.templateScript);
-    } catch (e) {
-      program.printDanger('Template malformed!\n${e.toString()
-      .replaceAll(new RegExp(r"'data:application\/dart;charset=utf-8,[^]*?':"),
-      '<template cache>')}');
-      print(processor.templateScript);
-      await program.exit();
+  Future run() async {
+    if (didCompile) {
+      await composer.generateCache(templateFiles);
+      await program.reload();
     }
-
-    await templatesCache.writeAsString(processor.templateScript);
-
-    program.printInfo('Templates compiled to [${templatesCache.path}]');
-
-    await program.reload();
-  }
-
-  String templateId(String path) {
-    return path.replaceFirst('${templatesDirectory.path}${Platform.pathSeparator}', '')
-    .replaceFirst(new RegExp('${extension(path)}\$'), '')
-    .replaceAll(Platform.pathSeparator, '.');
-  }
-
-  Stream<File> listTemplateFiles() {
-    return templatesDirectory.list(recursive: true, followLinks: false)
-    .where((f) => FileSystemEntity.isFileSync(f.path));
-  }
-
-  Future<DateTime> latestChange(List<File> files) async {
-    DateTime latest;
-    await for (DateTime changed in new Stream.fromIterable(files)
-    .asyncMap((File f) => f.stat())
-    .asyncMap((FileStat s) => s.modified))
-      latest = latest == null
-      ? changed : changed.isAfter(latest)
-      ? changed : latest;
-    return latest == null ? new DateTime.fromMillisecondsSinceEpoch(0) : latest;
-  }
-
-  List<TemplatePreProcessor> preProcessorsOf(String extension) {
-    var compileBridge = container.make(BridgePreProcessor);
-    var compileJade = container.make(JadePreProcessor);
-    var compileMarkdown = container.make(MarkdownPreProcessor);
-    var compileHandlebars = container.make(HandlebarsPreProcessor);
-
-    var all = <String, List<TemplatePreProcessor>>{
-      '.jade': [compileJade, compileBridge],
-      '.hbs': [compileHandlebars, compileBridge],
-      '.md': [compileMarkdown, compileBridge],
-      '.html': [compileBridge],
-    };
-    return all.containsKey(extension) ? all[extension] : [];
-  }
-
-  @Command('Compile front end .dart files to .js')
-  build() async {
-    var files = await publicDirectory.list(recursive: true, followLinks: false).toList();
-    await Future.wait(files.map((File file) async {
-      FileStat stat = await file.stat();
-      if (stat.type != FileSystemEntityType.FILE) return null;
-
-      if (!file.path.endsWith('.dart')) return null;
-
-      var outFile = '${file.path}.js';
-
-      program.printInfo('Compiling ${file.path}');
-
-      Process process = await Process.start('dart2js', ['-m', '-o', outFile, file.path]);
-
-      var sub = process.stdout.map(UTF8.decode).listen(stdout.writeln);
-
-      int exitCode = await process.exitCode;
-      await sub.cancel();
-      if (exitCode == 0) return program.printAccomplishment('$outFile generated successfully.');
-      program.printDanger('$outFile could not be generated! [Exit code $exitCode]');
-    }));
   }
 }
