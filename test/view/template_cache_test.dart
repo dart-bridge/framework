@@ -128,8 +128,8 @@ class ExampleTemplateCache extends TemplateCache {
       yield '''${$esc(function())}''';                             // ${function()}
       yield '''${$esc(ExternalClass.staticGetter)}''';             // ${ExternalClass.staticGetter}
       yield '''${$esc(ExternalClass.staticMethod())}''';           // ${ExternalClass.staticMethod()}
-      yield '''${$esc($new(#ExternalClass, [], {}).getter)}''';    // ${new ExternalClass().getter}
-      yield '''${$esc($new(#ExternalClass, [], {}).method())}''';  // ${new ExternalClass().method()}
+      yield '''${$esc($new(#ExternalClass)().getter)}''';          // ${new ExternalClass().getter}
+      yield '''${$esc($new(#ExternalClass)().method())}''';        // ${new ExternalClass().method()}
     },
     'conditionals': () async* {
       yield* $if([[true, () async* {                               // @if (true)
@@ -164,14 +164,14 @@ class ExampleTemplateCache extends TemplateCache {
     },
     'child': () async* {
       yield* $extends('parent', {                                  // @extends ('parent')
-        'block': () async* {                                       // @block ('block')
+        'block': () async* {                                       // @start block ('block')
           yield '''inside''';                                      //   inside
         },                                                         // @end block
       });
     },
     'nestingParent': () async* {
       yield* $extends('parent', {                                  // @extends ('parent')
-        'block': () async* {                                       // @block ('block')
+        'block': () async* {                                       // @start block ('block')
           yield '''before inner''';                                //   before inner
           yield* $block('innerBlock');                             //   @block ('innerBlock')
           yield '''after inner''';                                 //   after inner
@@ -180,7 +180,7 @@ class ExampleTemplateCache extends TemplateCache {
     },
     'nestedChild': () async* {
       yield* $extends('nestingParent', {                           // @extends ('nestingParent')
-        'innerBlock': () async* {                                  // @block ('innerBlock')
+        'innerBlock': () async* {                                  // @start block ('innerBlock')
           yield '''inside''';                                      //   inside
         },                                                         // @end block
       });

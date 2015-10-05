@@ -27,7 +27,7 @@ class TemplateComposerTest implements TestCase {
 
   @test
   it_can_register_other_parsers_for_file_extensions() async {
-    manager.registerParser(new StubTemplateParser());
+    manager.registerParser(() => new StubTemplateParser());
     await manager.cache('some/file.stub',
         new Stream.fromIterable(['a', 'b', 'c']));
     io.expectPutWasCalled('some.file', ['parsed', 'parsed', 'parsed']);
@@ -53,7 +53,7 @@ yield '''line2''';
 
   @test
   the_parsers_can_register_import_statements_for_the_cache_output() async {
-    manager.registerParser(new StubTemplateParser(), imports: [
+    manager.registerParser(() => new StubTemplateParser(), imports: [
       'package:library/library.dart'
     ]);
     await manager.generateCache(['some/file.stub']);

@@ -15,8 +15,8 @@ class ViewServiceProvider implements ServiceProvider {
     app.resolve(_registerParsers);
   }
 
-  void _registerParsers(ChalkTemplateParser chalk) {
-    composer.registerParser(chalk);
+  void _registerParsers() {
+    composer.registerParser(app.presolve((ChalkTemplateParser p) => p));
   }
 
   Future load(Program program, Server server) async {

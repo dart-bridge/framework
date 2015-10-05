@@ -38,7 +38,7 @@ class HttpServiceProvider implements ServiceProvider {
     server.onError = (e, s) {
       print('');
       program.printInfo(new trace.Chain.forTrace(s).terse
-      .toString().split('\n').take(5).toList().reversed.join('\n'));
+      .toString().split('\n').toList().reversed.join('\n'));
       print('');
       program.printWarning('<underline>Error in HTTP layer:</underline>');
       program.printInfo(e);

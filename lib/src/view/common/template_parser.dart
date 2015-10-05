@@ -15,3 +15,11 @@ class PlainTemplateParser implements TemplateParser {
 
   String get extension => null;
 }
+
+class ParserException extends BaseException {
+  final int lineNumber;
+
+  ParserException(this.lineNumber, String message) : super(message);
+
+  String toString() => '${super.toString()} at line $lineNumber';
+}

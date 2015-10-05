@@ -20,7 +20,13 @@ abstract class TemplateCache {
 
   Map<String, TemplateGenerator> get collection;
 
-  Stream<String> $generate(String template) => collection[template]?.call();
+  Stream<String> $generate(String template) {
+    final stream = collection[template]?.call();
+    if (stream == null)
+      throw new InvalidArgumentException(
+          'No template [$template] has been cached');
+    return stream;
+  }
 
   noSuchMethod(Invocation invocation) {
     final target = _getTarget(invocation);
@@ -49,8 +55,14 @@ abstract class TemplateCache {
 
   // Helpers
 
-  dynamic $new(Symbol type, List positional, Map<Symbol, dynamic> named) {
-    return plato.instantiate(plato.classMirror(type), positional, named);
+  dynamic $new(Symbol type) {
+    final classpath = MirrorSystem.getName(type).split('.').toList();
+    var constructor = const Symbol('');
+    if (classpath.length > 1
+        && classpath.last.startsWith(new RegExp('_?[a-z]')))
+      constructor = new Symbol(classpath.removeLast());
+    return new _Instantiator(plato.classMirror(
+        new Symbol(classpath.join('.'))), constructor);
   }
 
   Stream<String> $if(List<List> components) {
@@ -60,9 +72,9 @@ abstract class TemplateCache {
     return new Stream.empty();
   }
 
-  String $esc(String input) {
+  String $esc(input) {
     if (input == null) return '';
-    return new HtmlEscape().convert(input);
+    return new HtmlEscape().convert('$input');
   }
 
   Stream<String> $for(items, Stream<String> callback(item)) async* {
@@ -106,5 +118,22 @@ class _StaticAccessor {
           invocation.positionalArguments[0])
           .reflectee;
     return _target.delegate(invocation);
+  }
+}
+
+@proxy
+class _Instantiator {
+  final ClassMirror _mirror;
+  final Symbol _constructor;
+
+  _Instantiator(this._mirror, this._constructor);
+
+  noSuchMethod(Invocation invocation) {
+    if (!(invocation.isMethod && invocation.memberName == #call))
+      return super.noSuchMethod(invocation);
+    return plato.instantiate(_mirror,
+        invocation.positionalArguments,
+        invocation.namedArguments,
+        _constructor);
   }
 }

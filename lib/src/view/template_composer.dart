@@ -2,7 +2,7 @@ part of bridge.view;
 
 class TemplateComposer {
   final TemplateCacheIo _io;
-  final Map<String, TemplateParser> _parsers = {};
+  final Map<String, Function> _parsers = {};
   final Set<String> _imports = new Set<String>();
 
   TemplateComposer(TemplateCacheIo this._io);
@@ -18,7 +18,7 @@ class TemplateComposer {
     final parser = _parsers.keys
         .firstWhere((ext) => filename.endsWith(ext), orElse: () => null);
     if (parser == null) return new PlainTemplateParser();
-    return _parsers[parser];
+    return _parsers[parser]();
   }
 
   String _nameTemplateFromFilename(String filename) {
@@ -43,8 +43,8 @@ class TemplateComposer {
         .join('.');
   }
 
-  void registerParser(TemplateParser parser, {List<String> imports: const []}) {
-    _parsers[parser.extension] = parser;
+  void registerParser(TemplateParser factory(), {List<String> imports: const []}) {
+    _parsers[factory().extension] = factory;
     _imports.addAll(imports);
   }
 

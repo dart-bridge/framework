@@ -191,6 +191,8 @@ class _Server implements Server {
                   Exception: exception,
                   StackTrace: stack,
                 }), statusCode);
+          print(exception);
+          print(stack);
           throw exception;
         }));
   }
