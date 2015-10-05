@@ -8,9 +8,10 @@ class TemplateComposer {
   TemplateComposer(TemplateCacheIo this._io);
 
   Future cache(String filename, Stream<String> lines) async {
-    final name = _nameTemplate(filename);
+    final parser = _pickParser(filename);
+    final name = _nameTemplate(filename, parser.extension);
     if (await _io.shouldRecompile(filename, name))
-      await _io.put(name, _pickParser(filename).parse(lines));
+      await _io.put(name, parser.parse(lines));
   }
 
   TemplateParser _pickParser(String filename) {
@@ -20,27 +21,36 @@ class TemplateComposer {
     return _parsers[parser];
   }
 
-  String _nameTemplate(String filename) {
+  String _nameTemplateFromFilename(String filename) {
+    final parser = _pickParser(filename);
+    return _nameTemplate(filename, parser.extension);
+  }
+
+  String _nameTemplate(String filename, String extension) {
+    final extensionPartCount = extension
+        ?.split('.')
+        ?.where((s) => s != '')
+        ?.length
+        ?? 1;
     return filename
         .split(new RegExp(r'[/\\]'))
         .join('.')
         .split('.')
         .reversed
-        .skip(1)
+        .skip(extensionPartCount)
         .toList()
         .reversed
         .join('.');
   }
 
-  void registerParser(TemplateParser parser,
-      String extension, {List<String> imports: const []}) {
-    _parsers[extension] = parser;
+  void registerParser(TemplateParser parser, {List<String> imports: const []}) {
+    _parsers[parser.extension] = parser;
     _imports.addAll(imports);
   }
 
   Future generateCache(List<String> filenames) async {
     return _io.putTemplateCache(() async* {
-      final Iterable<String> names = filenames.map(_nameTemplate);
+      final Iterable<String> names = filenames.map(_nameTemplateFromFilename);
       final Iterable<Stream<String>> templates = names.map(_io.get);
       final templateMap = new Map.fromIterables(names, templates);
 

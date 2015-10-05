@@ -12,9 +12,14 @@ class ViewServiceProvider implements ServiceProvider {
     this.composer = composer;
     this.app = app;
     app.singleton(composer);
+    app.resolve(_registerParsers);
   }
 
-  Future load(Program program) async {
+  void _registerParsers(ChalkTemplateParser chalk) {
+    composer.registerParser(chalk);
+  }
+
+  Future load(Program program, Server server) async {
     this.program = program;
     final root = new Directory(
         app.config('view.templates.root', 'lib/templates'));
@@ -23,9 +28,16 @@ class ViewServiceProvider implements ServiceProvider {
       if (await FileSystemEntity.isFile(file.path)) {
         final source = path.relative(file.path, from: root.path);
         templateFiles.add(source);
-        await composer.cache(source, file.openRead().map(UTF8.decode));
+        await composer.cache(source, file.openRead()
+            .map(UTF8.decode)
+            .expand((String multiLine) => multiLine.split('\n')));
       }
     }
+
+    server.modulateRouteReturnValue((Template template) {
+      if (template is! Template) return template;
+      return template.content.join('\n');
+    });
   }
 
   Future run() async {

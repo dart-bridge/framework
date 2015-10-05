@@ -7,6 +7,7 @@ import 'dart:convert' show HtmlEscape, UTF8;
 
 import 'package:bridge/core.dart';
 import 'package:bridge/exceptions.dart';
+import 'package:bridge/http.dart';
 import 'package:bridge/cli.dart';
 
 import 'package:plato/plato.dart' as plato;

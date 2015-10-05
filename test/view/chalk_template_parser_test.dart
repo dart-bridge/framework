@@ -30,4 +30,10 @@ class ChalkTemplateParserTest implements TestCase {
       "yield '''c''';",
     ]);
   }
+
+  @test
+  it_wraps_variables_in_escape_functions() async {
+    await _expectParsesTo([r'$variable'],
+        [r"yield '''${$esc(variable)}''';"]);
+  }
 }
