@@ -23,5 +23,5 @@ class ParserException extends BaseException {
   ParserException(this.lineNumber, String message) : super(message);
 
   String toString() =>
-      '${super.toString()} in template [templateName] at line $lineNumber';
+      '${super.toString()} in template [$templateName] at line $lineNumber';
 }
