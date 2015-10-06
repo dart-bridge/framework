@@ -18,8 +18,11 @@ class TemplateComposer {
         await _io.put(name, streams.split());
         print('<blue>Template [$name] was compiled.</blue>');
       } on ParserException catch (e) {
+        e.templateName = name;
         await _io.put(name, _errorTemplate(e));
         rethrow;
+      } on FormatException catch (e) {
+        throw new ParserException(-1, '$e')..templateName = name;
       }
     }
   }

@@ -18,8 +18,10 @@ class PlainTemplateParser implements TemplateParser {
 
 class ParserException extends BaseException {
   final int lineNumber;
+  String templateName = '<unknown>';
 
   ParserException(this.lineNumber, String message) : super(message);
 
-  String toString() => '${super.toString()} at line $lineNumber';
+  String toString() =>
+      '${super.toString()} in template [templateName] at line $lineNumber';
 }
