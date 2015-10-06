@@ -140,4 +140,17 @@ class ChalkTemplateParserTest implements TestCase {
       r"yield '''line ${$esc('// not comment')}''';",
     ]);
   }
+
+  @test
+  it_has_a_special_syntax_for_not_escaping_variable() async {
+    await _expectParsesTo([
+      r"$!!variable",
+      r"$!!{variable}",
+      r"\$!!{variable}",
+    ], [
+      r"yield '''${variable}''';",
+      r"yield '''${variable}''';",
+      r"yield '''\$!!{variable}''';",
+    ]);
+  }
 }

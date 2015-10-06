@@ -96,7 +96,10 @@ class ChalkTemplateParser implements TemplateParser {
   }
 
   String _variableFormat(Match $) {
-    final expression = _expression($[1] ?? $[2]);
+    final noEscape = $[1] != null;
+    final expression = _expression($[2] ?? $[3]);
+    if (noEscape)
+      return r'${''$expression''}';
     return r'${$esc(''$expression'')}';
   }
 
@@ -177,7 +180,7 @@ class _ChalkPatterns {
   static const parensExpression = r'(.*?\((?:.*?\((?:.*?\((?:.*?\('
       r'(?:.*?\((?:.*?\((?:.*?\(\}.*?|.*?)\).*?|.*?)'
       r'\).*?|.*?)\).*?|.*?)\).*?|.*?)\).*?|.*?)\).*?|.*?)';
-  static const variable = r'\$(?:(\w+)|''$curlyExpression'r')';
+  static const variable = r'\$(!!)?(?:(\w+)|''$curlyExpression'r')';
   static const instantiation = r'\bnew\s*([\w.]+)';
   static const string = r"""('{3}|"{3}|['"])((?:"""'$variable'r'|.)*?)\1';
   static const forLoop = r'@\s*for\s*\(\s*(\w+)\s*in\s*''$parensExpression\\)';
