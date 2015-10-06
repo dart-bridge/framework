@@ -25,7 +25,8 @@ class ViewServiceProvider implements ServiceProvider {
         app.config('view.templates.root', 'lib/templates'));
 
     await Future.wait(await root.list(recursive: true).map((File file) async {
-      if (await FileSystemEntity.isFile(file.path)) {
+      if (!path.basename(file.path).startsWith('.')
+          && await FileSystemEntity.isFile(file.path)) {
         final source = path.relative(file.path, from: root.path);
         templateFiles.add(source);
         try {
