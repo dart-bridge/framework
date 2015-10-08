@@ -118,6 +118,7 @@ class ContainerTest implements TestCase {
       expect(dep.methodWasCalled, isTrue);
       wasCalled = true;
     };
+    container.resolve(func);
     expect(wasCalled, isFalse);
   }
 }

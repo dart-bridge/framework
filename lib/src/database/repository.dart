@@ -14,7 +14,8 @@ class Repository<M> extends trestle.Repository<M> {
   Symbol get _deletedEventName =>
       __deletedEventName ??= _getEventName('WasDeleted');
 
-  Repository(Events this._events) {
+  $inject(Events events) {
+    _events = events;
     super.connect(_gateway);
   }
 
