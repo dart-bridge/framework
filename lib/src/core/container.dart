@@ -164,7 +164,7 @@ class _Container implements Container {
 
       if (canResolveMethod(instance, r'$inject'))
         resolveMethod(instance, r'$inject',
-            namedParameters: namedParameters, 
+            namedParameters: namedParameters,
             injecting: injecting);
 
       return instance;
