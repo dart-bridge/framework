@@ -4,6 +4,7 @@ abstract class InputValidator<T> extends InputBase<T> {
   Input<T> _input;
 
   $inject(Validator validator, Input input) {
+    print('hej');
     _input = input;
     validator.validate(_input, guards);
   }

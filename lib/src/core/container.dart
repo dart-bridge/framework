@@ -212,7 +212,7 @@ class _Container implements Container {
 
     var objectClass = instance.type;
 
-    var method = objectClass.declarations[symbol];
+    var method = objectClass.instanceMembers[symbol];
 
     var args = _getPositionalParameters(method, injecting);
 
@@ -221,7 +221,7 @@ class _Container implements Container {
   }
 
   bool canResolveMethod(Object object, String method) {
-    return reflect(object).type.declarations.containsKey(new Symbol(method));
+    return reflect(object).type.instanceMembers.containsKey(new Symbol(method));
   }
 
   Function presolve(Function function,
