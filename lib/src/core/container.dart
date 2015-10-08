@@ -163,7 +163,9 @@ class _Container implements Container {
       ).reflectee;
 
       if (canResolveMethod(instance, r'$inject'))
-        resolveMethod(instance, r'$inject');
+        resolveMethod(instance, r'$inject',
+            namedParameters: namedParameters, 
+            injecting: injecting);
 
       return instance;
     } catch (error) {

@@ -2,12 +2,9 @@ part of bridge.validation;
 
 abstract class InputValidator<T> extends InputBase<T> {
   Input<T> _input;
-  Validator _validator;
 
-  $inject(validator, input) {
-    _validator = validator;
-    _input = input;
-    _validator.validate(_input, guards);
+  $inject(Validator validator, Input input) {
+    validator.validate(_input, guards);
   }
 
   Map<String, Guard> get guards;
