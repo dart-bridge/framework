@@ -7,13 +7,10 @@ abstract class InputValidator<T> extends InputBase<T> {
   $inject(validator, input) {
     _validator = validator;
     _input = input;
+    _validator.validate(_input, guards);
   }
 
   Map<String, Guard> get guards;
-
-  void validate() {
-    _validator.validate(_input, guards);
-  }
 
   @override
   T get(String key, [defaultValue]) => _input.get(key, defaultValue);
