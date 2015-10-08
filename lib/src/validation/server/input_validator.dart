@@ -1,10 +1,13 @@
 part of bridge.validation;
 
 abstract class InputValidator<T> extends InputBase<T> {
-  final Input<T> _input;
-  final Validator _validator;
+  Input<T> _input;
+  Validator _validator;
 
-  InputValidator(this._validator, this._input);
+  $inject(validator, input) {
+    _validator = validator;
+    _input = input;
+  }
 
   Map<String, String> get filters;
 
