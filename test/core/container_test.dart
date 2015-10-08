@@ -119,7 +119,7 @@ class ContainerTest implements TestCase {
       wasCalled = true;
     };
     container.resolve(func);
-    expect(wasCalled, isFalse);
+    expect(wasCalled, isTrue);
   }
 }
 
