@@ -1,21 +1,55 @@
 part of bridge.http;
 
-class Input extends MapBase<String, dynamic> {
-  Map<String, dynamic> _data;
+class Input<T> extends MapBase<String, T> implements Map<String, T> {
+  Map<String, T> _data;
 
-  Input(Map<String, dynamic> this._data);
+  Input(this._data);
 
   toString() {
     return 'Input(${_data.toString()})';
   }
 
-  operator [](Object key) => _data[key];
+  T get(String key, [defaultValue]) => _data[key] ?? defaultValue;
 
-  operator []=(String key, value) => _data[key] = value;
+  bool has(String key) => _data.containsKey(key);
 
-  void clear() => _data.clear();
+  Map<String, dynamic> toMap() => new Map.from(_data);
 
+  Input<UploadedFile> get files {
+    final filesMap = <String, UploadedFile>{};
+    forEach((key, value) {
+      if (value is UploadedFile) filesMap[key] = value;
+    });
+    return new Input<UploadedFile>(filesMap);
+  }
+
+  Input<T> only(List<String> keys) {
+    final newMap = <String, T>{};
+    forEach((key, value) {
+      if (keys.contains(key)) newMap[key] = value;
+    });
+    return new Input<T>(newMap);
+  }
+
+  // Implementing `Map`
+  @override
+  operator [](String key) => get(key);
+
+  @override
   Iterable<String> get keys => _data.keys;
 
-  remove(Object key) => _data.remove(key);
+  @override
+  operator []=(String key, value) {
+    throw new UnsupportedError('The Input object is immutable');
+  }
+
+  @override
+  void clear() {
+    throw new UnsupportedError('The Input object is immutable');
+  }
+
+  @override
+  remove(Object key) {
+    throw new UnsupportedError('The Input object is immutable');
+  }
 }

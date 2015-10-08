@@ -147,7 +147,7 @@ class _Server implements Server {
         shelf.Request: request,
       };
       if (request.context.containsKey('input'))
-        injecting[Input] = _clearPrivates(request.context['input']);
+        injecting[Input] = new Input(_clearPrivates(request.context['input']));
       if (request.context.containsKey('session'))
         injecting[Session] = request.context['session'];
       var returnValue = await
@@ -168,10 +168,11 @@ class _Server implements Server {
   }
 
   Object _clearPrivates(Map map) {
-    map.keys.where((k) => k.startsWith('_')).toList().forEach((k) {
-      map.remove(k);
+    final copy = new Map.from(map);
+    copy.keys.where((k) => k.startsWith('_')).toList().forEach((k) {
+      copy.remove(k);
     });
-    return map;
+    return copy;
   }
 
   Future stop() async {
