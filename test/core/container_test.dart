@@ -110,6 +110,16 @@ class ContainerTest implements TestCase {
     autoResolvingFunction(lonely);
     expect(wasCalled, isTrue);
   }
+
+  @test
+  it_resolves_an_$inject_method_if_it_exists_before_injection() {
+    var wasCalled = false;
+    final func = (ClassWithInjectMethod dep) {
+      expect(dep.methodWasCalled, isTrue);
+      wasCalled = true;
+    };
+    expect(wasCalled, isFalse);
+  }
 }
 
 class LonelyClass {
@@ -135,4 +145,12 @@ class ClassDependingOnInterface {
 
 class ClassWithTypeArgument<T> {
 
+}
+
+class ClassWithInjectMethod {
+  bool methodWasCalled = false;
+
+  $inject(LonelyClass lonely) {
+    methodWasCalled = true;
+  }
 }

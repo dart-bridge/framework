@@ -156,11 +156,16 @@ class _Container implements Container {
         constructorSymbol = const Symbol('');
       }
 
-      return (classMirror.newInstance(
+      final instance = (classMirror.newInstance(
           constructorSymbol,
           positionalArguments,
           namedArguments)
       ).reflectee;
+
+      if (canResolveMethod(instance, r'$inject'))
+        resolveMethod(instance, r'$inject');
+
+      return instance;
     } catch (error) {
       throw new ContainerException(type, error);
     }
