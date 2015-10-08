@@ -225,8 +225,7 @@ class MissingDependencyException extends BaseException {
   final ServiceProvider serviceProvider;
 
   MissingDependencyException(dependency, serviceProvider)
-      :
-        dependency = dependency,
+      : dependency = dependency,
         serviceProvider = serviceProvider,
         super('[${_qualifiedPathOfObject(serviceProvider)}] '
           'needs [${_qualifiedPathOfType(dependency)}] to function');
