@@ -1,100 +1,90 @@
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/validation.dart';
-import 'dart:async';
-import 'package:bridge/exceptions.dart';
 
 class ValidatorTest implements TestCase {
   Validator validator;
-  bool filterWasCalled;
 
   setUp() {
-    filterWasCalled = false;
     validator = new Validator();
   }
 
-  tearDown() {
-  }
+  tearDown() {}
 
-  Future<String> isStringFilter(input) async {
-    filterWasCalled = true;
-    if (input is! String) return 'must be a string';
-    return null;
-  }
-
-  Future<String> isLowercaseFilter(String input) async {
-    if (input.toLowerCase() != input) return 'must be all lower case';
-    return null;
+  void expectsFailsValidation(Map<String, dynamic> values,
+      Map<String, Guard> guards) {
+    expect(() => validator.validate(values, guards),
+        throwsA(new isInstanceOf<ValidationException>()));
   }
 
   @test
-  it_can_register_validation_filters() async {
-    validator.registerFilter('isString', isStringFilter);
-    await validator.validate('any', 'isString');
-    expect(filterWasCalled, equals(true));
+  it_does_nothing_when_no_guards_are_supplied() {
+    validator.validate({}, {});
+    validator.validate({'k': 'v'}, {});
   }
 
   @test
-  it_throws_if_the_filter_doesnt_return_null() async {
-    validator.registerFilter('isString', isStringFilter);
-    expect(validator.validate(0, 'isString'),
-    throwsA(const isInstanceOf<ValidationException>()));
-  }
-
-  @test
-  it_throws_if_trying_to_validate_a_filter_that_isnt_registered() async {
-    expect(validator.validate('any', 'isString'),
-    throwsA(const isInstanceOf<InvalidArgumentException>()));
-  }
-
-  @test
-  it_can_validate_against_multiple_filters() async {
-    validator.registerFilter('isString', isStringFilter);
-    validator.registerFilter('isLowercase', isLowercaseFilter);
-    await validator.validate('string', 'isString, isLowercase');
-  }
-
-  @test
-  it_can_validate_multiple_values() async {
-    validator.registerFilter('isString', isStringFilter);
-    validator.registerFilter('isLowercase', isLowercaseFilter);
-    await validator.validateMany(['string', 'another string'], 'isString, isLowercase');
-  }
-
-  @test
-  it_can_validate_a_map_against_filters_for_each_key() async {
-    validator.registerFilter('isString', isStringFilter);
-    validator.registerFilter('isLowercase', isLowercaseFilter);
-    await validator.validateAll({
-      'first': 'A string',
-      'second': 'a lowercase string',
+  it_throws_when_a_guard_returns_a_message() {
+    expectsFailsValidation({
+      'key': 'value'
     }, {
-      'first': 'isString',
-      'second': 'isString,isLowercase',
+      'key': (key, value) {
+        return 'message';
+      }
     });
   }
 
   @test
-  it_throws_when_the_keys_of_the_maps_are_not_identical() {
-    expect(validator.validateAll({
-      'first': 'A string',
-      'second': 'a lowercase string',
+  it_comes_with_a_few_built_in_guards() {
+    expectsFailsValidation({
     }, {
-      'first': 'isString',
-    }), throwsA(allOf(
-      new isInstanceOf<InvalidArgumentException>(),
-      predicate((e) => e.message.contains('identical'))
-    )));
+      'key': Guards.required,
+    });
+
+    validator.validate({
+      'x': 123,
+      'y': '123',
+    }, {
+      'x': Guards.numeric,
+      'y': Guards.numeric,
+    });
+    expectsFailsValidation({
+      'x': 'n',
+    }, {
+      'x': Guards.numeric,
+    });
   }
 
   @test
-  it_has_default_filters() async {
-    // required
-    await validator.validate('value', 'required');
-    await validator.validate(1, 'required');
-    await validator.validate(true, 'required');
-    expect(validator.validate(null, 'required'), throws);
-    expect(validator.validate('', 'required'), throws);
-    expect(validator.validate(false, 'required'), throws);
+  it_can_create_guards_from_function_that_throws() {
+    expectsFailsValidation({
+      'x': 'y'
+    }, {
+      'x': Guards.catches((String key, value) {
+        throw '';
+      }),
+    });
+  }
+
+  @test
+  it_can_merge_multiple_guards() {
+    final valid = {
+      'x': 1,
+    };
+    final invalid1 = {
+    };
+    final invalid2 = {
+      'x': 'a'
+    };
+    final guards = {
+      'x': Guards.all([
+        Guards.required,
+        Guards.numeric,
+      ]),
+    };
+
+    validator.validate(valid, guards);
+    expectsFailsValidation(invalid1, guards);
+    expectsFailsValidation(invalid2, guards);
   }
 }

@@ -9,10 +9,10 @@ abstract class InputValidator<T> extends InputBase<T> {
     _input = input;
   }
 
-  Map<String, String> get filters;
+  Map<String, Guard> get guards;
 
-  Future validate() async {
-    await _validator.validateAll(_input, filters);
+  void validate() {
+    _validator.validate(_input, guards);
   }
 
   @override
