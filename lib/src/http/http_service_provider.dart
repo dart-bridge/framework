@@ -2,7 +2,7 @@ part of bridge.http;
 
 UrlGenerator _urlGenerator;
 
-class HttpServiceProvider implements ServiceProvider {
+class HttpServiceProvider extends ServiceProvider {
   Server server;
   Router router;
   Program program;

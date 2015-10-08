@@ -2,7 +2,8 @@ part of bridge.database;
 
 Gateway _gateway;
 
-class DatabaseServiceProvider implements ServiceProvider {
+@DependsOn(EventsServiceProvider, strict: false)
+class DatabaseServiceProvider extends ServiceProvider {
   Application _app;
   Program _program;
 

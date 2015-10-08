@@ -1,6 +1,7 @@
 part of bridge.view;
 
-class ViewServiceProvider implements ServiceProvider {
+@DependsOn(HttpServiceProvider, strict: false)
+class ViewServiceProvider extends ServiceProvider {
   Application app;
   Program program;
   TemplateComposer composer;
@@ -39,10 +40,12 @@ class ViewServiceProvider implements ServiceProvider {
       }
     }).toList());
 
-    server.modulateRouteReturnValue((Template template) {
-      if (template is! Template) return template;
-      return template.content.join('\n');
-    });
+    if (app.hasServiceProvider(HttpServiceProvider)) {
+      server.modulateRouteReturnValue((Template template) {
+        if (template is! Template) return template;
+        return template.content.join('\n');
+      });
+    }
   }
 
   Future run() async {

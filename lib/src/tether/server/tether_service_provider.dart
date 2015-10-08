@@ -1,6 +1,7 @@
 part of bridge.tether;
 
-class TetherServiceProvider implements ServiceProvider {
+@DependsOn(http.HttpServiceProvider)
+class TetherServiceProvider extends ServiceProvider {
   TetherManager manager = new TetherManager();
   Application app;
 

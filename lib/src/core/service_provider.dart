@@ -1,10 +1,6 @@
 part of bridge.core;
 
-/// **Bridge Core Service Provider Interface**
-///
-/// This interface has no abstract methods. It only
-/// acts as an identifier when importing Service
-/// Providers into the application.
+/// **Bridge Service Provider**
 ///
 /// The Service Provider can implement a few methods,
 /// which, in turn, will be called by the application.
@@ -41,11 +37,17 @@ part of bridge.core;
 /// This method is called when the `exit` command has been issued
 /// in the shell program.
 ///
+/// A Service Provider can depend on other Service Providers, by annotating with
+/// [DependsOn] that takes a [Type]. If the dependency is not necessary for the
+/// service to function, the parameter `strict` can be set to false
+///
 /// **Example**
 ///
 /// A service provider should be structured like this:
 ///
-///     class MyServiceProvider implements ServiceProvider {
+///     @DependsOn(MyOtherServiceProvider)
+///     @DependsOn(HttpServiceProvider, strict: false)
+///     class MyServiceProvider extends ServiceProvider {
 ///       Application app;
 ///       MySingleton singleton;
 ///
@@ -70,4 +72,46 @@ part of bridge.core;
 ///         singleton.stopSomeRunningService();
 ///       }
 ///     }
-abstract class ServiceProvider {}
+abstract class ServiceProvider {
+  InstanceMirror _self;
+  Set<Type> _allDependencies;
+  Set<Type> _strictDependencies;
+
+  ServiceProvider() {
+    _self = reflect(this);
+  }
+
+  bool get hasDependencies => dependencies().isNotEmpty;
+
+  bool dependsOn(Type other) => dependencies().contains(other);
+
+  Set<Type> dependencies({bool strict: false}) =>
+      strict ?
+      _strictDependencies ??= _getDependenciesOf(_self.type, strict)
+          :
+      _allDependencies ??= _getDependenciesOf(_self.type, strict);
+
+  Set<Type> _getDependenciesOf(ClassMirror mirror, bool strict) {
+    return mirror.metadata
+        .where((m) => m.reflectee is DependsOn)
+        .map((m) => _dependOn(m.reflectee, strict))
+        .expand((d) => d)
+        .toList(growable: false).toSet();
+  }
+
+  Set<Type> _dependOn(DependsOn depends, bool strict) {
+    if (depends.dependency == this.runtimeType) return new Set();
+    final isStrict = strict && depends.strict;
+    if (strict && !isStrict)
+      return new Set();
+    return new Set.from([depends.dependency])
+      ..addAll(_getDependenciesOf(reflectClass(depends.dependency), isStrict));
+  }
+}
+
+class DependsOn {
+  final Type dependency;
+  final bool strict;
+
+  const DependsOn(this.dependency, {this.strict: true});
+}
