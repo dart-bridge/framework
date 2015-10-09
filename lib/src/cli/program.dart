@@ -3,13 +3,16 @@ part of bridge.cli;
 class BridgeCli extends Program {
   final Application app = new Application();
   final String _configPath;
+  final bool _setProduction;
 
-  BridgeCli(String this._configPath, Shell shell) : super(shell) {
+  BridgeCli(this._configPath, Shell shell, this._setProduction)
+      : super(shell) {
     app..singleton(this)..singleton(this, as: Program);
   }
 
   setUp() async {
     await app.setUp(_configPath);
+    Environment.current = Environment.production;
     InputDevice.prompt = new Output('<cyan>=</cyan> ');
   }
 
