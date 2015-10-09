@@ -37,11 +37,11 @@ class HttpServiceProvider extends ServiceProvider {
     server.addMiddleware(csrfMiddleware);
     server.onError = (e, s) {
       print('');
-      program.printInfo(new trace.Chain.forTrace(s).terse
+      program.printDanger(new trace.Chain.forTrace(s).terse
       .toString().split('\n').toList().reversed.join('\n'));
       print('');
-      program.printWarning('<underline>Error in HTTP layer:</underline>');
-      program.printInfo(e);
+      program.printWarning('<underline>Uncaught HTTP exception</underline>');
+      program.printDanger(e);
       print('');
     };
 
