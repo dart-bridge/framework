@@ -15,6 +15,9 @@ abstract class _ServerTether {
   final Container _container = null;
 
   Future applyData(data, Function listener) {
-    return _container.resolve(listener, injecting: {data.runtimeType: data});
+    return _container.resolve(listener, injecting: {
+      data.runtimeType: data,
+      dynamic: data
+    });
   }
 }

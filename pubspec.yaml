@@ -14,12 +14,12 @@ dependencies:
   dotenv: "^0.1.3+1"
   http_parser: '^0.0.2+6'
   formler: #'^0.1.2'
-    git: https://github.com/Daegalus/formler
+    git: https://github.com/emilniklas/formler
   dlog: '^0.0.5'
   plato: '>=0.2.0 <1.0.0'
   path: '^1.3.5'
   http_server: '^0.9.5+1'
-  trestle: '>=0.5.4 <1.0.0'
+  trestle: '>=0.5.5 <1.0.0'
   async: '^1.3.0'
 dev_dependencies:
   test: any
