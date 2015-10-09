@@ -68,7 +68,7 @@ class BridgeCli extends Program {
     final build = new Directory(app.config('http.server.build_root', 'build'));
     commands.add(_run('pub', ['build', '-o', build.path]));
     final List<File> files = await public
-        .list(recursive: false)
+        .list(recursive: true, followLinks: false)
         .where((e) => e.path.endsWith('.dart')).toList();
     for (final file in files)
       commands.add(
