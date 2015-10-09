@@ -56,4 +56,44 @@ class BridgeCli extends Program {
       printInfo('Stopped watching files');
     _watching = false;
   }
+
+  @Command('Build the projects client side assets using [pub build]')
+  build() async {
+    final commands = [];
+    final public = new Directory(app.config('http.server.public_root', 'web'));
+    final build = new Directory(app.config('http.server.build_root', 'build'));
+    commands.add(_run('pub', ['build', '-o', build.path]));
+    final List<File> files = await public
+        .list(recursive: false)
+        .where((e) => e.path.endsWith('.dart')).toList();
+    for (final file in files)
+      commands.add(
+          _run('dart2js', [
+            '-m',
+            '-o',
+            path.join(build.path, '${file.path}.js'),
+            file.path,
+          ]));
+    await Future.wait(commands);
+  }
+
+  Future _run(String executable, List<String> arguments) async {
+    printWarning('Executing: $executable ${arguments.join(' ')}');
+
+    final process = await Process.start(executable, arguments);
+    process.stdout.map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
+    process.stderr.map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
+    final exitCode = await process.exitCode;
+
+    if (exitCode != 0)
+      printDanger('Exited with exit code $exitCode');
+    else
+      printAccomplishment('Finished: $executable ${arguments.join(' ')}');
+  }
+
+  String _colorizeOutput(String executable, String line) {
+    return '<gray>[<gray><cyan>$executable</cyan><gray>] ${line.trim()}</gray>';
+  }
 }
