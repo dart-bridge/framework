@@ -68,14 +68,9 @@ class ValidatorTest implements TestCase {
 
   @test
   it_can_merge_multiple_guards() {
-    final valid = {
-      'x': 1,
-    };
-    final invalid1 = {
-    };
-    final invalid2 = {
-      'x': 'a'
-    };
+    final valid = {'x': 1};
+    final invalid1 = {};
+    final invalid2 = {'x': 'a'};
     final guards = {
       'x': Guards.all([
         Guards.required,
@@ -86,5 +81,39 @@ class ValidatorTest implements TestCase {
     validator.validate(valid, guards);
     expectsFailsValidation(invalid1, guards);
     expectsFailsValidation(invalid2, guards);
+  }
+
+  @test
+  it_has_a_regex_guard() {
+    final valid = {'x': 'ABC', 'y': 'abcde'};
+    final invalid = {'x': 'xy', 'y': 'UUUUU'};
+    final guards = {
+      'x': Guards.matches(r'^[A-Z]{3}$'),
+      'y': Guards.matches(r'^[a-z]{5}$'),
+    };
+
+    validator.validate(valid, guards);
+    expectsFailsValidation(invalid, guards);
+  }
+
+  @test
+  it_has_an_email_guard() {
+    final invalid = [
+      null,
+      '',
+      'x',
+      'xx',
+      'x@x',
+    ];
+    final valid = [
+      'x@x.x',
+      'x-y@x.y',
+      '1og892nld0-_sg902d..fg2_dsp2@xa-h--ssdfh-we1234.y',
+    ];
+
+    for (final eachInvalid in invalid)
+      expectsFailsValidation({'x': eachInvalid}, {'x': Guards.email});
+    for (final eachValid in valid)
+      validator.validate({'x': eachValid}, {'x': Guards.email});
   }
 }

@@ -5,7 +5,7 @@ class BridgeCli extends Program {
   final String _configPath;
   final bool _setProduction;
 
-  BridgeCli(this._configPath, Shell shell, this._setProduction)
+  BridgeCli(this._configPath, Shell shell, [this._setProduction])
       : super(shell) {
     app..singleton(this)..singleton(this, as: Program);
   }

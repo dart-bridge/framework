@@ -34,4 +34,18 @@ class Guards {
       }
     };
   }
+
+  static Guard matches(String regex,
+      {bool multiLine: false,
+      bool caseSensitive: true}) {
+    return (String key, value) {
+      if (!new RegExp(regex,
+          multiLine: multiLine,
+          caseSensitive: caseSensitive)
+          .hasMatch('$value'))
+        return '$key doesn\'t match $regex, got "$value"';
+    };
+  }
+
+  static Guard get email => matches(r'@.+\..+');
 }
