@@ -12,7 +12,8 @@ class BridgeCli extends Program {
 
   setUp() async {
     await app.setUp(_configPath);
-    Environment.current = Environment.production;
+    if (_setProduction)
+      Environment.current = Environment.production;
     InputDevice.prompt = new Output('<cyan>=</cyan> ');
   }
 
