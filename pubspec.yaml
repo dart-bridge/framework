@@ -13,8 +13,7 @@ dependencies:
   cupid: '^0.9.6'
   dotenv: "^0.1.3+1"
   http_parser: '^0.0.2+6'
-  formler: #'^0.1.2'
-    git: https://github.com/emilniklas/formler
+  formler: '^0.1.2'
   dlog: '^0.0.5'
   plato: '>=0.2.0 <1.0.0'
   path: '^1.3.5'
