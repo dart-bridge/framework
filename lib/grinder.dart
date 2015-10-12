@@ -19,6 +19,7 @@ library bridge.grinder;
 ///     db_migrate() => bridgeCommand('db_migrate');
 
 import 'dart:async';
+
 import 'package:bridge/cli.dart';
 
 Future bridgeCommand(List<String> commands) {

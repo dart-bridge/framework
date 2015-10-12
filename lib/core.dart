@@ -5,23 +5,18 @@
 /// dependency injection and method injection.
 library bridge.core;
 
-// Core libraries
-import 'dart:mirrors';
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
+import 'dart:mirrors';
 
-// Using
 import 'package:bridge/exceptions.dart';
-//import 'package:bridge/bridge.dart';
-
-// External libraries
-import 'package:yaml/yaml.dart' as yaml;
 import 'package:dotenv/dotenv.dart' as dotenv;
+import 'package:yaml/yaml.dart' as yaml;
 
 part 'src/core/application.dart';
-part 'src/core/container.dart';
 part 'src/core/config.dart';
 part 'src/core/config_exception.dart';
+part 'src/core/container.dart';
 part 'src/core/container_exception.dart';
-part 'src/core/service_provider.dart';
 part 'src/core/environment.dart';
+part 'src/core/service_provider.dart';
