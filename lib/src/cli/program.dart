@@ -64,20 +64,8 @@ class BridgeCli extends Program {
   @Command('Build the projects client side assets using [pub build]')
   build() async {
     final commands = [];
-    final public = new Directory(app.config('http.server.public_root', 'web'));
     final build = new Directory(app.config('http.server.build_root', 'build'));
     commands.add(_run('pub', ['build', '-o', build.path]));
-    final List<File> files = await public
-        .list(recursive: true, followLinks: false)
-        .where((e) => e.path.endsWith('.dart')).toList();
-    for (final file in files)
-      commands.add(
-          _run('dart2js', [
-            '-m',
-            '-o',
-            path.join(build.path, '${file.path}.js'),
-            file.path,
-          ]));
     await Future.wait(commands);
   }
 
