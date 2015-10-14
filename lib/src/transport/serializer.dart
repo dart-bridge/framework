@@ -7,7 +7,7 @@ abstract class Serializer {
 
   factory Serializer() => new _Serializer();
 
-  Object serialize(Object object);
+  Object serialize(Object object, {bool flatten: false});
 
   Object deserialize(Object serialized);
 
@@ -26,21 +26,25 @@ class _Serializer implements Serializer {
   final Map<Type, SerializationTransform> _serializers = {};
   final Map<String, SerializationTransform> _deserializers = {};
 
-  Object serialize(Object object) {
+  Object serialize(Object object, {bool flatten: false}) {
     if ([String, int, double, bool, Null].contains(object.runtimeType))
       return object;
-    if (object is List) return _transformList(object, serialize);
-    if (object is Map) return _transformMap(object, serialize);
+    if (object is List) return _transformList(
+        object, (_) => serialize(_, flatten: flatten));
+    if (object is Map) return _transformMap(
+        object, (_) => serialize(_, flatten: flatten));
     if (_serializers.containsKey(object.runtimeType))
-      return _serializeRegistered(object);
+      return _serializeRegistered(object, flatten);
     return object.toString();
   }
 
-  Object _serializeRegistered(Object object) {
+  Object _serializeRegistered(Object object, bool flatten) {
+    final serialized = _serializers[object.runtimeType](object);
+    if (flatten) return serialize(serialized, flatten: flatten);
     return serialize({
       r'$$': _types[object.runtimeType],
-      r'$$$': _serializers[object.runtimeType](object),
-    });
+      r'$$$': serialized,
+    }, flatten: flatten);
   }
 
   Object _transformList(List list, SerializationTransform transform) {

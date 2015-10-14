@@ -75,7 +75,8 @@ class _Server implements Server {
   }
 
   Future<HttpServer> start() async {
-    return _server = await shelf_io.serve(_buildPipeline(), _host, _port);
+    return _server = (await shelf_io.serve(_buildPipeline(), _host, _port))
+      ..autoCompress = true;
   }
 
   shelf.Response _globalErrorHandler(error, StackTrace stack) {
@@ -203,9 +204,6 @@ class _Server implements Server {
 
 class _ResponseMapper {
   Set<Function> _returnValueModulators = new Set();
-  Serializer _serializer;
-
-  _ResponseMapper(Serializer this._serializer);
 
   Future<shelf.Response> valueToResponse(Object value,
       [int statusCode = 200]) async {
@@ -220,20 +218,11 @@ class _ResponseMapper {
     });
   }
 
-  shelf.Response _streamResponse(Stream stream, int statusCode) {
-    var contentType = ContentType.HTML;
-    final newStream = () async* {
-      await for (final item in stream) {
-        if (item is String) yield item;
-        else {
-          contentType = ContentType.JSON;
-          yield JSON.encode(serializer.serialize(item));
-        }
-      }
-    }().map(UTF8.encode);
-    return new shelf.Response(
-        statusCode, body: newStream, headers: {
-      'Content-Type': contentType.toString()
+  Future<shelf.Response> _streamResponse(Stream stream, int statusCode) async {
+    return new shelf.Response(statusCode, body: await stream
+        .map((i) => serializer.serialize(i, flatten: true)).toList()
+        .then(JSON.encode), headers: {
+      'Content-Type': ContentType.JSON.toString()
     });
   }
 
@@ -243,7 +232,7 @@ class _ResponseMapper {
 
   Object _bodyFromValue(Object value) {
     if (_isJsonEncodable(value)) return JSON.encode(
-        _serializer.serialize(value));
+        serializer.serialize(value, flatten: true));
     return value.toString();
   }
 
