@@ -3,7 +3,6 @@ library bridge.core.application_test;
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'package:bridge/core.dart';
-import 'dart:async';
 
 class ApplicationTest implements TestCase {
   Application application;

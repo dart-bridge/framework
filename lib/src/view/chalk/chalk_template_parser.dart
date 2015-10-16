@@ -174,12 +174,16 @@ class ChalkTemplateParser implements TemplateParser {
 }
 
 class _ChalkPatterns {
-  static const curlyExpression = r'\{(.*?\{(?:.*?\{(?:.*?\{(?:.*?\{'
-      r'(?:.*?\{(?:.*?\{(?:.*?\{\}.*?|.*?)\}.*?|.*?)'
-      r'\}.*?|.*?)\}.*?|.*?)\}.*?|.*?)\}.*?|.*?)\}.*?|.*?)\}';
-  static const parensExpression = r'(.*?\((?:.*?\((?:.*?\((?:.*?\('
-      r'(?:.*?\((?:.*?\((?:.*?\(\}.*?|.*?)\).*?|.*?)'
-      r'\).*?|.*?)\).*?|.*?)\).*?|.*?)\).*?|.*?)\).*?|.*?)';
+  static const curlyExpression =
+      r'\{(.*?(\{.*?(\{.*?(\{.*?(\{.*?(\{.*?('
+      r'\{.*?(\{.*?(\{.*?(\{.*?\}.*?)*\}.*?'
+      r')*\}.*?)*\}.*?)*\}.*?)*\}.*?)*\}.'
+      r'*?)*\}.*?)*\}.*?)*)\}';
+  static const parensExpression =
+      r'(.*?(\(.*?(\(.*?(\(.*?(\(.*?(\(.*?('
+      r'\(.*?(\(.*?(\(.*?(\(.*?\).*?)*\).*?'
+      r')*\).*?)*\).*?)*\).*?)*\).*?)*\).'
+      r'*?)*\).*?)*\).*?)*)';
   static const variable = r'\$(!!)?(?:(\w+)|''$curlyExpression'r')';
   static const instantiation = r'\bnew\s*([\w.]+)';
   static const string = r"""('{3}|"{3}|['"])((?:"""'$variable'r'|.)*?)\1';
