@@ -19,6 +19,11 @@ class EventEmittingSqlDriver extends SqlDriver {
 
   Future disconnect() => _driver.disconnect();
 
+  @override
+  String parseSchemaColumn(Column column) {
+    return _driver.parseSchemaColumn(column);
+  }
+
   String wrapSystemIdentifier(String systemId) {
     return _driver.wrapSystemIdentifier(systemId);
   }
