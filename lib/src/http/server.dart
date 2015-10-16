@@ -30,7 +30,7 @@ class _Server implements Server {
   HttpServer _server;
   String _host;
   int _port;
-  List<shelf.Middleware> _middleware = new List();
+  List _middleware = new List();
   Container _container;
   Config _config;
   _ResponseMapper _responseMapper;
@@ -56,10 +56,9 @@ class _Server implements Server {
   var _highPriorityMiddleware = 0;
 
   void addMiddleware(Object middleware, {bool highPriority: false}) {
-    shelf.Middleware shelfMiddleware = _createMiddleware(middleware);
     if (highPriority) return _middleware.insert(
-        _highPriorityMiddleware++, shelfMiddleware);
-    _middleware.add(shelfMiddleware);
+        _highPriorityMiddleware++, middleware);
+    _middleware.add(middleware);
   }
 
   shelf.Middleware _createMiddleware(Object middleware) {
@@ -102,11 +101,11 @@ class _Server implements Server {
     return pipeline.addHandler(_handle);
   }
 
-  shelf.Middleware _conditionalMiddleware(shelf.Middleware middleware) {
+  shelf.Middleware _conditionalMiddleware(middleware) {
     return (shelf.Handler innerHandler) {
       return (shelf.Request request) {
         if (_shouldUseMiddlewareForRequest(request, middleware))
-          return middleware(innerHandler)(request);
+          return _createMiddleware(middleware)(innerHandler)(request);
         return innerHandler(request);
       };
     };
