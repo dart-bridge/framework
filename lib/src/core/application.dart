@@ -110,12 +110,35 @@ class Application implements Container {
   /// evaluating the inner function and returning the response.
   ///
   ///     functionWillBeInjected(SomeClass input) {}
-  ///     Function presolved = container.presolve(functionWillBeInjected);
+  ///     Function presolved = application.presolve(functionWillBeInjected);
   ///     presolved(...);
   presolve(Function function,
       {Map<String, dynamic> namedParameters,
       Map<Type, dynamic> injecting}) => _container.presolve(
       function, namedParameters: namedParameters, injecting: injecting);
+
+  /// Registers a decorator on a target type, so that every time that type
+  /// is injected, it will be decorated with the decorator.
+  ///
+  /// That means a class can be decorated with multiple decorators.
+  ///
+  ///     class Parent {}
+  ///
+  ///     class Decorator implements Parent {
+  ///       final Parent parent;
+  ///
+  ///       Decorator(this.parent);
+  ///     }
+  ///
+  ///     application.decorate(Parent, decorator: Decorator);
+  ///     application.make(Parent); // Instance of 'Decorator'
+  void decorate(Type target,
+      {Type decorator,
+      Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) => _container.decorate(
+      target, decorator: decorator,
+      namedParameters: namedParameters,
+      injecting: injecting);
 
   /// Initialize the application, given a relative path to the directory where
   /// the config files are located.
