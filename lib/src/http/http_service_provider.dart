@@ -7,7 +7,7 @@ class HttpServiceProvider extends ServiceProvider {
   Router router;
   Program program;
 
-  setUp(Container container,
+  setUp(Application app,
         Server server,
         Router router,
         _ResponseMapper responseMapper,
@@ -15,12 +15,14 @@ class HttpServiceProvider extends ServiceProvider {
     this.server = server;
     this.router = router;
 
+    _helperConfig = app.config;
+
     server.attachRouter(router);
 
-    container.singleton(responseMapper);
-    container.singleton(server, as: Server);
-    container.singleton(router, as: Router);
-    container.singleton(manager);
+    app.singleton(responseMapper);
+    app.singleton(server, as: Server);
+    app.singleton(router, as: Router);
+    app.singleton(manager);
   }
 
   load(Program program,
