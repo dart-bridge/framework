@@ -162,8 +162,15 @@ class _Config implements Config {
     return (value as String).replaceFirstMapped(matcher, (m) {
       var envName = m[1];
       var defaultValue = m[2];
-      return env(envName, defaultValue);
+      return _cast(env(envName, defaultValue));
     });
+  }
+
+  Object _cast(String env) {
+    if (env == 'true') return true;
+    if (env == 'false') return false;
+    if (new RegExp(r'^\d+|\d*\.\d+$').hasMatch(env)) return num.parse(env);
+    return env;
   }
 
   call(String key, [defaultValue]) {
