@@ -36,8 +36,7 @@ abstract class Config {
   static _loadEnv() {
     try {
       dotenv.load();
-    } on FileSystemException {
-    }
+    } on FileSystemException {}
     _envHasBeenLoaded = true;
   }
 
@@ -87,8 +86,8 @@ class _Config implements Config {
 
   _childOfItemByKey(item, key) {
     return (item is Iterable)
-    ? item[int.parse(key)]
-    : item[key];
+        ? item[int.parse(key)]
+        : item[key];
   }
 
   String toString() {
@@ -122,9 +121,9 @@ class _Config implements Config {
 
   String _makePathOfFile(File file, Directory root) {
     return file.path
-    .replaceAll(new RegExp('^${root.path}\\${Platform.pathSeparator}'), '')
-    .replaceAll(new RegExp(r'.yaml$'), '')
-    .replaceAll('/', '.');
+        .replaceAll(new RegExp('^${root.path}\\${Platform.pathSeparator}'), '')
+        .replaceAll(new RegExp(r'.yaml$'), '')
+        .replaceAll('/', '.');
   }
 
   Future<dynamic> _loadYaml(File file) async {
@@ -159,11 +158,10 @@ class _Config implements Config {
     if (value is Map) return _replaceEnvInMap(value);
     var matcher = new RegExp(r'^env\(\s*(.*?)\s*(?:,\s*(.*?))?\s*\)$');
     if (value is! String || !matcher.hasMatch(value)) return value;
-    return (value as String).replaceFirstMapped(matcher, (m) {
-      var envName = m[1];
-      var defaultValue = m[2];
-      return _cast(env(envName, defaultValue));
-    });
+    final m = matcher.firstMatch(value);
+    var envName = m[1];
+    var defaultValue = m[2];
+    return _cast(env(envName, defaultValue));
   }
 
   Object _cast(String env) {
