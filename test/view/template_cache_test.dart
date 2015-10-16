@@ -106,6 +106,11 @@ class TemplateCacheTest implements TestCase {
   it_can_include_partials() async {
     _expectGenerates('partial', ['xyz'], variables: {#variable: 'y'});
   }
+
+  @test
+  it_can_inject_variables() async {
+    _expectGenerates('inject', ['getter']);
+  }
 }
 
 class ExampleTemplateCache extends TemplateCache {
@@ -187,6 +192,10 @@ class ExampleTemplateCache extends TemplateCache {
     },
     'partial': () async* {
       yield* $generate('variable');                                // @include ('variable')
+    },
+    'inject': () async* {
+      final ext = await $make(ExternalClass);                      // @inject (ExternalClass as ext)
+      yield '''${$esc(ext.getter)}''';                             // ${ext.getter}
     },
   };
 }

@@ -5,8 +5,9 @@ class TemplateBuilder implements Future<Template> {
   final String _name;
   final Map<Symbol, dynamic> _data = {};
   final List<String> _scripts = [];
+  final Container _container;
 
-  TemplateBuilder(String this._name);
+  TemplateBuilder(String this._name, this._container);
 
   TemplateBuilder withScript(String script) {
     _scripts.add(script);
@@ -39,7 +40,7 @@ class TemplateBuilder implements Future<Template> {
 
   Future<Template> _build() async {
     final Stream<String> stream = _attachScripts(
-        new TemplateCache.import(_data).$generate(_name));
+        new TemplateCache.import(_data, _container).$generate(_name));
     return new Template(stream, data: new Map.fromIterables(
         _data.keys.map(MirrorSystem.getName),
         _data.values

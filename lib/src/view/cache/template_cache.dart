@@ -6,6 +6,7 @@ typedef Stream<String> TemplateGenerator();
 abstract class TemplateCache {
   final Map<Symbol, dynamic> _variables;
   Map<String, TemplateGenerator> _blocks = {};
+  Container _container = new Container();
 
   TemplateCache(Map<Symbol, dynamic> this._variables);
 
@@ -14,8 +15,11 @@ abstract class TemplateCache {
   static ClassMirror get _templatesClass =>
       __templatesClass ??= plato.classMirror(#Templates);
 
-  factory TemplateCache.import(Map<Symbol, dynamic> variables) {
-    return plato.instantiate(_templatesClass, [variables]);
+  factory TemplateCache.import(
+      Map<Symbol, dynamic> variables,
+      Container container) {
+    return plato.instantiate(_templatesClass, [variables])
+    .._container = container;
   }
 
   Map<String, TemplateGenerator> get collection;
@@ -99,6 +103,10 @@ abstract class TemplateCache {
     _blocks.addAll(blocks);
     yield* $generate(parent);
     blocks.keys.forEach(_blocks.remove);
+  }
+
+  Future $make(_StaticAccessor type) async {
+    return _container.make(type._target.reflectedType);
   }
 }
 

@@ -67,6 +67,7 @@ class ChalkTemplateParser implements TemplateParser {
     _directiveMapper(_blockFormat),
     _ChalkPatterns.directive('include', arg: true):
     _directiveMapper(_partialFormat),
+    _ChalkPatterns.inject: _directiveMapper(_injectFormat),
     _ChalkPatterns.comment: _commentFormat,
   };
 
@@ -171,6 +172,12 @@ class ChalkTemplateParser implements TemplateParser {
     final line = $[0];
     return line.replaceFirst(comment, '');
   }
+
+  String _injectFormat(Match $) {
+    final target = $[1];
+    final variable = $[2];
+    return 'final $variable = await \$make($target);';
+  }
 }
 
 class _ChalkPatterns {
@@ -188,6 +195,7 @@ class _ChalkPatterns {
   static const instantiation = r'\bnew\s*([\w.]+)';
   static const string = r"""('{3}|"{3}|['"])((?:"""'$variable'r'|.)*?)\1';
   static const forLoop = r'@\s*for\s*\(\s*(\w+)\s*in\s*''$parensExpression\\)';
+  static const inject = r'@\s*inject\s*\(\s*(\w+)\s*as\s*(\w+)\s*\)';
   static const comment = r"""^(?:(\/\/.*)|(?:('''|"""r'''"""|'|").*?\2|.)+?($|\/\/.*))''';
 
   static directive(String directive, {bool arg: false}) {

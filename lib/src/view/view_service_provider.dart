@@ -12,6 +12,7 @@ class ViewServiceProvider extends ServiceProvider {
     final composer = new TemplateComposer(io);
     this.composer = composer;
     this.app = app;
+    _helperContainer = app;
     app.singleton(composer);
     app.resolve(_registerParsers);
   }

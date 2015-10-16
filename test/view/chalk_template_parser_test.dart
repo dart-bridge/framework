@@ -153,4 +153,13 @@ class ChalkTemplateParserTest implements TestCase {
       r"yield '''\$!!{variable}''';",
     ]);
   }
+
+  @test
+  it_has_a_directive_for_injecting_variables() async {
+    await _expectParsesTo([
+      r"@inject (SomeClass as some)",
+    ], [
+      r"final some = await $make(SomeClass);",
+    ]);
+  }
 }

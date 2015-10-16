@@ -1,5 +1,7 @@
 part of bridge.view;
 
+Container _helperContainer;
+
 TemplateBuilder template(String templateName,
     {String withScript,
     List<String> withScripts,
@@ -8,7 +10,7 @@ TemplateBuilder template(String templateName,
 
   if (withScript != null) scripts.add(withScript);
 
-  return new TemplateBuilder(templateName)
+  return new TemplateBuilder(templateName, _helperContainer)
       .withScripts(scripts)
       .withData(withData);
 }
