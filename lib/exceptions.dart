@@ -1,3 +1,3 @@
-library bridge.proxy.exceptions;
+library bridge.exceptions;
 
-export 'src/exceptions/library.dart';
+export 'exceptions_shared.dart';

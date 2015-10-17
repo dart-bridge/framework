@@ -1,17 +1,25 @@
 part of bridge.validation;
 
-abstract class InputValidator implements Input {
-  final Input _input;
+abstract class InputValidator<T> extends InputBase<T> {
+  Input<T> _input;
 
-  InputValidator(Input this._input);
-
-  Map<String, String> get filters;
-
-  Future validate() {
-    return new Validator().validateAll(_input, filters);
+  $inject(Validator validator, Input input) {
+    print('hej');
+    _input = input;
+    validator.validate(_input, guards);
   }
 
-  noSuchMethod(Invocation invocation) {
-    return reflect(_input).delegate(invocation);
-  }
+  Map<String, Guard> get guards;
+
+  @override
+  T get(String key, [defaultValue]) => _input.get(key, defaultValue);
+
+  @override
+  bool has(String key) => _input.has(key);
+
+  @override
+  Iterable<String> get keys => _input.keys;
+
+  @override
+  Map<String, T> toMap() => _input.toMap();
 }

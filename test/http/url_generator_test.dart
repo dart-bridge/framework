@@ -23,13 +23,13 @@ class UrlGeneratorTest implements TestCase {
 
   @test
   it_can_reference_the_url_of_a_route() {
-    router.get('pages/all', () => null, name: 'pages');
+    router.get('pages/all', () => null).named('pages');
     expect(generator.route('pages'), equals('/pages/all'));
   }
 
   @test
   it_can_provide_wildcards_to_insert_into_the_route() {
-    router.get('pages/:username/:id', () => null, name: 'page');
+    router.get('pages/:username/:id', () => null).named('page');
     expect(generator.route('page', {'username': 'emil', 'id': 1,}),
         equals('/pages/emil/1'));
   }

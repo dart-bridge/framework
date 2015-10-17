@@ -1,3 +1,7 @@
-library bridge.proxy.validation;
+library bridge.validation;
+import 'package:bridge/http.dart';
 
-export 'src/validation/library.dart';
+import 'validation_shared.dart';
+export 'validation_shared.dart';
+
+part 'src/validation/server/input_validator.dart';

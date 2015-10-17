@@ -1,6 +1,6 @@
-part of bridge.exceptions;
+part of bridge.exceptions.shared;
 
-class BaseException implements Exception, Serializable {
+class BaseException implements Exception {
   final String message;
 
   BaseException([String this.message]);
@@ -9,9 +9,5 @@ class BaseException implements Exception, Serializable {
     final String name = this.runtimeType.toString();
     if (message != null) return '$name: $message';
     return name;
-  }
-
-  Object serialize() {
-    return message;
   }
 }

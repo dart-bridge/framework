@@ -1,25 +1,33 @@
 part of bridge.cli;
 
 class BridgeCli extends Program {
-  Application app;
-  String _configPath;
-  List<String> _arguments;
+  final Application app = new Application();
+  final String _configPath;
+  final bool _setProduction;
 
-  BridgeCli(List<String> this._arguments, String this._configPath, {bool printToLog: false})
-  : super(io: printToLog ? new LogIoDevice() : null) {
-    app = new Application()
-      ..singleton(this)
-      ..singleton(this, as: Program);
+  BridgeCli(this._configPath, Shell shell, [this._setProduction])
+      : super(shell) {
+    app..singleton(this)..singleton(this, as: Program);
   }
 
   setUp() async {
     await app.setUp(_configPath);
-    this.setPrompter('<cyan>=</cyan> ');
+    if (_setProduction)
+      Environment.current = Environment.production;
+    InputDevice.prompt = new Output('<cyan>=</cyan> ');
   }
 
   tearDown() async {
     await unwatch();
     await app.tearDown();
+  }
+
+  @override
+  Future run({String bootArguments: '', stdinBroadcast, reloadPort}) {
+    return super.run(
+        bootArguments: bootArguments.replaceAll('--production', ''),
+        stdinBroadcast: stdinBroadcast,
+        reloadPort: reloadPort);
   }
 
   bool _watching = false;
@@ -33,17 +41,14 @@ class BridgeCli extends Program {
       return;
     }
     _watching = true;
-    var arguments = this._arguments.isEmpty
-    ? ['watch']
-    : ['watch,']
-      ..addAll(this._arguments.toList().where((s) => !new RegExp(r',?watch,?').hasMatch(s)));
-    _watchSubscription = Directory.current.watch(recursive: true).listen((event) async {
-      if (path.split(event.path).any((s) => s.startsWith('.'))) return;
-      if (_reloading || path.basename(event.path).startsWith('.')) return;
-      printAccomplishment('Reloading...');
-      _reloading = true;
-      await reload(arguments);
-    });
+    _watchSubscription =
+        Directory.current.watch(recursive: true).listen((event) async {
+          if (path.split(event.path).any((s) => s.startsWith('.'))) return;
+          if (_reloading || path.basename(event.path).startsWith('.')) return;
+          printAccomplishment('Reloading...');
+          _reloading = true;
+          await reload(['watch']);
+        });
     printInfo('Watching files...');
   }
 
@@ -54,5 +59,33 @@ class BridgeCli extends Program {
     if (!_reloading)
       printInfo('Stopped watching files');
     _watching = false;
+  }
+
+  @Command('Build the projects client side assets using [pub build]')
+  build() async {
+    final commands = [];
+    final build = new Directory(app.config('http.server.build_root', 'build'));
+    commands.add(_run('pub', ['build', '-o', build.path]));
+    await Future.wait(commands);
+  }
+
+  Future _run(String executable, List<String> arguments) async {
+    printWarning('Executing: $executable ${arguments.join(' ')}');
+
+    final process = await Process.start(executable, arguments);
+    process.stdout.map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
+    process.stderr.map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
+    final exitCode = await process.exitCode;
+
+    if (exitCode != 0)
+      printDanger('Exited with exit code $exitCode');
+    else
+      printAccomplishment('Finished: $executable ${arguments.join(' ')}');
+  }
+
+  String _colorizeOutput(String executable, String line) {
+    return '<gray>[<gray><cyan>$executable</cyan><gray>] ${line.trim()}</gray>';
   }
 }

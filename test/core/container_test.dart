@@ -110,6 +110,28 @@ class ContainerTest implements TestCase {
     autoResolvingFunction(lonely);
     expect(wasCalled, isTrue);
   }
+
+  @test
+  it_resolves_an_$inject_method_if_it_exists_before_injection() {
+    var wasCalled = false;
+    final func = (ClassWithInjectMethod dep) {
+      expect(dep.methodWasCalled, isTrue);
+      wasCalled = true;
+    };
+    container.resolve(func);
+    expect(wasCalled, isTrue);
+  }
+
+  @test
+  it_has_a_method_for_registering_decorators() {
+    expect(() => container.decorate(ClassWithMethod), throws);
+    expect(() => container.decorate(ClassWithMethod,
+        decorator: LonelyClass), throws);
+    container.decorate(ClassWithMethod, decorator: Decorator1);
+    container.decorate(ClassWithMethod, decorator: Decorator2);
+    final ClassWithMethod instance = container.make(ClassWithMethod);
+    expect(instance.method(), equals('21response'));
+  }
 }
 
 class LonelyClass {
@@ -135,4 +157,32 @@ class ClassDependingOnInterface {
 
 class ClassWithTypeArgument<T> {
 
+}
+
+class ClassWithInjectMethod {
+  bool methodWasCalled = false;
+
+  $inject(LonelyClass lonely) {
+    methodWasCalled = true;
+  }
+}
+
+class ClassWithMethod {
+  method() => 'response';
+}
+
+class Decorator1 implements ClassWithMethod {
+  final ClassWithMethod parent;
+
+  Decorator1(this.parent);
+
+  @override method() => '1${parent.method()}';
+}
+
+class Decorator2 implements ClassWithMethod {
+  final ClassWithMethod parent;
+
+  Decorator2(this.parent);
+
+  @override method() => '2${parent.method()}';
 }

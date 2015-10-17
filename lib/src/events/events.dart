@@ -1,31 +1,17 @@
 part of bridge.events;
 
-abstract class Event {
-  static final Map<String, StreamController> _domainControllers = {};
+class Events {
+  final Map<dynamic, StreamController> _controllers = {};
 
-  static Stream on(String key) {
-    var controller = new StreamController();
-    _domainControllers[key] = controller;
-    return controller.stream;
+  StreamController _controller(id) {
+    return _controllers[id] ??= new StreamController.broadcast();
   }
 
-  static void fire(String key, data) {
-    if (_domainControllers.containsKey(key))
-      _domainControllers[key].add(data);
-  }
-}
-
-abstract class Events {
-  final Map<String, StreamController> _instanceControllers = {};
-
-  Stream on(String key) {
-    var controller = new StreamController();
-    _instanceControllers[key] = controller;
-    return controller.stream;
+  void fire(Object event, {as}) {
+    return _controller(as ?? event.runtimeType).add(event);
   }
 
-  void fire(String key, data) {
-    if (_instanceControllers.containsKey(key))
-      _instanceControllers[key].add(data);
+  Stream on(eventId) {
+    return _controller(eventId).stream;
   }
 }

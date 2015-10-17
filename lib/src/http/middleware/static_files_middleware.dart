@@ -15,6 +15,10 @@ class StaticFilesMiddleware {
   }
 
   String _publicRoot() {
-    return _config('http.server.publicRoot', 'web');
+    final public = _config('http.server.public_root', 'web');
+    final build = _config('http.server.build_root', 'build');
+    return Environment.isProduction
+        ? path.join(build, public)
+        : public;
   }
 }

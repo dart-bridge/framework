@@ -1,22 +1,21 @@
 part of bridge.cli;
 
-/// Entry point for the server side application. The `arguments` and `message`
-/// arguments should be passed directly from the main function. The `configPath`
-/// is the relative path to the root config directory. This will be passed
-/// into the [Application] and bootstrap the entire system.
-bootstrap(List<String> args, {String configPath}) async {
-  var arguments = args.toList();
-  if (arguments.contains('--production')) {
-    _printToLog = true;
-    arguments.remove('--production');
+/// Entry point for the server side application. The `arguments` and
+/// `connector` arguments should be passed directly from the main function. The
+/// `configPath` is the relative path to the root config directory. This will be
+/// passed into the [Application] and bootstrap the entire system.
+bootstrap(List<String> arguments, connector, {String configPath}) async {
+  final List args = arguments?.toList() ?? [];
+  var shell = new Shell();
+  var production = false;
+  if (args.contains('--production')) {
+    production = true;
+    shell = new Shell(
+        new SilentInputDevice(),
+        new FileOutputDevice('storage/bridge.log'));
   }
-  await _makeProgram(configPath, arguments).run(arguments);
-}
-
-bool _printToLog = false;
-
-Program _makeProgram(configPath, arguments) {
-  return new BridgeCli(arguments, _chooseConfigPath(configPath), printToLog: _printToLog);
+  return cupid(new BridgeCli(_chooseConfigPath(configPath), shell, production),
+      args, connector);
 }
 
 String _chooseConfigPath(String configPath) {

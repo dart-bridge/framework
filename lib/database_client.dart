@@ -1,3 +1,3 @@
-library bridge.proxy.database.client;
+library bridge.database.client;
 
-//export 'src/database/shared.dart';
+export 'database_shared.dart';

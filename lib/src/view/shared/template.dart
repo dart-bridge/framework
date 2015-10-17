@@ -1,23 +1,13 @@
 part of bridge.view.shared;
 
-class Template implements Serializable {
-  final String parsed;
+class Template {
+  final Stream<String> content;
   final Map<String, dynamic> data;
 
-  Template({String this.parsed: '',
-           Map<String, dynamic> this.data: const {}});
+  Template(Stream<String> this.content,
+      {Map<String, dynamic> this.data: const {}});
 
-  factory Template.deserialize(Map<String, dynamic> serialized) {
-    return new Template(
-        parsed: serialized['parsed'],
-        data: serialized['data']
-    );
-  }
+  Future<String> get parsed => content.join('\n');
 
-  Map<String, dynamic> serialize() => {
-    'parsed': parsed,
-    'data': data,
-  };
-
-  String toString() => parsed;
+  Stream<List<int>> get encoded => content.map(UTF8.encode);
 }

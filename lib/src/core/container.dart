@@ -33,7 +33,7 @@ abstract class Container {
   ///
   ///     container.make(MyClass, injecting: {MyInterface: new MyImpl()});
   make(Type type,
-       {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
+      {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Resolves a method or a top-level function be injecting its
   /// arguments and their dependencies recursively
@@ -48,7 +48,7 @@ abstract class Container {
   /// Optionally provide temporary singletons, to potentially be injected
   /// into the invocation.
   resolve(Function function,
-          {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
+      {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Resolves a named method on an instance. Use only when the type is
   /// not known or when expects a subtype or an implementation.
@@ -59,7 +59,7 @@ abstract class Container {
   /// Optionally provide temporary singletons, to potentially be injected
   /// into the invocation.
   resolveMethod(Object object, String methodName,
-                {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
+      {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting});
 
   /// Checks if an object has a method.
   ///
@@ -92,13 +92,34 @@ abstract class Container {
   ///     Function presolved = container.presolve(functionWillBeInjected);
   ///     presolved(...);
   Function presolve(Function function,
-                    {Map<String, dynamic> namedParameters,
-                    Map<Type, dynamic> injecting});
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting});
+
+  /// Registers a decorator on a target type, so that every time that type
+  /// is injected, it will be decorated with the decorator.
+  ///
+  /// That means a class can be decorated with multiple decorators.
+  ///
+  ///     class Parent {}
+  ///
+  ///     class Decorator implements Parent {
+  ///       final Parent parent;
+  ///
+  ///       Decorator(this.parent);
+  ///     }
+  ///
+  ///     container.decorate(Parent, decorator: Decorator);
+  ///     container.make(Parent); // Instance of 'Decorator'
+  void decorate(Type target,
+      {Type decorator,
+      Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting});
 }
 
 class _Container implements Container {
-  Map<Type, dynamic> _singletons = {};
-  Map<Type, Type> _bindings = {};
+  final Map<Type, dynamic> _singletons = {};
+  final Map<Type, Type> _bindings = {};
+  final Map<Type, List<Function>> _decorators = {};
 
   void bind(Type abstraction, Type implementation) {
     _bindings[abstraction] = implementation;
@@ -111,29 +132,34 @@ class _Container implements Container {
   }
 
   make(Type type,
-       {Map<String, dynamic> namedParameters,
-       Map<Type, dynamic> injecting}) {
-    if (_singletons.containsKey(type)) return _singletons[type];
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) {
+    final decorators = _decorators[type] ?? [];
+
+    if (_singletons.containsKey(type))
+      return _decorate(_singletons[type], decorators);
 
     if (_bindings.containsKey(type)) type = _bindings[type];
 
-    return _make(type, namedParameters, injecting);
+    return _decorate(_make(type, namedParameters, injecting), decorators);
   }
 
   resolve(Function function,
-          {Map<String, dynamic> namedParameters,
-          Map<Type, dynamic> injecting}) {
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) {
     ClosureMirror closure = reflect(function);
 
     List positional = _getPositionalParameters(closure.function, injecting);
 
-    return closure.apply(
-        positional, _convertStringKeysToSymbols(namedParameters)).reflectee;
+    return closure
+        .apply(
+        positional, _convertStringKeysToSymbols(namedParameters))
+        .reflectee;
   }
 
   _make(Type type,
-        Map<String, dynamic> namedParameters,
-        Map<Type, dynamic> injecting) {
+      Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting) {
     try {
       var namedArguments = _convertStringKeysToSymbols(namedParameters);
 
@@ -156,11 +182,18 @@ class _Container implements Container {
         constructorSymbol = const Symbol('');
       }
 
-      return (classMirror.newInstance(
+      final instance = (classMirror.newInstance(
           constructorSymbol,
           positionalArguments,
           namedArguments)
       ).reflectee;
+
+      if (canResolveMethod(instance, r'$inject'))
+        resolveMethod(instance, r'$inject',
+            namedParameters: namedParameters,
+            injecting: injecting);
+
+      return instance;
     } catch (error) {
       throw new ContainerException(type, error);
     }
@@ -173,15 +206,16 @@ class _Container implements Container {
         map.keys.map((String key) => new Symbol(key)), map.values);
   }
 
-  List _getPositionalParameters(
-      MethodMirror method, Map<Type, dynamic> injecting) {
+  List _getPositionalParameters(MethodMirror method,
+      Map<Type, dynamic> injecting) {
     List positionalParameters = [];
 
     if (method == null) return positionalParameters;
 
     method.parameters.forEach((ParameterMirror parameter) {
       if (!parameter.isNamed) {
-        if (!parameter.type.hasReflectedType) throw new InvalidArgumentException(
+        if (!parameter.type
+            .hasReflectedType) throw new InvalidArgumentException(
             'Each parameter must be typed in order to resolve the method!');
 
         var type = parameter.type.reflectedType;
@@ -198,38 +232,66 @@ class _Container implements Container {
   }
 
   resolveMethod(Object object, String methodName,
-                {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting}) {
+      {Map<String, dynamic> namedParameters, Map<Type, dynamic> injecting}) {
     var symbol = new Symbol(methodName);
 
     var instance = reflect(object);
 
     var objectClass = instance.type;
 
-    var method = objectClass.declarations[symbol];
+    var method = objectClass.instanceMembers[symbol];
 
     var args = _getPositionalParameters(method, injecting);
 
-    return instance.invoke(
-        symbol, args, _convertStringKeysToSymbols(namedParameters)).reflectee;
+    return instance
+        .invoke(
+        symbol, args, _convertStringKeysToSymbols(namedParameters))
+        .reflectee;
   }
 
   bool canResolveMethod(Object object, String method) {
-    return reflect(object).type.declarations.containsKey(new Symbol(method));
+    return reflect(object).type.instanceMembers.containsKey(new Symbol(method));
   }
 
   Function presolve(Function function,
-                    {Map<String, dynamic> namedParameters,
-                    Map<Type, dynamic> injecting}) {
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) {
     return ([arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]) {
-      var arguments = [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]
-      .where((a) => a != null);
+      var arguments = [
+        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]
+          .where((a) => a != null);
 
       var argumentsWithTypes = ((injecting != null ? injecting : {}) as Map)
         ..addAll(new Map.fromIterables(
-          arguments.map((a) => a.runtimeType),
-          arguments));
+            arguments.map((a) => a.runtimeType),
+            arguments));
 
-      return resolve(function, injecting: argumentsWithTypes, namedParameters: namedParameters);
+      return resolve(function, injecting: argumentsWithTypes,
+          namedParameters: namedParameters);
     };
+  }
+
+  void decorate(Type target,
+      {Type decorator,
+      Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) {
+    if (decorator == null)
+      throw new InvalidArgumentException('A decorator must be provided.');
+    if (!reflectType(decorator).isAssignableTo(reflectType(target)))
+      throw new InvalidArgumentException(
+          'The decorator must implement [$target].');
+    _decorators[target] ??= [];
+    _decorators[target].add((Object instance) {
+      return make(decorator, injecting: new Map.from(injecting ?? {})..addAll({
+        target: instance
+      }), namedParameters: namedParameters);
+    });
+  }
+
+  _decorate(Object instance, List<Function> decorators) {
+    var _instance = instance;
+    for (final decoratorFunction in decorators)
+      _instance = decoratorFunction(_instance);
+    return _instance;
   }
 }

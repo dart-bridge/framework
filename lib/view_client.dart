@@ -1,3 +1,3 @@
-library bridge.proxy.view.client;
+library bridge.view.client;
 
-export 'src/view/shared/library.dart';
+export 'view_shared.dart';

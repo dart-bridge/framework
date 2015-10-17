@@ -1,3 +1,14 @@
-library bridge.proxy.cli;
+library bridge.cli;
 
-export 'src/cli/library.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:bridge/core.dart';
+import 'package:cupid/cupid.dart';
+import 'package:path/path.dart' as path;
+
+export 'package:cupid/cupid.dart';
+
+part 'src/cli/bootstrap.dart';
+part 'src/cli/program.dart';

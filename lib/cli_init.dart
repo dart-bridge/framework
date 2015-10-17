@@ -1,3 +1,3 @@
 import 'cli.dart';
 
-main(a) => bootstrap(a);
+main(_, __) => bootstrap(_, __);

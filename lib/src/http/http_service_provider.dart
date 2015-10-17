@@ -2,12 +2,12 @@ part of bridge.http;
 
 UrlGenerator _urlGenerator;
 
-class HttpServiceProvider implements ServiceProvider {
+class HttpServiceProvider extends ServiceProvider {
   Server server;
   Router router;
   Program program;
 
-  setUp(Container container,
+  setUp(Application app,
         Server server,
         Router router,
         _ResponseMapper responseMapper,
@@ -15,12 +15,14 @@ class HttpServiceProvider implements ServiceProvider {
     this.server = server;
     this.router = router;
 
+    _helperConfig = app.config;
+
     server.attachRouter(router);
 
-    container.singleton(responseMapper);
-    container.singleton(server, as: Server);
-    container.singleton(router, as: Router);
-    container.singleton(manager);
+    app.singleton(responseMapper);
+    app.singleton(server, as: Server);
+    app.singleton(router, as: Router);
+    app.singleton(manager);
   }
 
   load(Program program,
@@ -31,17 +33,17 @@ class HttpServiceProvider implements ServiceProvider {
        UrlGenerator urlGenerator) {
     _urlGenerator = urlGenerator;
 
-    server.addMiddleware(sessionsMiddleware);
+    server.addMiddleware(sessionsMiddleware, highPriority: true);
     server.addMiddleware(staticFilesMiddleware);
     server.addMiddleware(inputMiddleware);
     server.addMiddleware(csrfMiddleware);
     server.onError = (e, s) {
       print('');
-      program.printInfo(new trace.Chain.forTrace(s).terse
-      .toString().split('\n').take(5).toList().reversed.join('\n'));
+      program.printDanger(new trace.Chain.forTrace(s).terse
+      .toString().split('\n').toList().reversed.join('\n'));
       print('');
-      program.printWarning('<underline>Error in HTTP layer:</underline>');
-      program.printInfo(e);
+      program.printWarning('<underline>Uncaught HTTP exception</underline>');
+      program.printDanger(e);
       print('');
     };
 

@@ -1,21 +1,35 @@
 part of bridge.tether;
 
-Container _helperContainer;
-
-class TetherServiceProvider implements ServiceProvider {
+@DependsOn(http.HttpServiceProvider)
+class TetherServiceProvider extends ServiceProvider {
   TetherManager manager = new TetherManager();
+  Application app;
 
-  setUp(Application app, Container helperContainer) async {
-    _helperContainer = helperContainer;
+  setUp(Application app) async {
+    this.app = app;
     app.singleton(manager, as: TetherManager);
   }
 
-  load(http.Server server) {
-    manager.registerHandler(new DefaultStructures());
+  load(http.Server server, http.SessionManager sessions) {
     server.addMiddleware(shelf.createMiddleware(requestHandler: _handle), highPriority: true);
+    transportSessionReAttacher = _createReAttacher(sessions);
+  }
+
+  SessionReAttacher _createReAttacher(http.SessionManager sessions) {
+    return (List serialized) {
+      final String id = serialized[0];
+      final Map<String, dynamic> variables = serialized[1];
+      return sessions.session(id)..variables.addAll(variables);
+    };
   }
 
   shelf.Response _handle(shelf.Request request) {
+    Future _attachSocket(http_parser.CompatibleWebSocket socket) async {
+      Tether tether = await ServerTetherMaker
+          .makeTether(app, socket, request.context['session']);
+      manager.manage(tether);
+    }
+
     shelf.Handler handler = ws.webSocketHandler(_attachSocket);
     try {
       // Attempt to upgrade WebSocket, hijacking the [shelf.Request] and therefore
@@ -30,10 +44,5 @@ class TetherServiceProvider implements ServiceProvider {
       // Upgrade failed, so proceed through the [shelf.Pipeline].
       return null;
     }
-  }
-
-  Future _attachSocket(http_parser.CompatibleWebSocket socket) async {
-    Tether tether = await ServerTetherMaker.makeTether(socket, Message.generateToken());
-    manager.manage(tether);
   }
 }

@@ -1,3 +1,3 @@
-library bridge.proxy.transport;
+library bridge.transport;
 
-export 'src/transport/library.dart';
+export 'transport_shared.dart';

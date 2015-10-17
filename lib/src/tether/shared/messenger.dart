@@ -9,20 +9,18 @@ abstract class Messenger {
   final Future onConnectionEnd;
   final Future onConnectionOpen;
 
-  factory Messenger(SocketInterface socket, Serializer serializer) =>
-  new _Messenger(socket, serializer);
+  factory Messenger(SocketInterface socket) => new _Messenger(socket);
 
   Future<Message> send(Message message);
 
   Stream<Message> listen(String key);
 
-  void registerStructure(String id, Type serializable, Serializable factory(data));
+  void removeListener(String key);
 }
 
 class _Messenger implements Messenger {
   SocketInterface _socket;
   Map<String, StreamController<Message>> _listeners = {};
-  Serializer _serializer;
 
   bool get socketIsOpen => _socket.isOpen;
 
@@ -30,7 +28,7 @@ class _Messenger implements Messenger {
 
   Future get onConnectionOpen => _socket.onOpen;
 
-  _Messenger(SocketInterface this._socket, Serializer this._serializer) {
+  _Messenger(SocketInterface this._socket) {
     _listenOnSocket();
   }
 
@@ -40,36 +38,32 @@ class _Messenger implements Messenger {
 
   void _onSocketData(data) {
     Message message = new Message.deserialize(data);
-    if (_listenerExistsForKey(message.key))
-      _sendMessageToListeners(message);
+    _sendMessageToListeners(message);
   }
 
   bool _listenerExistsForKey(String key) {
     return _listeners.containsKey(key);
   }
 
+  StreamController _listenersOf(String key) {
+    if (!_listenerExistsForKey(key))
+      _registerListener(key);
+    return _listeners[key];
+  }
+
   void _sendMessageToListeners(Message message) {
-    _listeners[message.key].add(message);
+    _listenersOf(message.key).add(message);
   }
 
   Stream<Message> listen(String key) {
-    _ensureUniqueListener(key);
-    return _registerListener(key).stream.asyncMap(_deserializeData);
+    return _listenersOf(key).stream;
   }
 
   StreamController<Message> _registerListener(String key) {
     return _listeners[key] = new StreamController<Message>();
   }
 
-  void _ensureUniqueListener(String key) {
-    if (_listenerExistsForKey(key))
-      throw new SocketOccupiedException(
-          'Socket [$key] has already been listened to'
-      );
-  }
-
   Future<Message> send(Message message) async {
-    message.data = _serializer.serialize(message.data);
     _socket.send(message.serialized);
     return _returnMessage(message);
   }
@@ -84,12 +78,7 @@ class _Messenger implements Messenger {
     _listeners.remove(key);
   }
 
-  void registerStructure(String id, Type serializable, Serializable factory(data)) {
-    _serializer.registerStructure(id, serializable, factory);
-  }
-
-  Message _deserializeData(Message message) {
-    message.data = _serializer.deserialize(message.data);
-    return message;
+  void removeListener(String key) {
+    _listeners[key] = null;
   }
 }
