@@ -10,10 +10,14 @@ class DatabaseServiceProvider extends ServiceProvider {
   Future setUp(Application app, Container container) async {
     _app = app;
     var driver = _chooseDriver(app);
-    if (driver is SqlDriver)
+    if (driver is SqlDriver) {
       driver = container.make(EventEmittingSqlDriver, injecting: {
         SqlDriver: driver
       });
+      app.singleton(driver, as: SqlDriver);
+    }
+    app.singleton(driver);
+    app.singleton(driver, as: Driver);
     _gateway = new Gateway(driver);
     app.singleton(_gateway);
   }
