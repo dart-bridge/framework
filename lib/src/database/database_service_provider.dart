@@ -1,11 +1,10 @@
 part of bridge.database;
 
-Gateway _gateway;
-
 @DependsOn(EventsServiceProvider, strict: false)
 class DatabaseServiceProvider extends ServiceProvider {
   Application _app;
   Program _program;
+  Gateway _gateway;
 
   Future setUp(Application app, Container container) async {
     _app = app;
@@ -18,8 +17,7 @@ class DatabaseServiceProvider extends ServiceProvider {
     }
     app.singleton(driver);
     app.singleton(driver, as: Driver);
-    _gateway = new Gateway(driver);
-    app.singleton(_gateway);
+    app.singleton(_gateway = new Gateway(driver));
   }
 
   Future load(Program program) async {

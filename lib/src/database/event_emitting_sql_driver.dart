@@ -15,6 +15,8 @@ class EventEmittingSqlDriver extends SqlDriver {
 
   String get autoIncrementKeyword => _driver.autoIncrementKeyword;
 
+  String insertedIdQuery(String table) => _driver.insertedIdQuery(table);
+
   Future connect() => _driver.connect();
 
   Future disconnect() => _driver.disconnect();
