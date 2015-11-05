@@ -1,21 +1,23 @@
 part of bridge.database;
 
-Gateway _gateway;
-
 @DependsOn(EventsServiceProvider, strict: false)
 class DatabaseServiceProvider extends ServiceProvider {
   Application _app;
   Program _program;
+  Gateway _gateway;
 
   Future setUp(Application app, Container container) async {
     _app = app;
     var driver = _chooseDriver(app);
-    if (driver is SqlDriver)
+    if (driver is SqlDriver) {
       driver = container.make(EventEmittingSqlDriver, injecting: {
         SqlDriver: driver
       });
-    _gateway = new Gateway(driver);
-    app.singleton(_gateway);
+      app.singleton(driver, as: SqlDriver);
+    }
+    app.singleton(driver);
+    app.singleton(driver, as: Driver);
+    app.singleton(_gateway = new Gateway(driver));
   }
 
   Future load(Program program) async {

@@ -34,7 +34,8 @@ class ViewServiceProvider extends ServiceProvider {
         try {
           await composer.cache(source, file.openRead()
               .map(UTF8.decode)
-              .expand((String multiLine) => multiLine.split('\n')));
+              .expand((String multiLine) => multiLine
+              .split(new RegExp(r'[\r\n]+'))));
         } on ParserException catch(e) {
           print('<red>$e</red>');
         }
