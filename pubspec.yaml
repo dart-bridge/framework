@@ -1,7 +1,7 @@
 name: bridge
 description: Extensible end-to-end framework
 author: Emil Persson <emil.n.persson@gmail.com>
-version: 1.0.0-beta.1
+version: 1.0.0-beta.2
 homepage: http://dart-bridge.io
 environment:
   sdk: ">=1.12.0 <2.0.0"
@@ -18,7 +18,7 @@ dependencies:
   plato: '>=0.2.0 <1.0.0'
   path: '^1.3.5'
   http_server: '^0.9.5+1'
-  trestle: '>=0.5.5 <1.0.0'
+  trestle: '^0.6.0'
   async: '^1.3.0'
 dev_dependencies:
   test: any
