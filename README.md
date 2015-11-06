@@ -1,4 +1,4 @@
-[![Bridge](http://dart-bridge.github.io/images/bridge-cover.svg)](http://dart-bridge.io)
+[![Bridge](http://dart-bridge.io/bridge-cover.svg)](http://dart-bridge.io)
 
 [![Build Status](https://img.shields.io/travis/dart-bridge/framework.svg)](https://travis-ci.org/dart-bridge/framework)
 [![Coverage Status](https://img.shields.io/coveralls/dart-bridge/framework.svg)](https://coveralls.io/r/dart-bridge/framework)
