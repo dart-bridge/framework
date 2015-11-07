@@ -22,6 +22,7 @@ part 'src/view/cache/template_cache.dart';
 part 'src/view/chalk/chalk_template_parser.dart';
 part 'src/view/common/template_parser.dart';
 part 'src/view/helpers.dart';
+part 'src/view/view_config.dart';
 part 'src/view/template_builder.dart';
 part 'src/view/template_cache_io.dart';
 part 'src/view/template_composer.dart';

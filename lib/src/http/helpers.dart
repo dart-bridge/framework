@@ -12,14 +12,14 @@ String route(String name, [Map<String, dynamic> wildcards]) {
   return _urlGenerator.route(name, wildcards);
 }
 
-Config _helperConfig;
+HttpConfig _helperConfig;
 
 Future<shelf.Response> public(String filepath) async {
   final dir = Environment.isDevelopment
-      ? new Directory(_helperConfig('http.server.public_root'))
+      ? new Directory(_helperConfig.publicRoot)
       : new Directory(path.join(
-      _helperConfig('http.server.build_root'),
-      _helperConfig('http.server.public_root')));
+      _helperConfig.buildRoot,
+      _helperConfig.publicRoot));
   final file = new File(path.join(dir.path, filepath));
   if (!await file.exists())
     throw new HttpNotFoundException.file(file);

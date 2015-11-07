@@ -11,11 +11,12 @@ class HttpServiceProvider extends ServiceProvider {
         Server server,
         Router router,
         _ResponseMapper responseMapper,
-        SessionManager manager) {
+        SessionManager manager,
+        HttpConfig config) {
     this.server = server;
     this.router = router;
 
-    _helperConfig = app.config;
+    _helperConfig = config;
 
     server.attachRouter(router);
 

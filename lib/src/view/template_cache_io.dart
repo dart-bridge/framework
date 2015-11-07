@@ -1,7 +1,7 @@
 part of bridge.view;
 
 abstract class TemplateCacheIo {
-  factory TemplateCacheIo(Config config)
+  factory TemplateCacheIo(ViewConfig config)
   => new _TemplateCacheIo(config);
 
   Future put(String name, Stream<String> lines);
@@ -18,14 +18,10 @@ class _TemplateCacheIo implements TemplateCacheIo {
   final Directory _templateCacheDirectory;
   final Directory _templateRoot;
 
-  _TemplateCacheIo(Config config)
-      :
-        _templateRoot = new Directory(config(
-            'view.template.root', 'lib/templates')),
-        _templateCacheFile = new File(config(
-            'view.templates.cache', '.templates.dart')),
-        _templateCacheDirectory = new Directory(config(
-            'view.templates.cache_directory', '.templates'));
+  _TemplateCacheIo(ViewConfig config)
+      : _templateRoot = new Directory(config.templatesRoot),
+        _templateCacheFile = new File(config.templatesCache),
+        _templateCacheDirectory = new Directory(config.templatesCacheDirectory);
 
   File _cacheFile(String name) {
     return new File(path.join(_templateCacheDirectory.path, name));

@@ -16,3 +16,4 @@ export 'package:trestle/trestle.dart' hide Repository;
 part 'src/database/database_service_provider.dart';
 part 'src/database/event_emitting_sql_driver.dart';
 part 'src/database/repository.dart';
+part 'src/database/database_config.dart';

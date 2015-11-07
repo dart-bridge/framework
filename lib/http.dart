@@ -41,5 +41,6 @@ part 'src/http/router/route_group.dart';
 part 'src/http/router/router.dart';
 part 'src/http/router/router_attachments.dart';
 part 'src/http/server.dart';
+part 'src/http/http_config.dart';
 part 'src/http/uploaded_file.dart';
 part 'src/http/url_generator.dart';

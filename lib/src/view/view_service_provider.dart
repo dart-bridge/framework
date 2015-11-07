@@ -21,10 +21,9 @@ class ViewServiceProvider extends ServiceProvider {
     composer.registerParser(app.presolve((ChalkTemplateParser p) => p));
   }
 
-  Future load(Program program, Server server) async {
+  Future load(Program program, Server server, ViewConfig config) async {
     this.program = program;
-    final root = new Directory(
-        app.config('view.templates.root', 'lib/templates'));
+    final root = new Directory(config.templatesRoot);
 
     await Future.wait(await root.list(recursive: true).map((File file) async {
       if (!path.basename(file.path).startsWith('.')

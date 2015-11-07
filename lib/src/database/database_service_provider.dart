@@ -2,13 +2,13 @@ part of bridge.database;
 
 @DependsOn(EventsServiceProvider, strict: false)
 class DatabaseServiceProvider extends ServiceProvider {
-  Application _app;
   Program _program;
   Gateway _gateway;
+  DatabaseConfig _config;
 
   Future setUp(Application app, Container container) async {
-    _app = app;
-    var driver = _chooseDriver(app);
+    _config = new DatabaseConfig(app.config);
+    var driver = _chooseDriver(_config);
     if (driver is SqlDriver) {
       driver = container.make(EventEmittingSqlDriver, injecting: {
         SqlDriver: driver
@@ -32,37 +32,33 @@ class DatabaseServiceProvider extends ServiceProvider {
     await _gateway.disconnect();
   }
 
-  Driver _chooseDriver(Application app) {
-    switch (app.config('database.driver', 'in_memory')) {
+  Driver _chooseDriver(DatabaseConfig config) {
+    switch (config.driver) {
       case 'in_memory':
         return new InMemoryDriver();
       case 'my_sql':
-        final conf = 'database.drivers.my_sql';
         return new MySqlDriver(
-            host: app.config('$conf.host', 'localhost'),
-            port: app.config('$conf.port', 3306),
-            username: app.config('$conf.username', 'root'),
-            password: app.config('$conf.password'),
-            database: app.config('$conf.database', 'database'),
-            max: app.config('$conf.max', 5),
-            maxPacketSize: app.config(
-                '$conf.max_packet_size', 16 * 1024 * 1024),
-            ssl: app.config('$conf.ssl', false));
+            host: config.mySqlHost,
+            port: config.mySqlPort,
+            username: config.mySqlUsername,
+            password: config.mySqlPassword,
+            database: config.mySqlDatabase,
+            max: config.mySqlMax,
+            maxPacketSize: config.mySqlMaxPacketSize,
+            ssl: config.mySqlSsl);
       case 'sqlite':
-        final conf = 'database.drivers.sqlite.file';
-        return new SqliteDriver(app.config(conf, ':memory:'));
+        return new SqliteDriver(config.sqliteFile);
       case 'postgres':
-        final conf = 'database.drivers.postgres';
         return new PostgresqlDriver(
-            host: app.config('$conf.host', 'localhost'),
-            port: app.config('$conf.port', 5432),
-            username: app.config('$conf.username', 'root'),
-            password: app.config('$conf.password', 'password'),
-            database: app.config('$conf.database', 'database'),
-            ssl: app.config('$conf.ssl', false));
+            host: config.postgresHost,
+            port: config.postgresPort,
+            username: config.postgresUsername,
+            password: config.postgresPassword,
+            database: config.postgresDatabase,
+            ssl: config.postgresSsl);
       default:
         throw new ConfigException(
-            '${app.config('database.driver')} '
+            '${config.driver} '
                 'is not an available database driver');
     }
   }
@@ -70,7 +66,7 @@ class DatabaseServiceProvider extends ServiceProvider {
   Set<Type> _migrations;
 
   Set<Type> _getMigrations() {
-    final migrationStrings = _app.config('database.migrations', []);
+    final migrationStrings = _config.migrations;
     if (migrationStrings is! List)
       throw new ConfigException('[database.migrations] must be a list');
     return migrationStrings
