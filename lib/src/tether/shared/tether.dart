@@ -111,7 +111,11 @@ abstract class TetherBase implements Tether {
   }
 
   StreamSubscription listen(String key, Function listener) {
-    return _messenger.listen(key).listen((m) => _respondToMessage(m, listener));
+    return new _TetherStreamSubscription(
+        _messenger,
+        key,
+        _respondToMessage,
+        listener);
   }
 
   void listenOnce(String key, Function listener) {
@@ -154,5 +158,67 @@ abstract class TetherBase implements Tether {
 
   void modulateBeforeSerialization(modulation(value)) {
     _returnValueModulators.add(modulation);
+  }
+}
+
+typedef _MessageResponder(Message message, Function listener);
+
+class _TetherStreamSubscription implements StreamSubscription {
+  final Messenger _messenger;
+  final String _key;
+  final _MessageResponder _responder;
+  Function _listener;
+  bool _isPaused = false;
+
+  _TetherStreamSubscription(
+      this._messenger,
+      this._key,
+      this._responder,
+      this._listener) {
+    _messenger.listen(_key).listen(_handle);
+  }
+
+  void _handle(Message message) {
+    if (isPaused) return;
+    _responder(message, _listener);
+  }
+
+  @override
+  Future asFuture([futureValue]) {
+    final completer = new Completer();
+    onDone(() => completer.complete(futureValue));
+    onError(completer.completeError);
+    return completer.future;
+  }
+
+  @override
+  Future cancel() async {
+    _messenger.removeListener(_key);
+  }
+
+  @override
+  bool get isPaused => _isPaused;
+
+  @override
+  void onData(void handleData(data)) {
+    _listener = handleData;
+  }
+
+  @override
+  void onDone(void handleDone()) {
+    _messenger.onConnectionEnd.then((_) => handleDone());
+  }
+
+  @override
+  void onError(Function handleError) {}
+
+  @override
+  void pause([Future resumeSignal]) {
+    _isPaused = true;
+  }
+
+  @override
+  void resume() {
+    _isPaused = false;
   }
 }
