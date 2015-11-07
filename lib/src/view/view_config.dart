@@ -5,10 +5,10 @@ class ViewConfig {
 
   ViewConfig(this._config);
 
-  const _templates = 'view.templates';
-  const _root = 'root';
-  const _cache = 'cache';
-  const _cacheDirectory = 'cache_directory';
+  static const _templates = 'view.templates';
+  static const _root = 'root';
+  static const _cache = 'cache';
+  static const _cacheDirectory = 'cache_directory';
 
   Map<String, String> get templates => _config(_templates, {
     _root: templatesRoot,
