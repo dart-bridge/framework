@@ -102,6 +102,28 @@ class RequestTest implements TestCase {
   }
 
   @test
+  it_injects_a_hidden_input_in_html_forms_with_http_method() async {
+    server.addMiddleware(new FormMethodMiddleware());
+    router.get('/', () => ""
+        "<form method='patch'></form>"
+        "<form method='delete'></form>"
+        "<form method='UPDATE'></form>"
+        "<form method='put'></form>");
+    var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
+    shelf.Response response = await server.handle(request);
+    expect(await response.readAsString(),
+        equals(""
+            "<form method='POST'>"
+            "<input type='hidden' name='_method' value='PATCH'></form>"
+            "<form method='POST'>"
+            "<input type='hidden' name='_method' value='DELETE'></form>"
+            "<form method='POST'>"
+            "<input type='hidden' name='_method' value='UPDATE'></form>"
+            "<form method='POST'>"
+            "<input type='hidden' name='_method' value='PUT'></form>"));
+  }
+
+  @test
   it_can_add_specific_middleware_for_a_route() async {
     router.post('/', () => 'response')
         .withMiddleware(CsrfMiddleware);

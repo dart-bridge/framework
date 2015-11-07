@@ -35,6 +35,7 @@ part 'src/http/middleware.dart';
 part 'src/http/middleware/csrf_middleware.dart';
 part 'src/http/middleware/input_middleware.dart';
 part 'src/http/middleware/static_files_middleware.dart';
+part 'src/http/middleware/form_method_middleware.dart';
 part 'src/http/router/route.dart';
 part 'src/http/router/route_group.dart';
 part 'src/http/router/router.dart';

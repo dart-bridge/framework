@@ -30,12 +30,14 @@ class HttpServiceProvider extends ServiceProvider {
        CsrfMiddleware csrfMiddleware,
        StaticFilesMiddleware staticFilesMiddleware,
        InputMiddleware inputMiddleware,
+       FormMethodMiddleware formMethodMiddleware,
        UrlGenerator urlGenerator) {
     _urlGenerator = urlGenerator;
 
     server.addMiddleware(sessionsMiddleware, highPriority: true);
     server.addMiddleware(staticFilesMiddleware);
     server.addMiddleware(inputMiddleware);
+    server.addMiddleware(formMethodMiddleware);
     server.addMiddleware(csrfMiddleware);
     server.onError = (e, s) {
       print('');
