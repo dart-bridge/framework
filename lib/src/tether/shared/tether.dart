@@ -49,7 +49,7 @@ abstract class Tether {
   /// [send] method responsible of the request on the other side.
   ///
   /// Therefore this can not be handled as a stream.
-  void listen(String key, Function listener);
+  StreamSubscription listen(String key, Function listener);
 
   void listenOnce(String key, Function listener);
 
@@ -110,8 +110,8 @@ abstract class TetherBase implements Tether {
     return _messenger.send(message);
   }
 
-  void listen(String key, Function listener) {
-    _messenger.listen(key).listen((m) => _respondToMessage(m, listener));
+  StreamSubscription listen(String key, Function listener) {
+    return _messenger.listen(key).listen((m) => _respondToMessage(m, listener));
   }
 
   void listenOnce(String key, Function listener) {

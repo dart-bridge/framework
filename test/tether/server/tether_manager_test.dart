@@ -69,7 +69,7 @@ class MockTether implements Tether {
 
   Future send(String key, [data]) async => didSend = data;
 
-  void listen(String key, Future listener(data)) => null;
+  StreamSubscription listen(String key, Future listener(data)) => null;
 
   void initiatePersistentConnection() => null;
 

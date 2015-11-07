@@ -90,10 +90,11 @@ class PendingTether extends _ServerTether implements Tether {
     throw new StateError('This Tether is not yet connected!');
   }
 
-  void listen(String key, Function listener) {
+  StreamSubscription listen(String key, Function listener) {
     _pendingListeners.add({
       'key': key, 'data': listener
     });
+    return null;
   }
 
   void listenOnce(String key, Function listener) {
