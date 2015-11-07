@@ -161,10 +161,11 @@ class _Config implements Config {
     final m = matcher.firstMatch(value);
     var envName = m[1];
     var defaultValue = m[2];
-    return _cast(env(envName, defaultValue));
+    return _cast(env(envName, defaultValue) ?? 'null');
   }
 
   Object _cast(String env) {
+    if (env == 'null') return null;
     if (env == 'true') return true;
     if (env == 'false') return false;
     if (new RegExp(r'^\d+|\d*\.\d+$').hasMatch(env)) return num.parse(env);
