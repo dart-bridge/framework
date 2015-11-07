@@ -72,13 +72,9 @@ class _Messenger implements Messenger {
     return listen(message.returnToken).first;
   }
 
-  void close(String key) {
+  void removeListener(String key) {
     if (!_listenerExistsForKey(key)) return;
     _listeners[key].close();
     _listeners.remove(key);
-  }
-
-  void removeListener(String key) {
-    _listeners[key] = null;
   }
 }
