@@ -40,15 +40,16 @@ class BridgeCli extends Program {
       printWarning('Already watching!');
       return;
     }
+
     _watching = true;
-    _watchSubscription =
-        Directory.current.watch(recursive: true).listen((event) async {
-          if (path.split(event.path).any((s) => s.startsWith('.'))) return;
-          if (_reloading || path.basename(event.path).startsWith('.')) return;
-          printAccomplishment('Reloading...');
-          _reloading = true;
-          await reload(['watch']);
-        });
+    new Watcher(Directory.current.path).events.listen((WatchEvent event) async {
+      if (path.split(event.path).any((s) => s.startsWith('.'))) return;
+      if (_reloading || path.basename(event.path).startsWith('.')) return;
+      printAccomplishment('Reloading...');
+      _reloading = true;
+      await reload(['watch']);
+    });
+
     printInfo('Watching files...');
   }
 
