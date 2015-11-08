@@ -40,9 +40,8 @@ class BridgeCli extends Program {
       printWarning('Already watching!');
       return;
     }
-
     _watching = true;
-    new Watcher(Directory.current.path).events.listen((WatchEvent event) async {
+    _watchSubscription = new Watcher(Directory.current.path).events.listen((WatchEvent event) async {
       if (path.split(event.path).any((s) => s.startsWith('.'))) return;
       if (_reloading || path.basename(event.path).startsWith('.')) return;
       printAccomplishment('Reloading...');
