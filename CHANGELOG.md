@@ -4,6 +4,23 @@ This Changelog tracks changes in all releases across the [dart-bridge](https://g
 
 ---
 
+## [framework](https://github.com/dart-bridge/framework)/1.0.0-beta.3
+
+### Changes
+* [`bridge.http`] Add a middleware that transform `<form method>` with methods `PUT`, `PATCH`, `UPDATE`, or `DESTROY`
+  to hidden inputs:
+  
+```html
+<form method='PATCH'>
+<!-- transformed to -->
+<form method='POST'><input type='hidden' name='_method' value='PATCH'>
+```
+
+* [`bridge.tether`] `Tether#listen` now returns a `StreamSubscription`, so that a listener can be cancelled easily.
+
+### Bug fixes
+* [`bridge.core`] Fixed a bug where a `.env` file was required for anything to work.
+
 ## [framework](https://github.com/dart-bridge/framework)/1.0.0-beta.2
 This release fixed some bugs, but mainly it's accounting for breaking changes in Trestle.
 
