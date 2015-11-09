@@ -12,8 +12,7 @@ class BridgeCli extends Program {
 
   setUp() async {
     await app.setUp(_configPath);
-    if (_setProduction)
-      Environment.current = Environment.production;
+    if (_setProduction) Environment.current = Environment.production;
     InputDevice.prompt = new Output('<cyan>=</cyan> ');
   }
 
@@ -41,14 +40,16 @@ class BridgeCli extends Program {
       return;
     }
     _watching = true;
-    _watchSubscription =
-        Directory.current.watch(recursive: true).listen((event) async {
-          if (path.split(event.path).any((s) => s.startsWith('.'))) return;
-          if (_reloading || path.basename(event.path).startsWith('.')) return;
-          printAccomplishment('Reloading...');
-          _reloading = true;
-          await reload(['watch']);
-        });
+    _watchSubscription = new Watcher(Directory.current.path)
+        .events
+        .listen((WatchEvent event) async {
+      if (path.split(event.path).any((s) => s.startsWith('.'))) return;
+      if (_reloading || path.basename(event.path).startsWith('.')) return;
+      printAccomplishment('Reloading...');
+      _reloading = true;
+      await reload(['watch']);
+    });
+
     printInfo('Watching files...');
   }
 
@@ -56,8 +57,7 @@ class BridgeCli extends Program {
   unwatch() async {
     if (!_watching) return;
     await _watchSubscription.cancel();
-    if (!_reloading)
-      printInfo('Stopped watching files');
+    if (!_reloading) printInfo('Stopped watching files');
     _watching = false;
   }
 
@@ -73,16 +73,18 @@ class BridgeCli extends Program {
     printWarning('Executing: $executable ${arguments.join(' ')}');
 
     final process = await Process.start(executable, arguments);
-    process.stdout.map(UTF8.decode)
-        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
-    process.stderr.map(UTF8.decode)
-        .map((s) => _colorizeOutput(executable, s)).listen(this.print);
+    process.stdout
+        .map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s))
+        .listen(this.print);
+    process.stderr
+        .map(UTF8.decode)
+        .map((s) => _colorizeOutput(executable, s))
+        .listen(this.print);
     final exitCode = await process.exitCode;
 
-    if (exitCode != 0)
-      printDanger('Exited with exit code $exitCode');
-    else
-      printAccomplishment('Finished: $executable ${arguments.join(' ')}');
+    if (exitCode != 0) printDanger('Exited with exit code $exitCode');
+    else printAccomplishment('Finished: $executable ${arguments.join(' ')}');
   }
 
   String _colorizeOutput(String executable, String line) {
