@@ -24,7 +24,7 @@ abstract class Middleware {
   }
 
   Future<shelf.Message> _request(shelf.Request request) async {
-    if (!_container.canResolveMethod(this, 'request')) return null;
+    if (!_container.hasMethod(this, 'request')) return null;
 
     var returnValue = await _container.resolveMethod(
         this,
@@ -39,7 +39,7 @@ abstract class Middleware {
   }
 
   Future<shelf.Response> _response(shelf.Response response) async {
-    if (!_container.canResolveMethod(this, 'response')) return response;
+    if (!_container.hasMethod(this, 'response')) return response;
 
 
     var returnValue = await _container.resolveMethod(

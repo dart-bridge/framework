@@ -87,11 +87,8 @@ class Application implements Container {
       _container.singleton(singleton, as: as);
 
   /// Checks if an object has a method.
-  ///
-  /// **NOTE:** This does not guarantee that the method will successfully
-  /// be resolved, only that the method exists. This behaviour may change.
-  bool canResolveMethod(Object object, String method) =>
-      _container.canResolveMethod(object, method);
+  bool hasMethod(Object object, String method) =>
+      _container.hasMethod(object, method);
 
   /// Resolves a named method on an instance. Use only when the type is
   /// not known or when expects a subtype or an implementation.
@@ -110,11 +107,17 @@ class Application implements Container {
   /// evaluating the inner function and returning the response.
   ///
   ///     functionWillBeInjected(SomeClass input) {}
-  ///     Function presolved = application.presolve(functionWillBeInjected);
-  ///     presolved(...);
+  ///     Function curried = application.curry(functionWillBeInjected);
+  ///     curried(...);
+  curry(Function function,
+      {Map<String, dynamic> namedParameters,
+      Map<Type, dynamic> injecting}) => _container.curry(
+      function, namedParameters: namedParameters, injecting: injecting);
+
+  @Deprecated('in version 1.1. Use curry instead')
   presolve(Function function,
       {Map<String, dynamic> namedParameters,
-      Map<Type, dynamic> injecting}) => _container.presolve(
+      Map<Type, dynamic> injecting}) => _container.curry(
       function, namedParameters: namedParameters, injecting: injecting);
 
   /// Registers a decorator on a target type, so that every time that type
@@ -134,6 +137,7 @@ class Application implements Container {
   ///     application.make(Parent); // Instance of 'Decorator'
   void decorate(Type target,
       {Type decorator,
+      Iterable<Type> decorators,
       Map<String, dynamic> namedParameters,
       Map<Type, dynamic> injecting}) => _container.decorate(
       target, decorator: decorator,
@@ -238,7 +242,7 @@ class Application implements Container {
 
   Future _runServiceProviderMethod(String name) async {
     return Future.wait(_serviceProviders
-        .where((s) => canResolveMethod(s, name))
+        .where((s) => hasMethod(s, name))
         .map((s) => new Future.value(this.resolveMethod(s, name))));
   }
 }

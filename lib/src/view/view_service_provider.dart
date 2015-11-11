@@ -18,7 +18,7 @@ class ViewServiceProvider extends ServiceProvider {
   }
 
   void _registerParsers() {
-    composer.registerParser(app.presolve((ChalkTemplateParser p) => p));
+    composer.registerParser(app.curry((ChalkTemplateParser p) => p));
   }
 
   Future load(Program program, Server server, ViewConfig config) async {

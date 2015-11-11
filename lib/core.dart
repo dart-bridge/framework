@@ -10,13 +10,14 @@ import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:bridge/exceptions.dart';
+import 'package:container/container.dart';
 import 'package:dotenv/dotenv.dart' as dotenv;
 import 'package:yaml/yaml.dart' as yaml;
+
+export 'package:container/container.dart';
 
 part 'src/core/application.dart';
 part 'src/core/config.dart';
 part 'src/core/config_exception.dart';
-part 'src/core/container.dart';
-part 'src/core/container_exception.dart';
 part 'src/core/environment.dart';
 part 'src/core/service_provider.dart';
