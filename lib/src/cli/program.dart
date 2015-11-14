@@ -76,7 +76,7 @@ class BridgeCli extends Program {
   Future _run(String executable, List<String> arguments) async {
     printWarning('Executing: $executable ${arguments.join(' ')}');
 
-    final process = await Process.run(executable, arguments);
+    final process = await Process.start(executable, arguments);
     process.stdout
         .map(UTF8.decode)
         .map((s) => _colorizeOutput(executable, s))
