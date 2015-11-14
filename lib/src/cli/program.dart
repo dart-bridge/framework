@@ -63,17 +63,18 @@ class BridgeCli extends Program {
 
   @Command('Build the projects client side assets using [pub build]')
   build() async {
-    final buildRootDirectory = new Directory(app.config('http.server.build_root'));
-    final buildDirectory = new Directory(app.config('http.server.build_root', 'build'));
-    final tempDirectory = await Directory.systemTemp.createTemp();
+    var buildPath = app.config('http.server.build_root', 'build');
+
+    final buildRootDirectory = new Directory(buildPath);
+    final tempDirectory = await (new Directory(buildPath).parent.createTemp());
 
     await _run('pub', ['build', '-o', tempDirectory.path]);
 
-    if (await buildDirectory.exists()) {
-      await buildDirectory.delete(recursive: true);
+    if (await buildRootDirectory.exists()) {
+      await buildRootDirectory.delete(recursive: true);
     }
 
-    await tempDirectory.rename(app.config('http.server.build_root', 'build'));
+    await tempDirectory.rename(buildPath);
   }
 
   Future _run(String executable, List<String> arguments) async {
