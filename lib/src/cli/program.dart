@@ -63,16 +63,20 @@ class BridgeCli extends Program {
 
   @Command('Build the projects client side assets using [pub build]')
   build() async {
-    final commands = [];
-    final build = new Directory(app.config('http.server.build_root', 'build'));
-    commands.add(_run('pub', ['build', '-o', build.path]));
-    await Future.wait(commands);
+    final buildRootDirectory = new Directory(app.config('http.server.build_root'));
+    final buildDirectory = new Directory(app.config('http.server.build_root', 'build'));
+    final tempDirectory = await buildRootDirectory.createTemp();
+
+    await _run('pub', ['build', '-o', tempDirectory.path]);
+    await buildDirectory.delete();
+
+    await tempDirectory.rename(app.config('http.server.build_root', 'build'));
   }
 
   Future _run(String executable, List<String> arguments) async {
     printWarning('Executing: $executable ${arguments.join(' ')}');
 
-    final process = await Process.start(executable, arguments);
+    final process = await Process.run(executable, arguments);
     process.stdout
         .map(UTF8.decode)
         .map((s) => _colorizeOutput(executable, s))
