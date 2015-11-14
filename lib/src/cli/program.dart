@@ -65,7 +65,7 @@ class BridgeCli extends Program {
   build() async {
     final buildRootDirectory = new Directory(app.config('http.server.build_root'));
     final buildDirectory = new Directory(app.config('http.server.build_root', 'build'));
-    final tempDirectory = await buildRootDirectory.createTemp();
+    final tempDirectory = await Directory.systemTemp.createTemp();
 
     await _run('pub', ['build', '-o', tempDirectory.path]);
     await buildDirectory.delete(recursive: true);
