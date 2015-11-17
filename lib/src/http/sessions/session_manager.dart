@@ -57,19 +57,10 @@ class SessionManager {
   }
 
   Session _generateSession() {
-    var id = _generateId();
-    open(id);
-    return session(id)
+    final session = new Session.generate();
+    _sessions[session.id] = session;
+    return session
       ..isNew = true;
-  }
-
-  String _generateId() {
-    var out = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var random = new Random();
-    for (var i = 0; i < 128; ++i)
-      out += chars[random.nextInt(chars.length - 1)];
-    return out;
   }
 
   shelf.Message passSession({shelf.Message from, shelf.Message to}) {

@@ -61,7 +61,7 @@ abstract class Tether {
   /// [exception] should be registered using [exceptionFactories] setter.
   /// If [exception] is not registered it will be cast to a standard
   /// [Exception] on arrival.
-  void sendException(String key, Exception exception);
+  void sendException(String key, exception);
 
   void modulateBeforeSerialization(modulation(value));
 }
@@ -102,7 +102,7 @@ abstract class TetherBase implements Tether {
     return returnValue.data;
   }
 
-  void sendException(String key, Exception exception) {
+  void sendException(String key, exception) {
     _send(new Message(key, session, exception));
   }
 

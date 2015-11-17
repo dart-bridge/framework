@@ -4,7 +4,6 @@ part of bridge.tether.shared;
 /// both on the server and the client. The [ServerSocketAdapter]
 /// and the [ClientSocketAdapter] both implement this.
 abstract class SocketInterface {
-
   void send(data);
 
   Stream get receiver;

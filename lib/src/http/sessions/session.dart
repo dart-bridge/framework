@@ -1,4 +1,5 @@
 library bridge.http.sessions.session;
+import 'dart:math' show Random;
 
 class Session {
   final Map<String, dynamic> variables = {};
@@ -8,6 +9,15 @@ class Session {
   bool isNew = false;
 
   Session(String this.id);
+
+  factory Session.generate() {
+    var out = '';
+    final chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final random = new Random();
+    for (var i = 0; i < 128; ++i)
+      out += chars[random.nextInt(chars.length - 1)];
+    return new Session(out);
+  }
 
   Object get(String key) {
     if (_flashedSessionVariables.containsKey(key))
