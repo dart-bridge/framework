@@ -63,7 +63,7 @@ class BridgeCli extends Program {
 
   @Command('Build the projects client side assets using [pub build]')
   build() async {
-    var buildPath = app.config('http.server.build_root', 'build');
+    final buildPath = app.config('http.server.build_root', 'build');
 
     final buildRootDirectory = new Directory(buildPath);
     final tempDirectory = await (new Directory(buildPath).parent.createTemp());
