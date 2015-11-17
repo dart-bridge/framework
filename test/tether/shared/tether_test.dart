@@ -31,7 +31,7 @@ class TetherTest implements TestCase {
       wasCalled = true;
     });
     messenger.messages.add(new Message('key', new Session('token'), 1));
-    await wait(ticks: 1);
+    await wait(ticks: 3);
     expect(wasCalled, isTrue);
   }
 
