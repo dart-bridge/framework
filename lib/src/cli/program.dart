@@ -64,22 +64,22 @@ class BridgeCli extends Program {
   @Command('Build the projects client side assets using [pub build]')
   build() async {
     final buildPath = app.config('http.server.build_root', 'build');
-
     final buildRootDirectory = new Directory(buildPath);
-    final tempDirectory = await (new Directory(buildPath).parent.createTemp());
+    final tempDirectory = await (buildRootDirectory.parent.createTemp());
+
+    printInfo('Building client in $buildPath');
 
     await _run('pub', ['build', '-o', tempDirectory.path]);
 
-    if (await buildRootDirectory.exists()) {
+    if (await buildRootDirectory.exists())
       await buildRootDirectory.delete(recursive: true);
-    }
 
     await tempDirectory.rename(buildPath);
+
+    printAccomplishment('Client was built successfully');
   }
 
   Future _run(String executable, List<String> arguments) async {
-    printWarning('Executing: $executable ${arguments.join(' ')}');
-
     final process = await Process.start(executable, arguments);
     process.stdout
         .map(UTF8.decode)
@@ -92,7 +92,6 @@ class BridgeCli extends Program {
     final exitCode = await process.exitCode;
 
     if (exitCode != 0) printDanger('Exited with exit code $exitCode');
-    else printAccomplishment('Finished: $executable ${arguments.join(' ')}');
   }
 
   String _colorizeOutput(String executable, String line) {
