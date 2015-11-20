@@ -1,7 +1,9 @@
 library bridge.http.sessions.session;
-import 'dart:math' show Random;
 
-class Session {
+import 'dart:math' show Random;
+import 'package:tether/protocol.dart' as tether show Session;
+
+class Session implements tether.Session {
   final Map<String, dynamic> variables = {};
   final Map<String, dynamic> _flashedSessionVariables = {};
   final List<String> _reflashedKeys = [];
@@ -63,4 +65,6 @@ class Session {
   String toString() {
     return 'Session(${new Map.from(_flashedSessionVariables)..addAll(variables)})';
   }
+
+  Map get data => new Map.from(variables);
 }

@@ -2,7 +2,7 @@ part of bridge.transport.shared;
 
 typedef Object SerializationTransform(Object object);
 
-abstract class Serializer {
+abstract class Serializer implements tether.Serializer {
   static final Serializer instance = new Serializer();
 
   factory Serializer() => new _Serializer();

@@ -3,17 +3,22 @@ library bridge.tether.client;
 import 'dart:async';
 import 'dart:html';
 
-import 'src/tether/client/tether.dart';
-import 'tether_shared.dart' hide Tether;
+import 'package:bridge/transport_client.dart';
+import 'package:tether/http_client.dart';
+import 'package:tether/protocol.dart';
 
-export 'src/tether/client/tether.dart';
-export 'tether_shared.dart' hide Tether;
+import 'tether_shared.dart';
 
-part 'src/tether/client/client_socket_adapter.dart';
-part 'src/tether/client/client_tether_maker.dart';
+export 'tether_shared.dart';
 
-Tether tether;
+Tether _globalTether = webSocketTether('ws://${window.location.hostname}:${window.location.port}/');
 
+Tether get tether {
+  Messenger.serializer = serializer;
+  return _globalTether;
+}
+
+@Deprecated('1.0.0. Handle Tether connection manually')
 Future globalTether() async {
-  tether = await ClientTetherMaker.makeTether();
+  await _globalTether.onConnection;
 }

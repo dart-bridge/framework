@@ -5,7 +5,7 @@ library bridge.client;
 export 'database_client.dart';
 export 'exceptions_client.dart';
 export 'http_client.dart';
-export 'tether_client.dart';
+export 'tether_client.dart' hide Session, Serializer;
 export 'transport_client.dart';
 export 'validation_client.dart';
 export 'view_client.dart';
