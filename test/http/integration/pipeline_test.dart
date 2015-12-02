@@ -26,13 +26,13 @@ class PipelineTest extends Pipeline implements TestCase {
     router.get('/', handler);
 
     router.get('/add', handler)
-        .addMiddleware(extraMiddleware);
+        .withMiddleware(extraMiddleware);
 
     router.get('/ignore', handler)
         .ignoreMiddleware(ClassMiddleware);
 
     router.get('/add-ignore', handler)
-        .addMiddleware(extraMiddleware)
+        .withMiddleware(extraMiddleware)
         .ignoreMiddleware(functionMiddleware);
 
     router.get('/di', (Dependency dependency, Request request) {
@@ -41,12 +41,12 @@ class PipelineTest extends Pipeline implements TestCase {
 
     router.get('/input', (Input input) {
       return input;
-    }).addMiddleware(InputMiddleware);
+    }).withMiddleware(InputMiddleware);
 
     router.get('/csrf', (Input input) {
       return input['payload'];
-    }).addMiddleware(InputMiddleware)
-        .addMiddleware(CsrfMiddleware);
+    }).withMiddleware(InputMiddleware)
+        .withMiddleware(CsrfMiddleware);
   }
 
   @test
