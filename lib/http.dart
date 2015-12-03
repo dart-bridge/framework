@@ -12,6 +12,7 @@ import 'package:http_server/http_server.dart' as http_server;
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:bridge/transport.dart';
+import 'package:bridge/cli.dart';
 
 export 'http_shared.dart';
 
@@ -24,6 +25,7 @@ part 'src/http/input/input_middleware.dart';
 part 'src/http/input/input_parser.dart';
 part 'src/http/input/uploaded_file.dart';
 part 'src/http/middleware.dart';
+part 'src/http/server.dart';
 part 'src/http/pipeline.dart';
 part 'src/http/routing/route.dart';
 part 'src/http/routing/route_group.dart';

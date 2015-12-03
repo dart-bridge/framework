@@ -27,7 +27,7 @@ abstract class Middleware {
     }));
   }
 
-  shelf.Response convert(shelf.Request request, Type type, conversion(value)) {
+  shelf.Request convert(shelf.Request request, Type type, conversion(value)) {
     return attach(request, new RequestAttachment(convert: {
       type: conversion
     }));
