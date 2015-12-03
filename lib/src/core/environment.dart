@@ -7,7 +7,7 @@ class Environment {
   static const custom = 3;
   static int current = production;
 
-  static BridgeInfo _bridge;
+  static BridgeInfo _bridge = new BridgeInfo._({});
   static BridgeInfo get bridge => _bridge;
 
   static bool get isDevelopment => current == development;
