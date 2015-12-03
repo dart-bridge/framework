@@ -5,16 +5,16 @@ class Route implements RouterAttachments<Route> {
   final String route;
   final Function handler;
   String name;
-  final List<Type> appendedMiddleware;
-  final List<Type> ignoredMiddleware;
+  final List appendedMiddleware;
+  final List ignoredMiddleware;
   final Map<Type, Object> _shouldInject = {};
 
   Route(String this.method,
       String this.route,
       Function this.handler,
       {String this.name,
-      List<Type> appendMiddleware,
-      List<Type> ignoreMiddleware}) :
+      List appendMiddleware,
+      List ignoreMiddleware}) :
         this.appendedMiddleware = appendMiddleware ?? [],
         this.ignoredMiddleware = ignoreMiddleware ?? [];
 
@@ -111,12 +111,12 @@ class Route implements RouterAttachments<Route> {
     return this;
   }
 
-  Route ignoreMiddleware(Type middleware) {
+  Route ignoreMiddleware(middleware) {
     ignoredMiddleware.add(middleware);
     return this;
   }
 
-  Route withMiddleware(Type middleware) {
+  Route withMiddleware(middleware) {
     appendedMiddleware.add(middleware);
     return this;
   }

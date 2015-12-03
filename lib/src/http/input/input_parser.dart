@@ -8,13 +8,12 @@ class InputParser {
 
   InputParser(shelf.Request this._request) {
     _transformer = new MimeMultipartTransformer(_getBoundary());
-    _bytes = _request.read().asBroadcastStream();
+    _bytes = _request.read();
   }
 
   Future<String> get _bytesAsString async {
-    if (__bytesAsString == null)
-      __bytesAsString = UTF8.decode((await _bytes.toList()).expand((l) => l).toList());
-    return __bytesAsString;
+    return __bytesAsString ??=
+        UTF8.decode(await _bytes.expand((l) => l).toList());
   }
 
   Future<Input> parse() async {
@@ -25,7 +24,7 @@ class InputParser {
   String _getBoundary() {
     try {
       return new RegExp(r'boundary=(-+[^ ]*)')
-      .firstMatch(_request.headers['Content-Type'])[1]/*
+          .firstMatch(_request.headers['Content-Type'])[1] /*
       .replaceAll(new RegExp(r'^-*'), '')
       .replaceAll(new RegExp(r'-*$'), '')*/;
     } catch (e) {
@@ -33,28 +32,33 @@ class InputParser {
     }
   }
 
-  Future<Object> _getBody() async {
-    if (_request.headers['Content-Type'].contains('application/x-www-form-urlencoded'))
+  Future<Map> _getBody() async {
+    final contentType = _request.headers['Content-Type'];
+    if (contentType?.contains('application/x-www-form-urlencoded') ?? false)
       return Formler.parseUrlEncoded(await _bytesAsString);
-    if (_request.headers['Content-Type'].contains('boundary'))
+    if (contentType?.contains('boundary') ?? false)
       return _multiPart(_transformMultipartData());
     try {
-      return JSON.decode(await _bytesAsString);
-    } catch(e) {
+      return serializer.deserialize(JSON.decode(await _bytesAsString));
+    } catch (e) {
       return {'data': await _bytesAsString};
     }
   }
 
   Stream<http_server.HttpMultipartFormData> _transformMultipartData() {
-    return _bytes.transform(_transformer).map(http_server.HttpMultipartFormData.parse);
+    return _bytes.transform(_transformer).map(
+        http_server.HttpMultipartFormData.parse);
   }
 
-  Future<Object> _multiPart(Stream<http_server.HttpMultipartFormData> data) async {
+  Future<Object> _multiPart(
+      Stream<http_server.HttpMultipartFormData> data) async {
     List<http_server.HttpMultipartFormData> datas = await data.toList();
-    return new Map<String, dynamic>.fromIterables(_namesOf(datas), await _valuesOf(datas));
+    return new Map<String, dynamic>.fromIterables(
+        _namesOf(datas), await _valuesOf(datas));
   }
 
-  Iterable<String> _namesOf(List<http_server.HttpMultipartFormData> datas) sync* {
+  Iterable<String> _namesOf(
+      List<http_server.HttpMultipartFormData> datas) sync* {
     for (var data in datas) {
       if (data.contentDisposition.parameters.containsKey('name'))
         yield data.contentDisposition.parameters['name'];
@@ -65,7 +69,8 @@ class InputParser {
   }
 
   Future<Iterable> _valuesOf(List<http_server.HttpMultipartFormData> datas) {
-    return Future.wait(datas.map((data) => (data.isText) ? _asString(data) : _asFile(data)));
+    return Future.wait(
+        datas.map((data) => (data.isText) ? _asString(data) : _asFile(data)));
   }
 
   Future<String> _asString(Stream<String> data) async {

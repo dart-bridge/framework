@@ -27,3 +27,4 @@ part 'src/view/template_builder.dart';
 part 'src/view/template_cache_io.dart';
 part 'src/view/template_composer.dart';
 part 'src/view/view_service_provider.dart';
+part 'src/view/templates_middleware.dart';

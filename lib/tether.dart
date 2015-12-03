@@ -9,9 +9,9 @@ import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_web_socket/shelf_web_socket.dart' as ws;
 import 'package:tether/protocol.dart';
-import 'package:tether/tether.dart';
 
 export 'tether_shared.dart';
+import 'tether_shared.dart';
 
 part 'src/tether/tether_service_provider.dart';
 

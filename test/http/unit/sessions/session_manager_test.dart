@@ -23,19 +23,9 @@ class SessionManagerTest implements TestCase {
 
   @test
   it_couples_a_shelf_request_with_a_session() {
-    var request = new shelf.Request('GET', new Uri.http('example.com', '/'));
+    final request = new shelf.Request('GET', new Uri.http('example.com', '/'));
     expect(manager.hasSession(request), isFalse);
-    request = manager.attachSession(request);
-    var session = request.context['session'];
+    final session = manager.attachSession(request);
     expect(session, new isInstanceOf<Session>());
-    expect(request.context['session'], equals(session));
-  }
-
-  @test
-  it_passes_a_request_session_to_a_response() {
-    var request = manager.attachSession(
-        new shelf.Request('GET', new Uri.http('example.com', '/')));
-    var response = manager.passSession(from: request, to: new shelf.Response.ok('body'));
-    expect(response.context['session'], equals(request.context['session']));
   }
 }

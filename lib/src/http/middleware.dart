@@ -1,56 +1,71 @@
 part of bridge.http;
 
 abstract class Middleware {
-  Container _container;
-  _ResponseMapper _responseMapper;
+  shelf.Handler _inner;
 
-  shelf.Middleware transform(Container container) {
-    _container = container;
-    _responseMapper = container.make(_ResponseMapper);
-
-    return (shelf.Handler innerHandler) {
-      return (shelf.Request request) async {
-        var handledRequest = await _request(request);
-        if (handledRequest is shelf.Response) return handledRequest;
-
-        var response;
-
-        if (handledRequest is shelf.Request) response = await innerHandler(handledRequest);
-        else response = await innerHandler(request);
-
-        return _response(response);
-      };
-    };
+  shelf.Handler call(shelf.Handler inner) {
+    this._inner = inner;
+    return handle;
   }
 
-  Future<shelf.Message> _request(shelf.Request request) async {
-    if (!_container.hasMethod(this, 'request')) return null;
-
-    var returnValue = await _container.resolveMethod(
-        this,
-        'request',
-        injecting: {
-          shelf.Request: request
-        });
-
-    if (returnValue == null) return null;
-    if (returnValue is shelf.Request) return returnValue;
-    return _responseMapper.valueToResponse(returnValue);
+  Future<shelf.Response> handle(shelf.Request request) async {
+    return await _inner(request);
   }
 
-  Future<shelf.Response> _response(shelf.Response response) async {
-    if (!_container.hasMethod(this, 'response')) return response;
+  shelf.Message attach(shelf.Message message, PipelineAttachment attachment) {
+    return message.change(context: {
+      PipelineAttachment._contextKey: new PipelineAttachment.of(message).apply(attachment)
+    });
+  }
 
+  shelf.Message inject(shelf.Message message, Object instance, {Type as}) {
+    return attach(message, new PipelineAttachment(inject: {
+      as ?? instance.runtimeType: instance
+    }));
+  }
 
-    var returnValue = await _container.resolveMethod(
-        this,
-        'response',
-        injecting: {
-          shelf.Response: response
-        });
+  dynamic getInjection(shelf.Request request, Type injection) =>
+      new PipelineAttachment.of(request).inject[injection];
 
-    if (returnValue == null) return response;
-    if (returnValue is shelf.Response) return returnValue;
-    return _responseMapper.valueToResponse(returnValue);
+  shelf.Message convert(shelf.Message message, Type type, conversion(value)) {
+    return attach(message, new PipelineAttachment(convert: {
+      type: conversion
+    }));
+  }
+
+  shelf.Message applySession(shelf.Message message, Session session) {
+    return attach(message, new PipelineAttachment(session: session));
+  }
+}
+
+class PipelineAttachment {
+  static const _contextKey = r'$bridge.http.RequestAttachment';
+  final Map<Type, Object> inject;
+  final Map<Type, Function> convert;
+  final Session session;
+
+  const PipelineAttachment({
+  this.inject: const {},
+  this.convert: const {},
+  this.session
+  });
+
+  factory PipelineAttachment.of(shelf.Message message) {
+    return message.context[_contextKey] ?? const PipelineAttachment.empty();
+  }
+
+  const PipelineAttachment.empty()
+      : inject = const {},
+        convert = const {},
+        session = null;
+
+  PipelineAttachment apply(PipelineAttachment other) {
+    return new PipelineAttachment(
+        inject: new Map.from(inject)
+          ..addAll(other.inject),
+        convert: new Map.from(convert)
+          ..addAll(other.convert),
+        session: other.session ?? session
+    );
   }
 }

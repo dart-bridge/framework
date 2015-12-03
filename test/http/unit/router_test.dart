@@ -6,13 +6,13 @@ import 'dart:mirrors';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:bridge/http.dart';
 
-part 'packages/bridge/src/http/router/router_attachments.dart';
+part 'packages/bridge/src/http/routing/router_attachments.dart';
 
-part 'packages/bridge/src/http/router/router.dart';
+part 'packages/bridge/src/http/routing/router.dart';
 
-part 'packages/bridge/src/http/router/route.dart';
+part 'packages/bridge/src/http/routing/route.dart';
 
-part 'packages/bridge/src/http/router/route_group.dart';
+part 'packages/bridge/src/http/routing/route_group.dart';
 
 class RouterTest implements TestCase {
   Router router;

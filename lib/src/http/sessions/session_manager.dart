@@ -21,8 +21,8 @@ class SessionManager {
     return _sessionOf(message);
   }
 
-  shelf.Message attachSession(shelf.Message message) {
-    if (hasSession(message)) return message;
+  Session attachSession(shelf.Message message) {
+    if (hasSession(message)) return sessionOf(message);
 
     Session session;
     if (_hasSessionCookie(message))
@@ -30,9 +30,7 @@ class SessionManager {
     else
       session = _generateSession();
 
-    return message.change(context: {
-      'session': session
-    });
+    return session;
   }
 
   Session _loadSessionCookie(shelf.Message message) {
@@ -49,24 +47,27 @@ class SessionManager {
   }
 
   bool hasSession(shelf.Message message) {
-    return message.context['session'] is Session;
+    return _sessionOf(message) is Session;
   }
 
   Session _sessionOf(shelf.Message message) {
-    return message.context['session'];
+    return new PipelineAttachment.of(message).session;
   }
 
   Session _generateSession() {
-    final session = new Session.generate();
-    _sessions[session.id] = session;
-    return session
+    var id = _generateId();
+    open(id);
+    return session(id)
       ..isNew = true;
   }
 
-  shelf.Message passSession({shelf.Message from, shelf.Message to}) {
-    return to.change(context: {
-      'session': from.context['session']
-    });
+  String _generateId() {
+    var out = '';
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var random = new Random();
+    for (var i = 0; i < 128; ++i)
+      out += chars[random.nextInt(chars.length - 1)];
+    return out;
   }
 
   bool _isSessionCookie(Cookie element) {

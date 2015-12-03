@@ -148,13 +148,17 @@ class Application implements Container {
   /// the config files are located.
   Future setUp(String configRoot) async {
     await _setUpConfig(configRoot);
-
-    await _setUpServiceProviders();
+    await _setUp();
   }
 
   Future setUpWithConfig(Config config) async {
     _config = config;
+    await _setUp();
+  }
 
+  Future _setUp() async {
+    singleton(_config, as: Config);
+    await Environment.loadPubSpec();
     await _setUpServiceProviders();
   }
 
@@ -168,7 +172,6 @@ class Application implements Container {
       throw new InvalidArgumentException('$configRoot is not a directory');
     }
     _config = await Config.load(configRootDirectory);
-    this.singleton(_config, as: Config);
     _setEnv(_config);
   }
 

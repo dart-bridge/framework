@@ -13,7 +13,7 @@ class UrlGenerator {
   String route(String name, [Map<String, dynamic> wildcards]) {
     var route = _getNamedRoute(name);
     if (route == null)
-      throw new InvalidArgumentException('No route named [$name] has been registered');
+      throw new ArgumentError('No route named [$name] has been registered');
     return url(_replaceWildcards(route, wildcards));
   }
 

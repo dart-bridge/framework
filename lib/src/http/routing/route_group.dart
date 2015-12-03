@@ -17,13 +17,13 @@ class RouteGroup implements RouterAttachments<RouteGroup> {
     return this;
   }
 
-  RouteGroup ignoreMiddleware(Type middleware) {
+  RouteGroup ignoreMiddleware(middleware) {
     for (final route in _routes)
       route.ignoreMiddleware(middleware);
     return this;
   }
 
-  RouteGroup withMiddleware(Type middleware) {
+  RouteGroup withMiddleware(middleware) {
     for (final route in _routes)
       route.withMiddleware(middleware);
     return this;

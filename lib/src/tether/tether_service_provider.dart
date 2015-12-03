@@ -11,7 +11,7 @@ class _CompatibleWebSocketAnchor implements Anchor {
 
   Future _listen() async {
     await for (final payload in _socket)
-        _controller.add(payload);
+      _controller.add(payload);
     _onClose.complete();
   }
 
@@ -39,16 +39,26 @@ class TetherServiceProvider extends ServiceProvider {
     this.app = app;
     app.singleton(tethers, as: Tethers);
     app.singleton(new TetherManager(tethers));
+    Session.factory = (id, data) => new http.Session(id, data);
     Messenger.serializer = serializer;
   }
 
   load(http.Server server, http.SessionManager sessions) {
-    server.addMiddleware(shelf.createMiddleware(requestHandler: _handle), highPriority: true);
+    // For backwards compatibility only. Include the [TetherMiddleware] in Pipeline.
+    server.addMiddleware(new TetherMiddleware(tethers), highPriority: true);
   }
+}
 
-  shelf.Response _handle(shelf.Request request) {
+class TetherMiddleware extends http.Middleware {
+  final Tethers _tethers;
+
+  TetherMiddleware(this._tethers);
+
+  Future<shelf.Response> handle(shelf.Request request) async {
+    final session = new http.PipelineAttachment.of(request).session;
+
     void createTether(http_parser.CompatibleWebSocket socket) {
-      tethers.add(new _CompatibleWebSocketAnchor(socket), session: request.context['session']);
+      _tethers.add(new _CompatibleWebSocketAnchor(socket), session: session);
     }
 
     shelf.Handler handler = ws.webSocketHandler(createTether);
@@ -61,9 +71,9 @@ class TetherServiceProvider extends ServiceProvider {
     } on shelf.HijackException {
       // [shelf.HijackException] should move down to the shelf core.
       rethrow;
-    } catch(e) {
+    } catch (e) {
       // Upgrade failed, so proceed through the [shelf.Pipeline].
-      return null;
+      return super.handle(inject(request, _tethers.get(session), as: Tether));
     }
   }
 }

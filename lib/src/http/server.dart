@@ -1,246 +1,163 @@
 part of bridge.http;
 
-abstract class Server {
-  Function onError;
+class Server {
+  final _BackwardsCompatibilityPipeline _fallbackPipeline;
+  final Container _container;
+  final HttpConfig _config;
+  Pipeline _pipeline;
+  _HttpServer _runningServer;
 
-  factory Server(Config config, Container container)
-  => new _Server(config, container);
+  Server(Container container, this._config)
+      : _container = container,
+        _fallbackPipeline = new _BackwardsCompatibilityPipeline(container);
 
-  String get hostname;
+  String get hostname => _config.host;
 
-  int get port;
+  int get port => _config.port;
 
-  Future start();
+  bool get isRunning => _runningServer != null;
 
-  Future stop();
+  Pipeline get pipeline => _pipeline ?? _fallbackPipeline;
 
-  void addMiddleware(Object middleware, {bool highPriority});
-
-  void handleException(Type exceptionType, Function handler);
-
-  void modulateRouteReturnValue(modulation(value));
-
-  void attachRouter(Router router);
-
-  Future<shelf.Response> handle(shelf.Request request);
-}
-
-class _Server implements Server {
-  Router _router;
-  HttpServer _server;
-  String _host;
-  int _port;
-  List _middleware = new List();
-  Container _container;
-  Config _config;
-  _ResponseMapper _responseMapper;
-  Function onError = (e, s) {
-    print(e);
-    print(s);
-  };
-
-  String get hostname => _host;
-
-  int get port => _port;
-
-  _Server(Config this._config, Container this._container) {
-    _responseMapper = _container.make(_ResponseMapper);
-    _host = _config('http.server.host', 'localhost');
-    _port = _config('http.server.port', 1337);
+  void usePipeline(Pipeline pipeline) {
+    _pipeline = pipeline;
   }
 
-  void attachRouter(Router router) {
-    _router = router;
-  }
-
-  var _highPriorityMiddleware = 0;
-
-  void addMiddleware(Object middleware, {bool highPriority: false}) {
-    if (highPriority) return _middleware.insert(
-        _highPriorityMiddleware++, middleware);
-    _middleware.add(middleware);
-  }
-
-  shelf.Middleware _createMiddleware(Object middleware) {
-    shelf.Middleware shelfMiddleware;
-    if (middleware is Type)
-      return _createMiddleware(_container.make(middleware));
-    if (middleware is shelf.Middleware) shelfMiddleware = middleware;
-    if (middleware is Middleware)
-      shelfMiddleware = middleware.transform(_container);
-    if (shelfMiddleware == null) throw new InvalidArgumentException(
-        'Must be a [shelf.Middleware] or a [bridge.http.Middleware]');
-    return shelfMiddleware;
-  }
-
-  Future<HttpServer> start() async {
-    return _server = (await shelf_io.serve(_buildPipeline(), _host, _port))
-      ..autoCompress = true;
-  }
-
-  shelf.Response _globalErrorHandler(error, StackTrace stack) {
-    onError(error, stack);
-    if (error is HttpNotFoundException)
-      return new shelf.Response.notFound('404 Not Found');
-    return new shelf.Response.internalServerError(
-        body: 'Internal Server Error');
-  }
-
-  shelf.Response _globalResponseHandler(shelf.Response response) {
-    return response.change(headers: {'X-Powered-By': 'Bridge for Dart'});
-  }
-
-  shelf.Handler _buildPipeline() {
-    var pipeline = const shelf.Pipeline()
-        .addMiddleware(
-        shelf.createMiddleware(errorHandler: _globalErrorHandler))
-        .addMiddleware(
-        shelf.createMiddleware(responseHandler: _globalResponseHandler));
-    _middleware.forEach((m) =>
-    pipeline = pipeline.addMiddleware(_conditionalMiddleware(m)));
-    return pipeline.addHandler(_handle);
-  }
-
-  shelf.Middleware _conditionalMiddleware(middleware) {
-    return (shelf.Handler innerHandler) {
-      return (shelf.Request request) {
-        if (_shouldUseMiddlewareForRequest(request, middleware))
-          return _createMiddleware(middleware)(innerHandler)(request);
-        return innerHandler(request);
-      };
-    };
-  }
-
-  bool _shouldUseMiddlewareForRequest(shelf.Request request,
-      shelf.Middleware middleware) {
-    for (Route route in _router._routes) {
-      if (_routeMatch(route, request))
-        return !route.ignoredMiddleware.contains(middleware.runtimeType);
-    }
-    return true;
-  }
-
-  Future<shelf.Response> handle(shelf.Request request) async {
-    return _buildPipeline()(request);
-  }
-
-  Future<shelf.Response> _handle(shelf.Request request) async {
-    for (Route route in _router._routes) {
-      if (_routeMatch(route, request))
-        return _routeResponse(route, request);
-    }
-    throw new HttpNotFoundException(request);
-  }
-
-  bool _routeMatch(Route route, shelf.Request request) {
-    Input input = request.context['input'];
-    String method = (input != null && input.containsKey('_method'))
-        ? input['_method']
-        : request.method;
-    return route.matches(method, request.url.path);
-  }
-
-  Future<shelf.Response> _routeResponse(Route route,
-      shelf.Request request) {
-    return _routeMiddleware(route, request, (request) async {
-      var injecting = {
-        shelf.Request: request,
-      };
-      if (request.context.containsKey('input'))
-        injecting[Input] = new Input(_clearPrivates(request.context['input']));
-      if (request.context.containsKey('session'))
-        injecting[Session] = request.context['session'];
-      var returnValue = await
-      _container.resolve(route.handler,
-          injecting: injecting..addAll(route._shouldInject),
-          namedParameters: route.wildcards(request.url.path));
-      return _responseMapper.valueToResponse(returnValue);
-    });
-  }
-
-  Future<shelf.Response> _routeMiddleware(Route route, shelf.Request request,
-      shelf.Handler handler) {
-    var pipeline = const shelf.Pipeline();
-    for (final middleware in route.appendedMiddleware) {
-      pipeline = pipeline.addMiddleware(_createMiddleware(middleware));
-    }
-    return pipeline.addHandler(handler)(request);
-  }
-
-  Object _clearPrivates(Map map) {
-    final copy = new Map.from(map);
-    copy.keys.where((k) => k.startsWith('_')).toList().forEach((k) {
-      copy.remove(k);
-    });
-    return copy;
+  Future<String> start() async {
+    if (isRunning) throw new StateError('The server is already running!');
+    _runningServer = new _HttpServer(
+        handle,
+        hostname,
+        port,
+        certificate: _config.certificate,
+        privateKey: _config.privateKey,
+        password: _config.privateKeyPassword
+    );
+    if (_config.useSsl)
+      await _runningServer.startSecure();
+    else
+      await _runningServer.start();
+    return 'http${_config.useSsl ? 's' : ''}//$hostname:$port';
   }
 
   Future stop() async {
-    if (_server == null) throw new Exception('The server isn\'t running');
-    await _server.close();
+    if (!isRunning)
+      throw new StateError('The server isn\'t running!');
+    await _runningServer.stop();
+    _runningServer = null;
   }
 
-  void handleException(Type exceptionType, Function handler,
-      {int statusCode: 500}) {
-    this.addMiddleware(shelf.createMiddleware(
-        errorHandler: (Object exception, StackTrace stack) async {
-          if (reflectType(exception.runtimeType).isAssignableTo(
-              reflectType(exceptionType)))
-            return _responseMapper.valueToResponse(
-                await _container.resolve(handler, injecting: {
-                  exceptionType: exception,
-                  Exception: exception,
-                  StackTrace: stack,
-                }), statusCode);
-          return new Future.error(exception, stack);
-        }));
+  Future<shelf.Response> handle(shelf.Request request) {
+    return pipeline.handle(request, _container);
+  }
+
+  @Deprecated('very soon. Create a middleware instead')
+  void modulateRouteReturnValue(modulation(value)) {
+    _fallbackPipeline.modulateRouteReturnValue(modulation);
+  }
+
+  @Deprecated("very soon. "
+      "The app's Pipeline must include the Middleware instead.")
+  void addMiddleware(Object middleware, {bool highPriority: false}) {
+    _fallbackPipeline.addMiddleware(middleware, highPriority: highPriority);
+  }
+
+  @Deprecated('very soon. Create a middleware instead')
+  void handleException(Type exceptionType, Function handler) {
+    _fallbackPipeline.handleException(exceptionType, handler);
+  }
+
+  @Deprecated('very soon. Bind a router in container instead')
+  void attachRouter(Router router) {}
+}
+
+class _BackwardsCompatibilityPipeline extends Pipeline {
+  final Container _container;
+  final List middlewareList = [];
+  final Map errorHandlersMap = {};
+
+  _BackwardsCompatibilityPipeline(this._container);
+
+  @override get middleware => new List.from(defaultMiddleware)..addAll(middlewareList);
+
+  @override get errorHandlers => errorHandlersMap;
+
+  void addMiddleware(Object middleware, {bool highPriority: false}) {
+    if (highPriority) {
+      middlewareList.insert(0, middleware);
+    } else {
+      middlewareList.add(middleware);
+    }
+  }
+
+  void handleException(Type exceptionType, Function handler) {
+    errorHandlersMap[exceptionType] = handler;
   }
 
   void modulateRouteReturnValue(modulation(value)) {
-    _responseMapper.modulateRouteReturnValue(modulation);
+    addMiddleware(
+        new _RouteReturnValueModulationMiddleware(_container, modulation));
   }
 }
 
-class _ResponseMapper {
-  Set<Function> _returnValueModulators = new Set();
+class _RouteReturnValueModulationMiddleware extends Middleware {
+  final Container _container;
+  final Function _modulation;
 
-  Future<shelf.Response> valueToResponse(Object value,
-      [int statusCode = 200]) async {
-    for (var m in _returnValueModulators)
-      value = await m(value);
-    if (value is shelf.Response) return value;
-    if (value is Stream)
-      return _streamResponse(value, statusCode);
-    return new shelf.Response(
-        statusCode, body: _bodyFromValue(value), headers: {
-      'Content-Type': _contentTypeFromValue(value).toString()
-    });
+  _RouteReturnValueModulationMiddleware(this._container, this._modulation);
+
+  Future<shelf.Response> handle(shelf.Request request) {
+    return super.handle(convert(
+        request,
+        Object,
+        _modulation
+    ));
+  }
+}
+
+class _HttpServer {
+  final shelf.Handler handler;
+  final String host;
+  final int port;
+  final SecurityContext securityContext = new SecurityContext();
+  HttpServer server;
+  HttpServer secureServer;
+
+  _HttpServer(this.handler, this.host, this.port, {
+  String certificate,
+  String privateKey,
+  String password}) {
+    if (certificate != null)
+      securityContext.useCertificateChain(certificate);
+    if (password != null)
+      securityContext.usePrivateKey(privateKey, password: password);
   }
 
-  Future<shelf.Response> _streamResponse(Stream stream, int statusCode) async {
-    return new shelf.Response(statusCode, body: await stream
-        .map((i) => serializer.serialize(i, flatten: true)).toList()
-        .then(JSON.encode), headers: {
-      'Content-Type': ContentType.JSON.toString()
-    });
+  Future start() async {
+    await _start(handler);
   }
 
-  void modulateRouteReturnValue(modulation(value)) {
-    _returnValueModulators.add(modulation);
+  Future startSecure() async {
+    secureServer = await HttpServer.bindSecure(
+        host,
+        port,
+        securityContext,
+        shared: true
+    );
+    await _start(const shelf.Pipeline()
+        .addHandler((shelf.Request request) {
+      return new shelf.Response.seeOther('https://$host:$port/${request.url}');
+    }));
+    shelf_io.serveRequests(secureServer, handler);
   }
 
-  Object _bodyFromValue(Object value) {
-    if (_isJsonEncodable(value)) return JSON.encode(
-        serializer.serialize(value, flatten: true));
-    return value.toString();
+  Future _start(shelf.Handler handler) async {
+    server = await HttpServer.bind(host, port, shared: true);
+    shelf_io.serveRequests(server, handler);
   }
 
-  ContentType _contentTypeFromValue(Object value) {
-    if (_isJsonEncodable(value)) return ContentType.JSON;
-    return ContentType.HTML;
-  }
-
-  bool _isJsonEncodable(Object value) {
-    return value is Iterable || value is Map;
+  Future stop() async {
+    await server?.close();
+    await secureServer?.close();
   }
 }

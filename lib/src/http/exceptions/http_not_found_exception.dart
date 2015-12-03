@@ -1,13 +1,9 @@
 part of bridge.http;
 
-class HttpNotFoundException extends BaseException {
-  shelf.Request request;
+class HttpNotFoundException implements Exception {
+  final shelf.Request _request;
 
-  HttpNotFoundException(shelf.Request request)
-      : super('${request.method} ${request.url.path} was not found.') {
-    this.request = request;
-  }
+  HttpNotFoundException(this._request);
 
-  HttpNotFoundException.file(File file)
-      : super('${file.path} was not found.');
+  String toString() => 'The route /${_request.url} was not found';
 }

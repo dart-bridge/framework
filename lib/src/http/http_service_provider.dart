@@ -1,98 +1,65 @@
 part of bridge.http;
 
-UrlGenerator _urlGenerator;
-
 class HttpServiceProvider extends ServiceProvider {
   Server server;
-  Router router;
-  Program program;
 
-  setUp(Application app,
-        Server server,
-        Router router,
-        _ResponseMapper responseMapper,
-        SessionManager manager,
-        HttpConfig config) {
-    this.server = server;
-    this.router = router;
-
-    _helperConfig = config;
-
-    server.attachRouter(router);
-
-    app.singleton(responseMapper);
-    app.singleton(server, as: Server);
+  setUp(Application app, Server server, Router router) {
     app.singleton(router, as: Router);
-    app.singleton(manager);
+    app.singleton(server);
+    this.server = server;
   }
 
-  load(Program program,
-       SessionsMiddleware sessionsMiddleware,
-       CsrfMiddleware csrfMiddleware,
-       StaticFilesMiddleware staticFilesMiddleware,
-       InputMiddleware inputMiddleware,
-       FormMethodMiddleware formMethodMiddleware,
-       UrlGenerator urlGenerator) {
-    _urlGenerator = urlGenerator;
-
-    server.addMiddleware(sessionsMiddleware, highPriority: true);
-    server.addMiddleware(staticFilesMiddleware);
-    server.addMiddleware(inputMiddleware);
-    server.addMiddleware(formMethodMiddleware);
-    server.addMiddleware(csrfMiddleware);
-    server.onError = (e, s) {
-      print('');
-      program.printDanger(new trace.Chain.forTrace(s).terse
-      .toString().split('\n').toList().reversed.join('\n'));
-      print('');
-      program.printWarning('<underline>Uncaught HTTP exception</underline>');
-      program.printDanger(e);
-      print('');
-    };
-
-    this.program = program;
+  load(Program program) {
     program.addCommand(start);
     program.addCommand(stop);
-    program.addCommand(routes);
   }
 
   tearDown() async {
-    await stop();
+    if (server.isRunning)
+      await stop();
+  }
+
+  run(Container container) {
+    try {
+      final Pipeline pipeline = container.make(Pipeline);
+      server.usePipeline(pipeline);
+    } on ContainerException {
+      print('''
+<red-background><white>  WARNING!  </white></red-background>
+<red>No Pipeline is bound in the Container. Instead, the fallback Pipeline
+will be used to allow backwards compatibility. This behaviour is
+deprecated and will be replaced with an exception soon. To remove this
+notice, bind an implementation of the Pipeline class in a Service Provider.</red>
+
+<green>@DependsOn</green>(<cyan>HttpServiceProvider</cyan>)
+<yellow>class</yellow> <cyan>PipelineServiceProvider </cyan><yellow>extends</yellow> <cyan>ServiceProvider </cyan>{
+  load(<cyan>Container </cyan>container) {
+    container.bind(<cyan>Pipeline</cyan>, <cyan>MyPipeline</cyan>);
+  }
+}
+
+<yellow>class</yellow> <cyan>MyPipeline </cyan><yellow>extends</yellow> <cyan>Pipeline </cyan>{}
+      '''.trim());
+    }
   }
 
   @Command('Start the server')
   start() async {
-    await server.start();
-    program.printInfo('Server started on http://${server.hostname}:${server.port}');
+    try {
+      final url = await server.start();
+      print('<blue>Server started on <underline>$url</underline>.</blue>');
+    } on StateError catch(e) {
+      print('<yellow>${e.message}</yellow>');
+    }
   }
 
   @Command('Stop the server')
   stop() async {
     try {
       await server.stop();
-      program.printInfo('Server stopped');
-    } catch (e) {
+      print('<blue>Server stopped.</blue>');
+    } on StateError catch(e) {
+      print('<yellow>${e.message}</yellow>');
     }
-  }
-
-  @Command('List all the end-points defined in the router')
-  routes() async {
-    var table = new dlog.Table(3);
-
-    table.columns.addAll([
-      'Method',
-      'End-point',
-      'Name',
-    ]);
-
-    for (var row in router._routes) {
-      table.data.addAll([
-        row.method,
-        row.route,
-        row.name == null ? '' : row.name,
-      ]);
-    }
-
-    print(table);
   }
 }

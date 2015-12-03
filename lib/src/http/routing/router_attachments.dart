@@ -5,7 +5,7 @@ abstract class RouterAttachments<T> {
 
   T inject(Object object, {Type as});
 
-  T ignoreMiddleware(Type middleware);
+  T ignoreMiddleware(middleware);
 
-  T withMiddleware(Type middleware);
+  T withMiddleware(middleware);
 }
