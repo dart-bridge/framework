@@ -1,13 +1,15 @@
 part of bridge.http;
 
 class Server {
-  final _BackwardsCompatibilityPipeline _fallbackPipeline = new _BackwardsCompatibilityPipeline();
+  final _BackwardsCompatibilityPipeline _fallbackPipeline;
   final Container _container;
   final HttpConfig _config;
   Pipeline _pipeline;
   _HttpServer _runningServer;
 
-  Server(this._container, this._config);
+  Server(Container container, this._config)
+      : _container = container,
+        _fallbackPipeline = new _BackwardsCompatibilityPipeline(container);
 
   String get hostname => _config.host;
 
@@ -70,10 +72,13 @@ class Server {
 }
 
 class _BackwardsCompatibilityPipeline extends Pipeline {
+  final Container _container;
   final List middlewareList = [];
   final Map errorHandlersMap = {};
 
-  @override get middleware => middlewareList;
+  _BackwardsCompatibilityPipeline(this._container);
+
+  @override get middleware => new List.from(defaultMiddleware)..addAll(middlewareList);
 
   @override get errorHandlers => errorHandlersMap;
 
@@ -90,7 +95,8 @@ class _BackwardsCompatibilityPipeline extends Pipeline {
   }
 
   void modulateRouteReturnValue(modulation(value)) {
-    addMiddleware(_RouteReturnValueModulationMiddleware);
+    addMiddleware(
+        new _RouteReturnValueModulationMiddleware(_container, modulation));
   }
 }
 
@@ -103,8 +109,8 @@ class _RouteReturnValueModulationMiddleware extends Middleware {
   Future<shelf.Response> handle(shelf.Request request) {
     return super.handle(convert(
         request,
-        dynamic,
-        _container.curry(_modulation)
+        Object,
+        _modulation
     ));
   }
 }

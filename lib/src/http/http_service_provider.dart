@@ -14,6 +14,11 @@ class HttpServiceProvider extends ServiceProvider {
     program.addCommand(stop);
   }
 
+  tearDown() async {
+    if (server.isRunning)
+      await stop();
+  }
+
   run(Container container) {
     try {
       final Pipeline pipeline = container.make(Pipeline);

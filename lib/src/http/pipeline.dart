@@ -14,33 +14,36 @@ abstract class Pipeline {
 
   Map<Type, Function> get errorHandlers => {};
 
-  Future<shelf.Response> handle(shelf.Request request, Container container) async {
+  Future<shelf.Response> handle(shelf.Request request,
+      Container container) async {
     _container = container;
     final Router router = _container.make(Router);
     final route = router._routes.firstWhere(_routeMatches(request),
-        orElse: () => new Route(request.method, request.url.path, () => throw new HttpNotFoundException(request)));
+        orElse: () => new Route(request.method,
+            request.url.path, () => throw new HttpNotFoundException(request)));
     final middleware = _setUpMiddleware(route);
     var pipeline = const shelf.Pipeline();
     for (final m in middleware)
       pipeline = pipeline.addMiddleware(m);
     final handler = pipeline.addHandler(_routeHandler(route));
-    try {
-      return await handler(request);
-    } catch (exception, stack) {
-      final mirror = reflect(exception);
-      final type = errorHandlers.keys.firstWhere((type) {
-        return mirror.type.isAssignableTo(reflectType(type));
-      }, orElse: () => null);
-      if (type == null) rethrow;
-      final returnValue = await _container.resolve(errorHandlers[type], injecting: {
-        exception.runtimeType: exception,
-        Error: exception,
-        Exception: exception,
-        Object: exception,
-        StackTrace: stack
-      });
-      return _makeResponse(returnValue);
-    }
+    return await handler(request);
+  }
+
+  Future<shelf.Response> _tryErrorHandlers(exception, stack) async {
+    final mirror = reflect(exception);
+    final type = errorHandlers.keys.firstWhere((type) {
+      return mirror.type.isAssignableTo(reflectType(type));
+    }, orElse: () => null);
+    if (type == null) return null;
+    final returnValue = await _container.resolve(
+        errorHandlers[type], injecting: {
+      exception.runtimeType: exception,
+      Error: exception,
+      Exception: exception,
+      Object: exception,
+      StackTrace: stack
+    });
+    return _makeResponse(returnValue);
   }
 
   shelf.Handler _routeHandler(Route route) {
@@ -99,7 +102,10 @@ abstract class Pipeline {
   }
 
   List<shelf.Middleware> _setUpMiddleware(Route route) {
-    final all = _flatten(new List.from(middleware)).toList();
+    final all = _flatten([
+      new _GlobalErrorHandlerMiddleware(_tryErrorHandlers),
+      _HeaderTagMiddleware,
+    ]..addAll(middleware)).toList();
     all.removeWhere(route.ignoredMiddleware.contains);
     for (final extra in route.appendedMiddleware)
       if (!all.contains(extra)) all.add(extra);
@@ -128,5 +134,68 @@ abstract class Pipeline {
     throw new ArgumentError.value(middleware,
         'middleware', 'must be a Type of class or function that'
             ' conforms to shelf.Middleware');
+  }
+}
+
+class _HeaderTagMiddleware extends Middleware {
+  Future<shelf.Response> handle(shelf.Request request) {
+    return super.handle(request).then(_applyHeaderTag);
+  }
+
+  shelf.Response _applyHeaderTag(shelf.Response response) {
+    return response.change(headers: {
+      'X-Powered-By': 'Bridge Framework ${Environment.bridge.version}'
+    });
+  }
+}
+
+class _GlobalErrorHandlerMiddleware extends Middleware {
+  Function _handlers;
+
+  _GlobalErrorHandlerMiddleware(this._handlers);
+
+  Future<shelf.Response> handle(shelf.Request request) async {
+    try {
+      return await super.handle(request);
+    } on shelf.HijackException {
+      rethrow;
+    } catch(e, s) {
+      final attempt = await _handlers(e, s);
+      if (attempt is shelf.Response) return attempt;
+      final stack = new Chain.forTrace(s).terse
+          .toString()
+          .replaceAll(new RegExp(r'.*Program\.execute[^]*'),
+          '===== program started ============================\n')
+          .replaceAllMapped(new RegExp('^((dart:|===).*)', multiLine: true),
+          (m) => '<gray>${m[0]}<yellow>')
+          .replaceAllMapped(new RegExp('^(package:.*)', multiLine: true),
+          (m) => '<red>${m[0]}<yellow>')
+          .split('\n')
+          .reversed
+          .join('\n');
+      final message = '   ' + e.toString().replaceAll('\n', '\n   ');
+      print('''<yellow>$stack</yellow>
+<red-background><white>
+
+$message
+</white></red-background>
+
+<yellow><bold>Note:</bold> To mute this message, add an error handler for <underline>${e.runtimeType}</underline>:</yellow>
+
+<yellow>class</yellow> <cyan>Main</cyan> <yellow>extends</yellow> <cyan>Pipeline</cyan> {
+  <green>@override</green> <yellow>get</yellow> errorHandlers => {
+    <cyan>${e.runtimeType}</cyan>: _handle${e.runtimeType}
+  };
+
+  _handle${e.runtimeType}(<cyan>${e.runtimeType}</cyan> error) {
+    <yellow>return</yellow> <red>'Ouch! We encountered a(n) ${e.runtimeType}! Sorry about that!'</red>;
+  }
+}
+''');
+
+      if (e is HttpNotFoundException)
+        return new shelf.Response.notFound('$e');
+      return new shelf.Response.internalServerError(body: '$e');
+    }
   }
 }

@@ -12,6 +12,7 @@ import 'package:bridge/transport.dart';
 import 'package:formler/formler.dart';
 import 'package:http_server/http_server.dart' as http_server;
 import 'package:mime/mime.dart';
+import 'package:stack_trace/stack_trace.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
