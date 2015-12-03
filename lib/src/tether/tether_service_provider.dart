@@ -73,7 +73,7 @@ class TetherMiddleware extends http.Middleware {
       rethrow;
     } catch (e) {
       // Upgrade failed, so proceed through the [shelf.Pipeline].
-      return super.handle(inject(request, _tethers.get(session), as: Tether));
+      return super.handle(request);
     }
   }
 }

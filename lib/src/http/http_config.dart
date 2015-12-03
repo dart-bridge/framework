@@ -18,6 +18,7 @@ class HttpConfig {
     'certificate': certificate,
     'private_key': privateKey,
     'password': privateKeyPassword,
+    'port': sslPort,
   });
 
   String get certificate => _config('http.server.ssl.certificate');
@@ -26,6 +27,7 @@ class HttpConfig {
   bool get useSsl => _config('http.server.use_ssl', false);
   String get host => _config('http.server.host', 'localhost');
   int get port => _config('http.server.port', 1337);
+  int get sslPort => _config('http.server.ssl.port', port);
   String get publicRoot => _config('http.server.public_root', 'web');
   String get buildRoot => _config('http.server.build_root', 'storage/.build');
 }

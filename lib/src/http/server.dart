@@ -25,14 +25,7 @@ class Server {
 
   Future<String> start() async {
     if (isRunning) throw new StateError('The server is already running!');
-    _runningServer = new _HttpServer(
-        handle,
-        hostname,
-        port,
-        certificate: _config.certificate,
-        privateKey: _config.privateKey,
-        password: _config.privateKeyPassword
-    );
+    _runningServer = new _HttpServer(handle, _config);
     if (_config.useSsl)
       await _runningServer.startSecure();
     else
@@ -78,7 +71,8 @@ class _BackwardsCompatibilityPipeline extends Pipeline {
 
   _BackwardsCompatibilityPipeline(this._container);
 
-  @override get middleware => new List.from(defaultMiddleware)..addAll(middlewareList);
+  @override get middleware => new List.from(defaultMiddleware)
+    ..addAll(middlewareList);
 
   @override get errorHandlers => errorHandlersMap;
 
@@ -117,21 +111,11 @@ class _RouteReturnValueModulationMiddleware extends Middleware {
 
 class _HttpServer {
   final shelf.Handler handler;
-  final String host;
-  final int port;
-  final SecurityContext securityContext = new SecurityContext();
+  final HttpConfig config;
   HttpServer server;
   HttpServer secureServer;
 
-  _HttpServer(this.handler, this.host, this.port, {
-  String certificate,
-  String privateKey,
-  String password}) {
-    if (certificate != null)
-      securityContext.useCertificateChain(certificate);
-    if (password != null)
-      securityContext.usePrivateKey(privateKey, password: password);
-  }
+  _HttpServer(this.handler, this.config);
 
   Future start() async {
     await _start(handler);
@@ -139,20 +123,23 @@ class _HttpServer {
 
   Future startSecure() async {
     secureServer = await HttpServer.bindSecure(
-        host,
-        port,
-        securityContext,
-        shared: true
+        config.host,
+        config.sslPort,
+        new SecurityContext()
+          ..useCertificateChain(config.certificate)
+          ..usePrivateKey(config.privateKey, password: config.privateKeyPassword)
     );
-    await _start(const shelf.Pipeline()
-        .addHandler((shelf.Request request) {
-      return new shelf.Response.seeOther('https://$host:$port/${request.url}');
-    }));
+    if (config.port != config.sslPort)
+      await _start(const shelf.Pipeline()
+          .addHandler((shelf.Request request) {
+        return new shelf.Response.seeOther(
+            'https://${config.host}:${config.sslPort}/${request.url}');
+      }));
     shelf_io.serveRequests(secureServer, handler);
   }
 
   Future _start(shelf.Handler handler) async {
-    server = await HttpServer.bind(host, port, shared: true);
+    server = await HttpServer.bind(config.host, config.port);
     shelf_io.serveRequests(server, handler);
   }
 

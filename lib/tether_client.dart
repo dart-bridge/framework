@@ -17,7 +17,8 @@ Tether _globalTether;
 Tether get tether {
   Messenger.serializer = serializer;
   Session.factory = (id, data) => new http.Session(id, data);
-  return _globalTether ??= webSocketTether('ws://${window.location.hostname}:${window.location.port}/');
+  final protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+  return _globalTether ??= webSocketTether('$protocol://${window.location.hostname}:${window.location.port}/');
 }
 
 @Deprecated('1.0.0. Handle Tether connection manually')
