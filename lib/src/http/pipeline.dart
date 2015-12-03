@@ -12,6 +12,13 @@ abstract class Pipeline {
 
   List get middleware => [];
 
+  List get defaultMiddleware => [
+    StaticFilesMiddleware,
+    InputMiddleware,
+    SessionsMiddleware,
+    CsrfMiddleware,
+  ];
+
   Map<Type, ErrorHandler> get errorHandlers => {};
 
   routes(Router router);
@@ -39,7 +46,7 @@ abstract class Pipeline {
 
   shelf.Handler _routeHandler(Route route) {
     return (shelf.Request request) async {
-      final attachment = _getAttachment(request);
+      final attachment = new PipelineAttachment.of(request);
       final injections = {shelf.Request: request}..addAll(
           route._shouldInject)..addAll(attachment.inject);
       final named = route.wildcards(request.url.path);
@@ -54,7 +61,7 @@ abstract class Pipeline {
   }
 
   Future<shelf.Response> _makeResponse(rawValue,
-      [RequestAttachment attachment]) async {
+      [PipelineAttachment attachment]) async {
     final value = attachment == null
         ? rawValue
         : await _applyConversions(rawValue, attachment.convert);
@@ -90,17 +97,22 @@ abstract class Pipeline {
         await conversions[type](rawValue), remainingConversions);
   }
 
-  RequestAttachment _getAttachment(shelf.Request request) {
-    return request.context[Middleware._attachmentKey]
-        ?? new RequestAttachment.empty();
-  }
-
   List<shelf.Middleware> _setUpMiddleware(Route route) {
-    final all = new List.from(middleware);
+    final all = _flatten(new List.from(middleware));
     all.removeWhere(route.ignoredMiddleware.contains);
     for (final extra in route.appendedMiddleware)
       if (!all.contains(extra)) all.add(extra);
     return all.map(_conformMiddleware).toList(growable: false);
+  }
+
+  Iterable _flatten(Iterable iterable) sync* {
+    for (final item in iterable) {
+      if (item is Iterable) {
+        yield* _flatten(item);
+      } else {
+        yield item;
+      }
+    }
   }
 
   Function _routeMatches(shelf.Request request) {

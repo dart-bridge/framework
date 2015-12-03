@@ -50,7 +50,8 @@ class PipelineTest extends Pipeline implements TestCase {
       // TODO: Implement Sessions and CSRF protection
       if(input['_token'] != 'x') throw new CsrfException();
       return input['payload'];
-    }).withMiddleware(InputMiddleware)
+    }).withMiddleware(SessionsMiddleware)
+        .withMiddleware(InputMiddleware)
         .withMiddleware(CsrfMiddleware);
   }
 
