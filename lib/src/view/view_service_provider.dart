@@ -42,6 +42,8 @@ class ViewServiceProvider extends ServiceProvider {
     }).toList());
 
     if (app.hasServiceProvider(HttpServiceProvider)) {
+      // For backwards compatibility.
+      // Include [TemplatesMiddleware] in the middleware list instead.
       server.modulateRouteReturnValue((Template template) {
         if (template is! Template) return template;
         return template.content.join('\n');

@@ -43,12 +43,20 @@ class TetherServiceProvider extends ServiceProvider {
   }
 
   load(http.Server server, http.SessionManager sessions) {
-    server.addMiddleware(shelf.createMiddleware(requestHandler: _handle), highPriority: true);
+    // For backwards compatibility only. Include the [TetherMiddleware] in Pipeline.
+    server.addMiddleware(new TetherMiddleware(tethers), highPriority: true);
   }
+}
 
-  shelf.Response _handle(shelf.Request request) {
+class TetherMiddleware extends http.Middleware {
+  final Tethers _tethers;
+
+  TetherMiddleware(this._tethers);
+
+  Future<shelf.Response> handle(shelf.Request request) async {
     void createTether(http_parser.CompatibleWebSocket socket) {
-      tethers.add(new _CompatibleWebSocketAnchor(socket), session: request.context['session']);
+      _tethers.add(new _CompatibleWebSocketAnchor(socket),
+          session: new http.PipelineAttachment.of(request).session);
     }
 
     shelf.Handler handler = ws.webSocketHandler(createTether);
@@ -63,7 +71,7 @@ class TetherServiceProvider extends ServiceProvider {
       rethrow;
     } catch(e) {
       // Upgrade failed, so proceed through the [shelf.Pipeline].
-      return null;
+      return super.handle(request);
     }
   }
 }

@@ -1,7 +1,9 @@
 library bridge.http.sessions.session;
 
-class Session {
-  final Map<String, dynamic> variables = {};
+import 'package:tether/protocol.dart' as tether;
+
+class Session implements tether.Session {
+  final Map<String, dynamic> _variables = {};
   final Map<String, dynamic> _flashedSessionVariables = {};
   final List<String> _reflashedKeys = [];
   final String id;
@@ -12,11 +14,11 @@ class Session {
   Object get(String key) {
     if (_flashedSessionVariables.containsKey(key))
       return _flashedSessionVariables[key];
-    return variables[key];
+    return _variables[key];
   }
 
   void set(String key, value) {
-    variables[key] = value;
+    _variables[key] = value;
   }
 
   operator [](String key) => get(key);
@@ -43,7 +45,7 @@ class Session {
   void apply(Session session) {
     if (session.id != id)
       throw new ArgumentError('Applied Session must have the same id');
-    variables.addAll(session.variables);
+    _variables.addAll(session._variables);
     _flashedSessionVariables.addAll(session._flashedSessionVariables);
     for (final key in session._reflashedKeys)
         if (!_reflashedKeys.contains(key))
@@ -51,6 +53,8 @@ class Session {
   }
 
   String toString() {
-    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(variables)})';
+    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(_variables)})';
   }
+
+  Map get data => _variables;
 }
