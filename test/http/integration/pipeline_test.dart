@@ -20,7 +20,7 @@ class PipelineTest extends Pipeline implements TestCase {
   ];
 
   @override get errorHandlers => {
-    CsrfException: csrfErrorHandler,
+    TokenMismatchException: csrfErrorHandler,
   };
 
   @override routes(Router router) {
@@ -47,10 +47,8 @@ class PipelineTest extends Pipeline implements TestCase {
     }).withMiddleware(InputMiddleware);
 
     router.post('/csrf', (Input input) {
-      // TODO: Implement Sessions and CSRF protection
-      if(input['_token'] != 'x') throw new CsrfException();
       return input['payload'];
-    }).withMiddleware(SessionsMiddleware)
+    }).withMiddleware(MockSessionsMiddleware)
         .withMiddleware(InputMiddleware)
         .withMiddleware(CsrfMiddleware);
   }
@@ -92,7 +90,7 @@ class PipelineTest extends Pipeline implements TestCase {
         'bridge(class(function(y)))');
   }
 
-  String csrfErrorHandler(CsrfException exception, StackTrace stack) {
+  String csrfErrorHandler(TokenMismatchException exception, StackTrace stack) {
     return 'caught csrf error';
   }
 
@@ -164,4 +162,13 @@ class BridgeMiddleware extends Middleware {
 
 class Dependency {
   final property = 'bridge';
+}
+
+class MockSessionsMiddleware extends Middleware {
+  Future<Response> handle(Request request) {
+    return super.handle(attach(
+        request,
+        new PipelineAttachment(session: new Session('x'))
+    ));
+  }
 }

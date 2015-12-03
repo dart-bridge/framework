@@ -56,7 +56,9 @@ abstract class Pipeline {
           namedParameters: named
       );
       final response = await _makeResponse(returnValue, attachment);
-      return response;
+      return response.change(context: {
+        PipelineAttachment._contextKey: attachment
+      });
     };
   }
 
@@ -98,7 +100,7 @@ abstract class Pipeline {
   }
 
   List<shelf.Middleware> _setUpMiddleware(Route route) {
-    final all = _flatten(new List.from(middleware));
+    final all = _flatten(new List.from(middleware)).toList();
     all.removeWhere(route.ignoredMiddleware.contains);
     for (final extra in route.appendedMiddleware)
       if (!all.contains(extra)) all.add(extra);

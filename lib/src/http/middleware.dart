@@ -24,6 +24,9 @@ abstract class Middleware {
     }));
   }
 
+  dynamic getInjection(shelf.Request request, Type injection) =>
+      new PipelineAttachment.of(request).inject[injection];
+
   shelf.Message convert(shelf.Message message, Type type, conversion(value)) {
     return attach(message, new PipelineAttachment(convert: {
       type: conversion
@@ -48,7 +51,7 @@ class PipelineAttachment {
   });
 
   factory PipelineAttachment.of(shelf.Message message) {
-    return message.context[_contextKey] ??= const PipelineAttachment.empty();
+    return message.context[_contextKey] ?? const PipelineAttachment.empty();
   }
 
   const PipelineAttachment.empty()
