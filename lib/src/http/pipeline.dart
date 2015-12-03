@@ -1,14 +1,7 @@
 part of bridge.http;
 
-typedef ErrorHandler(error, StackTrace stackTrace);
-
 abstract class Pipeline {
-  final Router _router;
-  final Container _container;
-
-  Pipeline(this._router, this._container) {
-    routes(_router);
-  }
+  Container _container;
 
   List get middleware => [];
 
@@ -19,13 +12,13 @@ abstract class Pipeline {
     CsrfMiddleware,
   ];
 
-  Map<Type, ErrorHandler> get errorHandlers => {};
+  Map<Type, Function> get errorHandlers => {};
 
-  routes(Router router);
-
-  Future<shelf.Response> handle(shelf.Request request) async {
-    final route = _router._routes.firstWhere(_routeMatches(request),
-        orElse: () => throw new HttpNotFoundException(request));
+  Future<shelf.Response> handle(shelf.Request request, Container container) async {
+    _container = container;
+    final Router router = _container.make(Router);
+    final route = router._routes.firstWhere(_routeMatches(request),
+        orElse: () => new Route(request.method, request.url.path, () => throw new HttpNotFoundException(request)));
     final middleware = _setUpMiddleware(route);
     var pipeline = const shelf.Pipeline();
     for (final m in middleware)
@@ -39,7 +32,13 @@ abstract class Pipeline {
         return mirror.type.isAssignableTo(reflectType(type));
       }, orElse: () => null);
       if (type == null) rethrow;
-      final returnValue = await errorHandlers[type](exception, stack);
+      final returnValue = await _container.resolve(errorHandlers[type], injecting: {
+        exception.runtimeType: exception,
+        Error: exception,
+        Exception: exception,
+        Object: exception,
+        StackTrace: stack
+      });
       return _makeResponse(returnValue);
     }
   }

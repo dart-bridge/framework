@@ -1,6 +1,5 @@
 part of bridge.view;
 
-@DependsOn(HttpServiceProvider, strict: false)
 class ViewServiceProvider extends ServiceProvider {
   Application app;
   Program program;
@@ -21,7 +20,7 @@ class ViewServiceProvider extends ServiceProvider {
     composer.registerParser(app.curry((ChalkTemplateParser p) => p));
   }
 
-  Future load(Program program, Server server, ViewConfig config) async {
+  Future load(Program program, ViewConfig config) async {
     this.program = program;
     final root = new Directory(config.templatesRoot);
 
@@ -40,13 +39,6 @@ class ViewServiceProvider extends ServiceProvider {
         }
       }
     }).toList());
-
-    if (app.hasServiceProvider(HttpServiceProvider)) {
-      server.modulateRouteReturnValue((Template template) {
-        if (template is! Template) return template;
-        return template.content.join('\n');
-      });
-    }
   }
 
   Future run() async {

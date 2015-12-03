@@ -14,6 +14,7 @@ import 'package:http_server/http_server.dart' as http_server;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf/src/message.dart' as shelf;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 

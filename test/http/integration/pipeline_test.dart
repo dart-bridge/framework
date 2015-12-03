@@ -7,7 +7,13 @@ import 'dart:convert';
 import 'dart:async';
 
 class PipelineTest extends Pipeline implements TestCase {
-  PipelineTest() : super(new Router(), new Container());
+  final Container container = new Container();
+
+  PipelineTest() {
+    final router = new Router();
+    routes(router);
+    container.singleton(router, as: Router);
+  }
 
   setUp() {}
 
@@ -23,7 +29,7 @@ class PipelineTest extends Pipeline implements TestCase {
     TokenMismatchException: csrfErrorHandler,
   };
 
-  @override routes(Router router) {
+  routes(Router router) {
     final handler = () => 'response';
 
     router.get('/', handler);
@@ -103,7 +109,7 @@ class PipelineTest extends Pipeline implements TestCase {
   }
 
   Future<String> _handle(Request request) {
-    return handle(request).then(_read);
+    return handle(request, container).then(_read);
   }
 
   Request _request(String path, {
