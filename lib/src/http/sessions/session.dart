@@ -3,13 +3,14 @@ library bridge.http.sessions.session;
 import 'package:tether/protocol.dart' as tether;
 
 class Session implements tether.Session {
-  final Map<String, dynamic> _variables = {};
+  final Map<String, dynamic> _variables;
   final Map<String, dynamic> _flashedSessionVariables = {};
   final List<String> _reflashedKeys = [];
   final String id;
   bool isNew = false;
 
-  Session(String this.id);
+  Session(this.id, [Map<String, dynamic> variables])
+    : _variables = variables ?? {};
 
   Object get(String key) {
     if (_flashedSessionVariables.containsKey(key))
@@ -22,6 +23,7 @@ class Session implements tether.Session {
   }
 
   operator [](String key) => get(key);
+
   operator []=(String key, value) => set(key, value);
 
   void flash(String key, value) {
@@ -48,13 +50,21 @@ class Session implements tether.Session {
     _variables.addAll(session._variables);
     _flashedSessionVariables.addAll(session._flashedSessionVariables);
     for (final key in session._reflashedKeys)
-        if (!_reflashedKeys.contains(key))
-          _reflashedKeys.add(key);
+      if (!_reflashedKeys.contains(key))
+        _reflashedKeys.add(key);
   }
 
   String toString() {
-    return 'Session(${new Map.from(_flashedSessionVariables)..addAll(_variables)})';
+    return 'Session(${new Map.from(_flashedSessionVariables)
+      ..addAll(_variables)})';
   }
 
-  Map get data => _variables;
+  Map get data => new Map.from(_variables);
+
+  set data(Map value) {
+    _variables.clear();
+    _variables.addAll(value);
+  }
+
+  operator ==(Session other) => other is Session && other.id == id;
 }

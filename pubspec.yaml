@@ -20,7 +20,8 @@ dependencies:
   path: '^1.3.5'
   http_server: '^0.9.5+1'
   trestle: '^0.6.0'
-  tether: '^0.1.2'
+  tether: #'^0.1.5'
+    path: /Users/emilpersson/Code/dart-bridge/tether
   async: '^1.3.0'
   watcher: '^0.9.7'
 dev_dependencies:
