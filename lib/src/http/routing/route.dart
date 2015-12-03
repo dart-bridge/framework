@@ -1,4 +1,4 @@
-part of bridge.http.shared;
+part of bridge.http;
 
 class Route implements RouterAttachments<Route> {
   final String method;

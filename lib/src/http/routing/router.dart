@@ -1,4 +1,4 @@
-part of bridge.http.shared;
+part of bridge.http;
 
 abstract class Router {
   Set<Route> _routes;
@@ -6,7 +6,7 @@ abstract class Router {
   factory Router({String base: '',
   List<Type> ignoreMiddleware,
   List<Type> appendMiddleware}) =>
-      new BaseRouter(base, ignoreMiddleware ?? [], appendMiddleware ?? []);
+      new _Router(base, ignoreMiddleware ?? [], appendMiddleware ?? []);
 
   RouteGroup group(String prefix, group());
 
@@ -21,19 +21,21 @@ abstract class Router {
   Route patch(String route, Function handler);
 
   Route delete(String route, Function handler);
+
+  void resource(String route, Object controller);
 }
 
-class BaseRouter implements Router {
+class _Router implements Router {
   Set<Route> _routes = new Set();
   final List<Type> _ignoredMiddleware;
   final List<Type> _appendedMiddleware;
   String _base;
 
-  BaseRouter(String this._base,
+  _Router(String this._base,
       List<Type> this._ignoredMiddleware,
       List<Type> this._appendedMiddleware);
 
-  Route makeRoute(String method,
+  Route _route(String method,
       String route,
       Function handler,
       [String name]) {
@@ -50,22 +52,59 @@ class BaseRouter implements Router {
   }
 
   Route delete(String route, Function handler) =>
-      makeRoute('DELETE', route, handler);
+      _route('DELETE', route, handler);
 
   Route get(String route, Function handler) =>
-      makeRoute('GET', route, handler);
+      _route('GET', route, handler);
 
   Route patch(String route, Function handler) =>
-      makeRoute('PATCH', route, handler);
+      _route('PATCH', route, handler);
 
   Route post(String route, Function handler) =>
-      makeRoute('POST', route, handler);
+      _route('POST', route, handler);
 
   Route put(String route, Function handler) =>
-      makeRoute('PUT', route, handler);
+      _route('PUT', route, handler);
 
   Route update(String route, Function handler) =>
-      makeRoute('UPDATE', route, handler);
+      _route('UPDATE', route, handler);
+
+  void resource(String route, Object controller) {
+    final controllerMirror = reflect(controller);
+    final name = route.split('/').removeLast();
+    _restfulResource(route, controllerMirror, name);
+  }
+
+  void _restfulResource(String route, InstanceMirror controller, String name) {
+    if (controller.type.declarations.containsKey(#index))
+      _route('GET', '$route', controller
+          .getField(#index)
+          .reflectee, '$name.index');
+    if (controller.type.declarations.containsKey(#create))
+      _route('GET', '$route/create', controller
+          .getField(#create)
+          .reflectee, '$name.create');
+    if (controller.type.declarations.containsKey(#store))
+      _route('POST', '$route', controller
+          .getField(#store)
+          .reflectee, '$name.store');
+    if (controller.type.declarations.containsKey(#show))
+      _route('GET', '$route/:id', controller
+          .getField(#show)
+          .reflectee, '$name.show');
+    if (controller.type.declarations.containsKey(#edit))
+      _route('GET', '$route/:id/edit', controller
+          .getField(#edit)
+          .reflectee, '$name.edit');
+    if (controller.type.declarations.containsKey(#update))
+      _route('PUT', '$route/:id', controller
+          .getField(#update)
+          .reflectee, '$name.update');
+    if (controller.type.declarations.containsKey(#destroy))
+      _route('DELETE', '$route/:id', controller
+          .getField(#destroy)
+          .reflectee, '$name.destroy');
+  }
 
   RouteGroup group(String prefix, group()) {
     final oldBase = _base;

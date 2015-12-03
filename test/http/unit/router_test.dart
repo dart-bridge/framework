@@ -1,11 +1,10 @@
-library bridge.http.shared;
+library bridge.http;
 
 import 'package:testcase/testcase.dart';
 export 'package:testcase/init.dart';
 import 'dart:mirrors';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:bridge/http.dart';
-import 'package:bridge/src/http/routing/rest_router.dart' as rest;
 
 part 'packages/bridge/src/http/routing/router_attachments.dart';
 
@@ -65,7 +64,6 @@ class RouterTest implements TestCase {
 
   @test
   it_has_a_restful_batch_method() {
-    final router = new rest.Router();
     final controller = new CompleteResourceController();
     router.resource('test', controller);
 
@@ -82,7 +80,6 @@ class RouterTest implements TestCase {
 
   @test
   it_supports_partial_resources() {
-    final router = new rest.Router();
     final controller = new PartialResourceController();
     router.resource('test', controller);
 

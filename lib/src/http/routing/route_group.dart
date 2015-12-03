@@ -1,4 +1,4 @@
-part of bridge.http.shared;
+part of bridge.http;
 
 class RouteGroup implements RouterAttachments<RouteGroup> {
   final Set<Route> _routes;

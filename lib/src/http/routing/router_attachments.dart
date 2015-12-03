@@ -1,4 +1,4 @@
-part of bridge.http.shared;
+part of bridge.http;
 
 abstract class RouterAttachments<T> {
   T named(String name);

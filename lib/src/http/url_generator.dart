@@ -1,4 +1,4 @@
-part of bridge.http.shared;
+part of bridge.http;
 
 class UrlGenerator {
   final Router _router;
