@@ -9,8 +9,8 @@ class Session implements tether.Session {
   final String id;
   bool isNew = false;
 
-  Session(this.id, [Map<String, dynamic> variables])
-    : _variables = variables ?? {};
+  Session(this.id, [Map<String, dynamic> variables = const {}])
+    : _variables = new Map.from(variables);
 
   Object get(String key) {
     if (_flashedSessionVariables.containsKey(key))
