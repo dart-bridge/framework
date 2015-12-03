@@ -9,8 +9,9 @@ class ApplicationTest implements TestCase {
   Config config;
 
   setUp() {
-    config = new Config();
-    config['app'] = {};
+    config = new Config({
+      'app': {}
+    });
     application = new Application();
   }
 

@@ -3,7 +3,8 @@ part of bridge.core;
 /// Loads a deep folder structure with YAML-files and its values
 /// as a single map with dot-notation accessing.
 abstract class Config {
-  factory Config() => new _Config();
+  factory Config(Map<String, Map<String, dynamic>> data) => new _Config(data);
+  factory Config.empty() => new Config({});
 
   /// Gets a value from this config map. Supports dot notation:
   ///
@@ -22,7 +23,7 @@ abstract class Config {
   /// asynchronous and returns a [Future].
   static Future<Config> load(Directory directory) async {
     if (_envHasNotBeenLoaded() && await _envFileIsPresent()) _loadEnv();
-    var config = new _Config();
+    var config = new Config.empty();
     await config._load(directory);
     return config;
   }
@@ -52,8 +53,9 @@ abstract class Config {
 }
 
 class _Config implements Config {
+  final Map _map;
 
-  Map _map = {};
+  _Config(this._map);
 
   operator [](String key) {
     return _itemFromDotPath(key);
