@@ -26,11 +26,12 @@ class Server {
   Future<String> start() async {
     if (isRunning) throw new StateError('The server is already running!');
     _runningServer = new _HttpServer(handle, _config);
-    if (_config.useSsl)
+    if (_config.useSsl) {
       await _runningServer.startSecure();
-    else
-      await _runningServer.start();
-    return 'http${_config.useSsl ? 's' : ''}//$hostname:$port';
+      return 'https://$hostname:${_config.sslPort} (http://$hostname:$port)';
+    }
+    await _runningServer.start();
+    return 'http://$hostname:$port';
   }
 
   Future stop() async {
@@ -127,7 +128,8 @@ class _HttpServer {
         config.sslPort,
         new SecurityContext()
           ..useCertificateChain(config.certificate)
-          ..usePrivateKey(config.privateKey, password: config.privateKeyPassword)
+          ..usePrivateKey(
+              config.privateKey, password: config.privateKeyPassword)
     );
     if (config.port != config.sslPort)
       await _start(const shelf.Pipeline()
