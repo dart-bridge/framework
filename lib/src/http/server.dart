@@ -135,7 +135,7 @@ class _HttpServer {
       await _start(const shelf.Pipeline()
           .addHandler((shelf.Request request) {
         return new shelf.Response.seeOther(
-            'https://${config.host}:${config.sslPort}/${request.url}');
+            'https://${request.headers['host']}:${config.sslPort}/${request.url}');
       }));
     shelf_io.serveRequests(secureServer, handler);
   }
