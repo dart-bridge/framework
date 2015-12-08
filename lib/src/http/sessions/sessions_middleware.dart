@@ -13,7 +13,7 @@ class SessionsMiddleware extends Middleware {
 
   shelf.Response _attachSessionToResponse(shelf.Response response) {
     final session = manager.sessionOf(response);
-    if (session.isNew) response = _setSessionCookie(response, session);
+    if (session?.isNew ?? true) response = _setSessionCookie(response, session);
     session.clearOldFlashes();
     return response;
   }

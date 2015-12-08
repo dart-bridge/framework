@@ -29,7 +29,7 @@ abstract class Pipeline {
     return await handler(request);
   }
 
-  Future<shelf.Response> _tryErrorHandlers(exception, stack) async {
+  Future<shelf.Response> _tryErrorHandlers(shelf.Request request, exception, stack) async {
     final mirror = reflect(exception);
     final type = errorHandlers.keys.firstWhere((type) {
       return mirror.type.isAssignableTo(reflectType(type));
@@ -43,7 +43,7 @@ abstract class Pipeline {
       Object: exception,
       StackTrace: stack
     });
-    return _makeResponse(returnValue);
+    return _makeResponse(returnValue, new PipelineAttachment.of(request));
   }
 
   shelf.Handler _routeHandler(Route route) {
@@ -57,22 +57,25 @@ abstract class Pipeline {
           injecting: injections,
           namedParameters: named
       );
-      final response = await _makeResponse(returnValue, attachment);
-      return response.change(context: {
-        PipelineAttachment._contextKey: attachment
-      });
+      return _makeResponse(returnValue, attachment);
     };
   }
 
   Future<shelf.Response> _makeResponse(rawValue,
       [PipelineAttachment attachment]) async {
+    reattachAttachment(shelf.Response response) {
+      return response.change(context: {
+        PipelineAttachment._contextKey: attachment
+            ?? new PipelineAttachment.empty()
+      });
+    }
     final value = attachment == null
         ? rawValue
         : await _applyConversions(rawValue, attachment.convert);
-    if (value is shelf.Response) return value;
+    if (value is shelf.Response) return reattachAttachment(value);
     if (value is String || value is bool || value is num)
-      return _htmlResponse(value);
-    return _jsonResponse(value);
+      return reattachAttachment(_htmlResponse(value));
+    return reattachAttachment(await _jsonResponse(value));
   }
 
   shelf.Response _htmlResponse(value) {
@@ -105,10 +108,16 @@ abstract class Pipeline {
     final all = _flatten([
       new _GlobalErrorHandlerMiddleware(_tryErrorHandlers),
       _HeaderTagMiddleware,
-    ]..addAll(middleware)).toList();
+      middleware,
+    ]).toList();
+
     all.removeWhere(route.ignoredMiddleware.contains);
+
     for (final extra in route.appendedMiddleware)
       if (!all.contains(extra)) all.add(extra);
+
+    all.add(new _GlobalErrorHandlerMiddleware(_tryErrorHandlers));
+
     return all.map(_conformMiddleware).toList(growable: false);
   }
 
@@ -160,8 +169,12 @@ class _GlobalErrorHandlerMiddleware extends Middleware {
     } on shelf.HijackException {
       rethrow;
     } catch(e, s) {
-      final attempt = await _handlers(e, s);
-      if (attempt is shelf.Response) return attempt;
+      try {
+        final attempt = await _handlers(request, e, s);
+        if (attempt is shelf.Response) return attempt;
+      } catch (_) {
+        return new Future.error(e, s);
+      }
       final stack = new Chain.forTrace(s).terse
           .toString()
           .replaceAll(new RegExp(r'.*Program\.execute[^]*'),
