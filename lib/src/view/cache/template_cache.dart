@@ -18,8 +18,19 @@ abstract class TemplateCache {
   factory TemplateCache.import(
       Map<Symbol, dynamic> variables,
       Container container) {
+    final ViewConfig config = container.make(ViewConfig);
+    if (_templatesClass == null) {
+      final cacheDirectory = new Directory(config.templatesCacheDirectory);
+      if (cacheDirectory.existsSync())
+        cacheDirectory.deleteSync(recursive: true);
+      throw new ConfigException(
+          "No [Templates] class is loaded. "
+          "Add [export '${config.templatesCache}'] "
+          "to a loaded library."
+      );
+    }
     return plato.instantiate(_templatesClass, [variables])
-    .._container = container;
+      .._container = container;
   }
 
   Map<String, TemplateGenerator> get collection;
