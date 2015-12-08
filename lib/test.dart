@@ -1,11 +1,13 @@
 library bridge.test;
 
-import 'dart:mirrors';
 import 'dart:async';
+import 'dart:mirrors';
 
-import 'core.dart';
 import 'cli.dart';
-
-part 'src/test/test_application.dart';
+import 'core.dart';
+import 'package:bridge/http.dart' as http;
+import 'dart:convert';
 
 part 'src/test/input_output.dart';
+part 'src/test/test_application.dart';
+part 'src/test/test_server.dart';

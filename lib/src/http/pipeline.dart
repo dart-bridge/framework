@@ -3,7 +3,7 @@ part of bridge.http;
 abstract class Pipeline {
   Container _container;
 
-  List get middleware => [];
+  List get middleware => [defaultMiddleware];
 
   List get defaultMiddleware => [
     StaticFilesMiddleware,

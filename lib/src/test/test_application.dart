@@ -3,6 +3,7 @@ part of bridge.test;
 class TestApplication extends Application {
   final Config _config;
   BridgeCli _program;
+  TestServer _server;
   final _InputOutput _io = new _InputOutput();
 
   TestApplication._(List<Type> serviceProviders, {Map config})
@@ -29,11 +30,20 @@ class TestApplication extends Application {
 
   List<String> get log => _io.log;
 
+  TestServer get server {
+    if (!hasServiceProvider(http.HttpServiceProvider))
+      throw new UnsupportedError(
+          'You must include [HttpServiceProvider] to use HTTP.');
+
+    return _server ??= make(TestServer);
+  }
+
   Future execute(String command) async {
     _io.output(await _program.execute(new Input(command)));
   }
 
-  static Future<TestApplication> start(List<Type> serviceProviders, {Map config}) async {
+  static Future<TestApplication> start(List<Type> serviceProviders,
+      {Map config}) async {
     final app = new TestApplication._(serviceProviders, config: config);
     await app.setUp();
     return app;
@@ -42,8 +52,7 @@ class TestApplication extends Application {
   Future setUp([_]) {
     return runZoned(() {
       return super.setUpWithConfig(_config);
-    }, zoneSpecification: new ZoneSpecification(print: (
-        Zone self,
+    }, zoneSpecification: new ZoneSpecification(print: (Zone self,
         ZoneDelegate parent,
         Zone zone,
         String line) {
