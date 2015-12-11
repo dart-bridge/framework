@@ -9,7 +9,9 @@ class HttpServiceProvider extends ServiceProvider {
     this.server = server;
   }
 
-  load(Program program) {
+  load(Program program, HttpConfig config, UrlGenerator urlGenerator) {
+    _helperConfig = config;
+    _helperUrlGenerator = urlGenerator;
     program.addCommand(start);
     program.addCommand(stop);
   }
