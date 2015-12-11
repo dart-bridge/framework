@@ -168,14 +168,17 @@ class _GlobalErrorHandlerMiddleware extends Middleware {
       return await super.handle(request);
     } on shelf.HijackException {
       rethrow;
-    } catch(e, s) {
+    } catch(_e, _s) {
+      var error = _e;
+      StackTrace stackTrace = _s;
       try {
-        final attempt = await _handlers(request, e, s);
+        final attempt = await _handlers(request, error, stackTrace);
         if (attempt is shelf.Response) return attempt;
-      } catch (_) {
-        return new Future.error(e, s);
+      } catch (_e, _s) {
+        error = _e;
+        stackTrace = _s;
       }
-      final stack = new Chain.forTrace(s).terse
+      final stack = new Chain.forTrace(stackTrace).terse
           .toString()
           .replaceAll(new RegExp(r'.*Program\.execute[^]*'),
           '===== program started ============================\n')
@@ -186,29 +189,29 @@ class _GlobalErrorHandlerMiddleware extends Middleware {
           .split('\n')
           .reversed
           .join('\n');
-      final message = '   ' + e.toString().replaceAll('\n', '\n   ');
+      final message = '   ' + error.toString().replaceAll('\n', '\n   ');
       print('''<yellow>$stack</yellow>
 <red-background><white>
 
 $message
 </white></red-background>
 
-<yellow><bold>Note:</bold> To mute this message, add an error handler for <underline>${e.runtimeType}</underline>:</yellow>
+<yellow><bold>Note:</bold> To mute this message, add an error handler for <underline>${error.runtimeType}</underline>:</yellow>
 
 <yellow>class</yellow> <cyan>Main</cyan> <yellow>extends</yellow> <cyan>Pipeline</cyan> {
   <green>@override</green> <yellow>get</yellow> errorHandlers => {
-    <cyan>${e.runtimeType}</cyan>: _handle${e.runtimeType}
+    <cyan>${error.runtimeType}</cyan>: _handle${error.runtimeType}
   };
 
-  _handle${e.runtimeType}(<cyan>${e.runtimeType}</cyan> error) {
-    <yellow>return</yellow> <red>'Ouch! We encountered a(n) ${e.runtimeType}! Sorry about that!'</red>;
+  _handle${error.runtimeType}(<cyan>${error.runtimeType}</cyan> error) {
+    <yellow>return</yellow> <red>'Ouch! We encountered a(n) ${error.runtimeType}! Sorry about that!'</red>;
   }
 }
 ''');
 
-      if (e is HttpNotFoundException)
-        return new shelf.Response.notFound('$e');
-      return new shelf.Response.internalServerError(body: '$e');
+      if (error is HttpNotFoundException)
+        return new shelf.Response.notFound('$error');
+      return new shelf.Response.internalServerError(body: '$error');
     }
   }
 }

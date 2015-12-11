@@ -8,13 +8,31 @@ abstract class Middleware {
     return handle;
   }
 
-  Future<shelf.Response> handle(shelf.Request request) async {
+  Future<shelf.Response> handle(shelf.Request request) {
+    return _handle(request).then(_reattach(new PipelineAttachment.of(request)));
+  }
+
+  Future<shelf.Response> _handle(shelf.Request request) async {
     return await _inner(request);
+  }
+
+  Function _reattach(PipelineAttachment attachment) {
+    return (shelf.Response response) {
+      return attachIfEmpty(response, attachment);
+    };
   }
 
   shelf.Message attach(shelf.Message message, PipelineAttachment attachment) {
     return message.change(context: {
-      PipelineAttachment._contextKey: new PipelineAttachment.of(message).apply(attachment)
+      PipelineAttachment._contextKey: new PipelineAttachment.of(message)
+          .apply(attachment)
+    });
+  }
+
+  shelf.Message attachIfEmpty(shelf.Message message, PipelineAttachment attachment) {
+    return message.change(context: {
+      PipelineAttachment._contextKey: new PipelineAttachment.of(message)
+          .applyIfEmpty(attachment)
     });
   }
 
@@ -66,6 +84,22 @@ class PipelineAttachment {
         convert: new Map.from(convert)
           ..addAll(other.convert),
         session: other.session ?? session
+    );
+  }
+
+  PipelineAttachment applyIfEmpty(PipelineAttachment other) {
+    final oldInject = new Map.from(inject);
+    for (final injectKey in other.inject.keys) {
+      oldInject.putIfAbsent(injectKey, () => other.inject[injectKey]);
+    }
+    final oldConvert = new Map.from(convert);
+    for (final convertKey in other.convert.keys) {
+      oldConvert.putIfAbsent(convertKey, () => other.convert[convertKey]);
+    }
+    return new PipelineAttachment(
+        inject: oldInject,
+        convert: oldConvert,
+        session: session ?? other.session
     );
   }
 }

@@ -8,12 +8,12 @@ class SessionsMiddleware extends Middleware {
   Future<shelf.Response> handle(shelf.Request request) async {
     final session = manager.attachSession(request);
     return super.handle(applySession(request, session))
-        .then(_attachSessionToResponse);
+        .then(_treatResponse);
   }
 
-  shelf.Response _attachSessionToResponse(shelf.Response response) {
+  shelf.Response _treatResponse(shelf.Response response) {
     final session = manager.sessionOf(response);
-    if (session?.isNew ?? true) response = _setSessionCookie(response, session);
+    if (session.isNew) response = _setSessionCookie(response, session);
     session.clearOldFlashes();
     return response;
   }

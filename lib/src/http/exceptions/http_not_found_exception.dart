@@ -15,5 +15,5 @@ class HttpNotFoundException implements Exception {
       return 'The file at ${path.relative(_file.path)}';
   }
 
-  String toString() => '$resource was not found';
+  String toString() => 'HttpNotFoundException: $resource was not found';
 }
